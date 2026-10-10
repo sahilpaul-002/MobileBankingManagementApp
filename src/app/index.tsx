@@ -6,8 +6,10 @@ import { AnimatedIcon } from '@/components/animated-icon';
 import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Button } from '@/components/ui/button';
 import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { Text } from 'expo-router/build/react-navigation';
 
 function getDevMenuHint() {
   if (Platform.OS === 'web') {
@@ -42,6 +44,10 @@ export default function HomeScreen() {
         <ThemedText type="code" style={styles.code}>
           get started
         </ThemedText>
+
+        <Button className="mt-6">
+          <Text>Get Started</Text>
+        </Button>
 
         <ThemedView type="backgroundElement" style={styles.stepContainer}>
           <HintRow

@@ -8,18 +8,21 @@
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@assets/*": [
-        "./assets/*"
-      ],
       "@/*": [
         "./src/*"
       ],
+      "@assets/*": [
+        "./assets/*"
+      ]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "babel.config.js",
+    "metro.config.js",
+    "nativewind-env.d.ts"
   ]
 }
