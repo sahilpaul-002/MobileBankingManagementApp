@@ -2,13 +2,18 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
     "paths": {
+      "@assets/*": [
+        "./assets/*"
+      ],
       "@/*": [
         "./src/*"
       ],
-      "@/assets/*": [
-        "./assets/*"
-      ]
     }
   },
   "include": [
