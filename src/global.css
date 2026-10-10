@@ -4,7 +4,7 @@
 
 @import "nativewind/theme";
 
-@theme {
+:root {
   /* Surfaces */
   --color-app: #f4f6fa;
   --color-app-surface: #ffffff;

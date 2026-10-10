@@ -1,5 +1,5 @@
 import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { Alert, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedIcon } from '@/components/animated-icon';
@@ -45,7 +45,10 @@ export default function HomeScreen() {
           get started
         </ThemedText>
 
-        <Button className="mt-6">
+        <Button
+          className="mt-6"
+          onPress={() => Alert.alert('Success', 'Button is working!')}
+        >
           <Text>Get Started</Text>
         </Button>
 
