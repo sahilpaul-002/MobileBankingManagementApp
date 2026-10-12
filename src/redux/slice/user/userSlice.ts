@@ -1,6 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { rootStateType } from '../../sotre'
-import { ActivityIcon } from 'lucide-react'
 
 // 🔐 Define State Type
 interface UserState {
@@ -8,6 +7,7 @@ interface UserState {
   isAuthenticated: boolean
   isAdmin: boolean
   isMasterAdmin: boolean
+  email: string | null
 }
 
 // 🧠 Initial State
@@ -16,6 +16,7 @@ const initialState: UserState = {
   isAuthenticated: false,
   isAdmin: false,
   isMasterAdmin: false,
+  email: null,
 }
 
 // ⚙️ Create Slice
@@ -43,12 +44,18 @@ const userSlice = createSlice({
       state.isMasterAdmin = action.payload
     },
 
+    // Set Email
+    setIsEmail: (state, action: PayloadAction<string | null>) => {
+      state.email = action.payload
+    },
+
     // ❌ Logout
     logout: (state) => {
       state.isAuthorized = false
       state.isAuthenticated = false
       state.isAdmin = false
       state.isMasterAdmin = false
+      state.email = null
     },
 
     // Reset User States 
@@ -57,7 +64,7 @@ const userSlice = createSlice({
 })
 
 // 📤 Export actions
-export const { setAuthenticated, setAuthorized, setIsAdmin, setIsMasterAdmin, logout, resetUserState } = userSlice.actions
+export const { setAuthenticated, setAuthorized, setIsAdmin, setIsMasterAdmin, setIsEmail, logout, resetUserState } = userSlice.actions
 
 // 📤 Export reducer
 export default userSlice
@@ -67,3 +74,4 @@ export const selectIsAuthenticated = (state: rootStateType) => state.user.isAuth
 export const selectIsAuthorized = (state: rootStateType) => state.user.isAuthorized
 export const selectIsAdmin = (state: rootStateType) => state.user.isAdmin
 export const selectIsMasterAdmin = (state: rootStateType) => state.user.isMasterAdmin
+export const selectEmail = (state: rootStateType) => state.user.email

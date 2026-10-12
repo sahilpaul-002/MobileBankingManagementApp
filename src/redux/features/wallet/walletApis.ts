@@ -1,12 +1,12 @@
 import { axiosBaseQuery, getAxiosInstance } from '@/configs/axiosConfig'
-import { createApi, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
-import type { rootStateType } from '@/redux/sotre'
-import executeBaseQuery from '../executeBaseQuery'
-import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
-import { KYC_URL, WALLET_URL } from '@/configs/constants'
-import { selectApplicaitonHeaders } from '@/redux/slice/config/configSlice'
+import { WALLET_URL } from '@/configs/constants'
 import { ApplicationServiceError } from '@/errorHandling/error'
-import { userApis } from '../user/userApi'
+import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
+import { selectApplicaitonHeaders } from '@/redux/slice/config/configSlice'
+import type { rootStateType } from '@/redux/sotre'
+import { createApi } from '@reduxjs/toolkit/query/react'
+import executeBaseQuery from '../executeBaseQuery'
+import { userApis } from '../user/userApis'
 
 const ENVIRONMENT = import.meta.env.VITE_REACT_ENV
 

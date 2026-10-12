@@ -1,14 +1,13 @@
 import { axiosBaseQuery, getAxiosInstance } from "@/configs/axiosConfig";
 import { TWO_FA_URL } from "@/configs/constants";
 import { ApplicationServiceError } from "@/errorHandling/error";
+import rtkQueryCatchError from "@/errorHandling/rtkQueryCatchError";
 import { selectApplicaitonHeaders } from "@/redux/slice/config/configSlice";
+import { setAuthorized } from "@/redux/slice/user/userSlice";
 import type { rootStateType } from "@/redux/sotre";
 import { createApi } from "@reduxjs/toolkit/query/react";
 import executeBaseQuery from "../executeBaseQuery";
-import rtkQueryCatchError from "@/errorHandling/rtkQueryCatchError";
-import { configApis } from "../config/configApi";
-import { setAuthorized } from "@/redux/slice/user/userSlice";
-import { userApis } from "../user/userApi";
+import { userApis } from "../user/userApis";
 
 type apiResponseDataType = Record<string, any>
 type apiResponseType<T> = {

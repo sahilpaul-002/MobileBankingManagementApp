@@ -1,13 +1,13 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
 import { axiosBaseQuery, getAxiosInstance } from '@/configs/axiosConfig';
 import { CARD_URL } from '@/configs/constants';
+import { ApplicationServiceError } from '@/errorHandling/error';
+import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError';
 import { selectApplicaitonHeaders } from '@/redux/slice/config/configSlice';
 import type { rootStateType } from '@/redux/sotre';
-import executeBaseQuery from '../executeBaseQuery';
-import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError';
-import { userApis } from '../user/userApi';
-import { ApplicationServiceError } from '@/errorHandling/error';
 import type { MerchantCategoryType } from '@/types/cards/cardDetailsTypes';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import executeBaseQuery from '../executeBaseQuery';
+import { userApis } from '../user/userApis';
 
 const ENVIRONMENT = import.meta.env.VITE_REACT_ENV
 

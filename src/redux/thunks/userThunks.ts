@@ -1,20 +1,20 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import { configApis } from "../features/config/configApi";
-import { userApis } from "../features/user/userApi";
-import { helperApis } from "../features/helper/helperApis";
-import { resetConfigStates } from "../slice/config/configSlice";
-import { resetUserState } from "../slice/user/userSlice";
-import {clearBanner, clearDestroySession, resetUtilityStates} from "../slice/utility/utilitySlice";
 import { InternalApplicationError } from "@/errorHandling/error";
 import { logError } from "@/errorHandling/errorLogger";
-import { twoFaApis } from "../features/twoFa/twoFaApis";
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { configApis } from "../features/config/configApi";
+import { helperApis } from "../features/helper/helperApis";
 import { kycApis } from "../features/kyc/kycApis";
+import { twoFaApis } from "../features/twoFa/twoFaApis";
+import { userApis } from "../features/user/userApis";
+import { resetConfigStates } from "../slice/config/configSlice";
+import { resetUserState } from "../slice/user/userSlice";
+import { clearBanner, clearDestroySession, resetUtilityStates } from "../slice/utility/utilitySlice";
 // import { cardholderApis } from "../features/cardholder/cardholderApis";
 // import { cardsApis } from "../features/cards/cardsApis";
-import { finishLogout, startLogout } from "../slice/appSession/appSessionSlice";
 import { beneficiariesApis } from "../features/beneficiaries/beneficiariesApi";
-import { walletApis } from "../features/wallet/walletApis";
 import { transferApis } from "../features/transfer/transferApis";
+import { walletApis } from "../features/wallet/walletApis";
+import { finishLogout, startLogout } from "../slice/appSession/appSessionSlice";
 
 let isLoggingOut = false;
 

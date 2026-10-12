@@ -1,18 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { userApis } from './features/user/userApi.js'
-import userSlice from "./slice/user/userSlice.js"
-import configSlice from './slice/config/configSlice.js'
+import { beneficiariesApis } from './features/beneficiaries/beneficiariesApi.js'
+import { cardApis } from './features/card/cardApi.js'
+import { cardholdersApis } from './features/cardholder/cardholdersApi.js'
 import { configApis } from './features/config/configApi.js'
 import { helperApis } from './features/helper/helperApis.js'
-import utilitySlice from './slice/utility/utilitySlice.js'
-import { twoFaApis } from './features/twoFa/twoFaApis.js'
-import { beneficiariesApis } from './features/beneficiaries/beneficiariesApi.js'
-import appSessionSlice from './slice/appSession/appSessionSlice.js'
 import { kycApis } from './features/kyc/kycApis.js'
-import { walletApis } from './features/wallet/walletApis.js'
 import { transferApis } from './features/transfer/transferApis.js'
-import { cardholdersApis } from './features/cardholder/cardholdersApi.js'
-import { cardApis } from './features/card/cardApi.js'
+import { twoFaApis } from './features/twoFa/twoFaApis.js'
+import { userApis } from './features/user/userApis.js'
+import { walletApis } from './features/wallet/walletApis.js'
+import appSessionSlice from './slice/appSession/appSessionSlice.js'
+import configSlice from './slice/config/configSlice.js'
+import userSlice from "./slice/user/userSlice.js"
+import utilitySlice from './slice/utility/utilitySlice.js'
 
 // EXPORT RTK STORE
 export const store = configureStore({
