@@ -1,18 +1,15 @@
-import { Slot } from "expo-router";
-import { Text, View } from 'react-native';
+import { Stack } from "expo-router";
 
 export default function AuthLayout() {
   return (
     <>
-      <View>
-        <Text>AuthLayout</Text>
-        <Text>AuthLayout</Text>
-        <Text>AuthLayout</Text>
-        <Text>AuthLayout</Text>
-        <Text>AuthLayout</Text>
-        <Text>AuthLayout</Text>
-      </View>
-      <Slot />
+      {/* <Slot /> */}
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      />
     </>
   )
 }

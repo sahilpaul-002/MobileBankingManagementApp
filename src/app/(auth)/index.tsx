@@ -1,6 +1,6 @@
 import SignIn from "./signIn";
 
-export default function index() {
+export default function AuthIndex() {
   return (
     <SignIn />
   )
