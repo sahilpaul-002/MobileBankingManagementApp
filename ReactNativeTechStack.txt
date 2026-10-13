@@ -1,0 +1,54 @@
+I will first build real-world applications using **React Native + TypeScript + Expo**, leveraging my existing React and TypeScript knowledge, along with Expo Router, Redux Toolkit, and RTK Query. As I progress, I will learn the **Android side of React Native** using Android Studio, Android SDK, Emulator, Gradle, Android project structure, permissions, Logcat, and build variants. Then I will learn the necessary **Kotlin fundamentals and native Android APIs** so I can understand and implement native modules when React Native or Expo does not provide a required capability, such as advanced biometrics, NFC, custom payment SDKs, background services, or specialized native functionality. Finally, I will learn **Expo Development Builds, EAS Build, Android signing, AAB generation, production debugging, and Play Store deployment**, giving me both strong React Native development skills and the native Android knowledge required to work effectively on enterprise-level React Native applications.
+
+
+| Your React Web Stack | React Native Stack                                        | Notes                             |
+| -------------------- | --------------------------------------------------------- | --------------------------------- |
+| React                | **React Native**                                          | Core UI framework                 |
+| TypeScript           | **TypeScript**                                            | Same                              |
+| Vite                 | **Metro**                                                 | Bundler/dev server                |
+| Tailwind CSS         | **NativeWind**                                            | Tailwind-style styling            |
+| shadcn/ui            | **React Native Reusables**                                | Closest shadcn-like approach      |
+| React Router         | **Expo Router**                                           | File-based navigation             |
+| TanStack Table       | **Custom RN table/list**                                  | Tables work differently on mobile |
+| React Hook Form      | **React Hook Form**                                       | Same library                      |
+| Zod                  | **Zod**                                                   | Same validation                   |
+| RTK Query            | **RTK Query**                                             | Same API/data fetching            |
+| Redux Toolkit        | **Redux Toolkit**                                         | Same state management             |
+| Axios                | **Axios**                                                 | Can continue using it             |
+| Browser localStorage | **Expo SecureStore / AsyncStorage**                       | Depends on sensitivity            |
+| CSS                  | **NativeWind / StyleSheet**                               | No traditional CSS                |
+| Browser DevTools     | **Flipper/React Native debugging + Android Studio tools** | Mobile debugging                  |
+| Browser              | **Android/iOS**                                           | Native platform                   |
+
+
+
+My React Native enterprise learning stack will be **React Native + TypeScript + Expo + Metro + Expo Router + NativeWind + React Native Reusables + Redux Toolkit + RTK Query + Axios + React Hook Form + Zod + Expo SecureStore**, with **FlatList/custom mobile layouts instead of TanStack Table** for mobile data presentation. I will first use my existing React and TypeScript knowledge to build a real-world mobile application with Expo, learning React Native components (`View`, `Text`, `Pressable`, `TextInput`, `Image`, `ScrollView`, `FlatList`), mobile layouts, styling, navigation, forms, API integration, state management, authentication, secure storage, and mobile UX. After becoming comfortable with React Native, I will learn the native Android side using **Android Studio + Android SDK + Emulator + Gradle + Kotlin**, covering Android project structure, permissions, lifecycle, Logcat, build variants, native APIs, and Kotlin fundamentals. Then I will learn how React Native communicates with native Android through **native modules, native APIs, and the JavaScript-to-native boundary**, so I can integrate functionality that React Native/Expo does not provide directly. Finally, I will learn production and enterprise development with **Expo Development Builds, EAS Build, Android signing, AAB generation, Gradle configuration, performance optimization, debugging native crashes, CI/CD, and Play Store deployment**. The overall goal is not to convert my React Native application into a Kotlin application, but to build the main application using React Native while gaining enough native Android/Kotlin expertise to develop, debug, customize, and maintain enterprise-level native functionality when required.
+
+
+
+### My React Native Development Stack
+
+I am developing a React Native application using **React Native + TypeScript + Expo**. When helping me with any task, use the following technology stack and conventions:
+
+- **Navigation:** Expo Router with file-based routing, nested layouts, `Slot`, `Stack`, and `Tabs` where appropriate.
+- **State management:** Redux Toolkit and React Redux.
+- **API integration:** RTK Query for data fetching, caching, and request management; Axios for HTTP communication through a centralized API client where needed.
+- **Styling:** NativeWind for Tailwind-style native styling, React Native `StyleSheet` when appropriate, and React Native Reusables for compatible reusable UI components.
+- **Forms and validation:** React Hook Form and Zod.
+- **Storage:** Expo SecureStore for sensitive credentials and tokens; AsyncStorage for non-sensitive persistent data.
+- **Native UI:** React Native components such as `View`, `Text`, `Pressable`, `TextInput`, `Image`, `ScrollView`, `FlatList`, and `SectionList`.
+- **Development and debugging:** Metro, Expo CLI, Android Studio, Android SDK, and Android Emulator.
+
+**Development rules:**
+1. Write strict, type-safe TypeScript and follow React Native and Expo best practices.
+2. Prefer small, reusable components, custom hooks, utility functions, and maintainable code over unnecessarily large components.
+3. Reuse my existing project architecture, dependencies, components, hooks, types, API clients, and styling conventions whenever possible.
+4. Do not use web-only technologies such as `react-dom`, DOM APIs, browser-specific APIs (`window`, `document`, `sessionStorage`), traditional web CSS, Vite, React Router, or standard web shadcn/ui components.
+5. Do not use web-oriented table libraries such as TanStack Table for native mobile data presentation; use `FlatList`, `SectionList`, or suitable mobile layouts instead.
+6. Do not introduce additional libraries, duplicate existing functionality, or change the project architecture unless necessary.
+7. Prefer Expo-compatible APIs and libraries. Use Kotlin or custom native Android modules only when a required native capability cannot be handled adequately by the existing React Native/Expo stack.
+8. When teaching me, explain unfamiliar React Native concepts by relating them to my existing React and TypeScript knowledge. Explain the purpose of the code and introduce concepts step by step instead of assuming I already know native development.
+9. When implementing a task, focus only on the requested component, feature, or concept. Do not generate unrelated application code or rewrite existing files unnecessarily.
+10. If the solution depends on my existing project structure or code, ask for or inspect the relevant files before making assumptions. Provide precise changes and explain any new dependencies or configuration requirements.
+
+Follow these instructions as the default context for my React Native development tasks, while adapting the implementation to the specific request.
