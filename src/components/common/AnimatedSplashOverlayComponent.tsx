@@ -1,69 +1,74 @@
 import { Image } from 'expo-image';
 import * as SplashScreen from 'expo-splash-screen';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
+import { useCallback, useRef } from 'react';
+import { StyleSheet } from 'react-native';
+import Animated, {
+    Easing,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withTiming,
+} from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-const DURATION = 10_000;
+const DURATION = 5_000;
+const HOLD_DURATION = DURATION * 0.2;
+const FADE_DURATION = DURATION * 0.5;
 
-export default function AnimatedSplashOverlayComponent() {
-    const [animate, setAnimate] = useState(false);
-    const [visible, setVisible] = useState(true);
+interface AnimatedSplashOverlayComponentProps {
+    onAnimationComplete: () => void;
+}
 
-    if (!visible) return null;
+export default function AnimatedSplashOverlayComponent({
+    onAnimationComplete,
+}: AnimatedSplashOverlayComponentProps) {
+    const opacity = useSharedValue(1);
+    const hasStarted = useRef(false);
 
-    const splashKeyframe = new Keyframe({
-        0: {
-            transform: [{ scale: 1 }],
-            opacity: 1,
-        },
-        20: {
-            opacity: 1,
-        },
-        70: {
-            opacity: 0,
-            easing: Easing.elastic(0.7),
-        },
-        100: {
-            opacity: 0,
-            transform: [{ scale: 1 }],
-            easing: Easing.elastic(0.7),
-        },
-    });
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: opacity.value,
+    }));
 
-    const image = (
-        <Image
-            style={styles.image}
-            source={require('@/assets/nativeSplashScreenLogo/walletCardLogo.png')}
-            contentFit="contain"
-        />
-    );
+    const startAnimation = useCallback(() => {
+        opacity.value = withDelay(
+            HOLD_DURATION,
+            withTiming(
+                0,
+                {
+                    duration: FADE_DURATION,
+                    easing: Easing.out(Easing.cubic),
+                },
+                (finished) => {
+                    if (finished) {
+                        scheduleOnRN(onAnimationComplete);
+                    }
+                },
+            ),
+        );
+    }, [onAnimationComplete, opacity]);
 
-    return animate ? (
+    const handleLayout = useCallback(() => {
+        if (hasStarted.current) return;
+
+        hasStarted.current = true;
+
+        SplashScreen.hideAsync().finally(() => {
+            startAnimation();
+        });
+    }, [startAnimation]);
+
+    return (
         <Animated.View
-            entering={splashKeyframe.duration(DURATION).withCallback((finished) => {
-                'worklet';
-
-                if (finished) {
-                    scheduleOnRN(setVisible, false);
-                }
-            })}
-            style={styles.splashOverlay}
+            onLayout={handleLayout}
+            style={[styles.splashOverlay, animatedStyle]}
+            pointerEvents="auto"
         >
-            {image}
+            <Image
+                style={styles.image}
+                source={require('@/assets/nativeSplashScreenLogo/walletCardLogo.png')}
+                contentFit="contain"
+            />
         </Animated.View>
-    ) : (
-        <View
-            onLayout={() => {
-                SplashScreen.hideAsync().finally(() => {
-                    setAnimate(true);
-                });
-            }}
-            style={styles.splashOverlay}
-        >
-            {image}
-        </View>
     );
 }
 

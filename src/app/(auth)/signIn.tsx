@@ -3,14 +3,8 @@ import { Button, Text, View } from 'react-native';
 
 export default function SignIn() {
   return (
-    <View
-      style={{
-        flex: 1,
-        padding: 24,
-        backgroundColor: '#0C1830',
-      }}
-    >
-      <Text style={{ color: '#FFFFFF' }}>
+    <View className='w-full h-full'>
+      <Text className='text-gray-400'>
         Sign In
       </Text>
 

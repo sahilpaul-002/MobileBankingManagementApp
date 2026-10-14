@@ -1,7 +1,10 @@
 import AuthLayout from '@/layouts/AuthLayout'
+import { View } from 'react-native'
 
 export default function AuthRootLayout() {
   return (
-    <AuthLayout />
+    <View className='w-full h-full'>
+      <AuthLayout />
+    </View>
   )
 }

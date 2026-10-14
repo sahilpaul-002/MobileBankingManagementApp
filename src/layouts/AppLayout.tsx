@@ -1,18 +1,29 @@
-import { useColorScheme, View } from 'react-native';
+import { View } from 'react-native';
 
-import ToastMessagesComponent from '@/components/common/ToastMessagesComponent';
 import { Slot } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect } from 'react';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AppLayout() {
-    const colorScheme = useColorScheme();
+    const insets = useSafeAreaInsets();
+
+    useEffect(() => {
+        console.log('Safe area insets:', insets);
+    }, [insets]);
+
     return (
         <SafeAreaView
-            style={{ flex: 1, backgroundColor: '#F4F6FA' }}
+            style={{ flex: 1 }}
             edges={['top', 'left', 'right']}
         >
-            <View style={{ flex: 1, backgroundColor: '#F4F6FA' }}>
-                <ToastMessagesComponent />
+            {/* <View className="absolute left-2 bottom-2 z-50 rounded bg-black p-2">
+                <Text className="text-white">
+                    Top: {insets.top} | Bottom: {insets.bottom}
+                </Text>
+            </View> */}
+
+            <View className='w-full h-full p-5'>
+                {/* <Text className="text-black">Safe area content</Text> */}
                 <Slot />
                 {/* <Stack
                 screenOptions={{

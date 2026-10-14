@@ -1,8 +1,15 @@
 import AnimatedSplashOverlayComponent from '@/components/common/AnimatedSplashOverlayComponent';
+import ToastMessagesComponent from '@/components/common/ToastMessagesComponent';
 import AppLayout from '@/layouts/AppLayout';
-import { DarkTheme, DefaultTheme, ThemeProvider, usePathname, useSegments } from 'expo-router';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+  usePathname,
+  useSegments,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { Activity, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBar, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import '../global.css';
@@ -10,26 +17,15 @@ import '../global.css';
 SplashScreen.preventAutoHideAsync();
 
 export default function AppRootLayout() {
-  const [showAppLayout, setShowAppLayout] = useState(false)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setShowAppLayout(true);
-    }, 6000);
-
-    return () => clearTimeout(timeoutId);
-  }, []);
-
+  const [showAppLayout, setShowAppLayout] = useState(false);
   const colorScheme = useColorScheme();
 
-  // Log Current Path Name
   const pathname = usePathname();
+  const segments = useSegments();
 
   useEffect(() => {
     console.log('Navigated to:', pathname);
   }, [pathname]);
-
-  // Log Current Path Segment
-  const segments = useSegments();
 
   useEffect(() => {
     console.log('Current route segments:', segments);
@@ -37,17 +33,21 @@ export default function AppRootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider
-        value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-      >
-        <View style={{ flex: 1, backgroundColor: '#F4F6FA' }}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        {/* <View className="w-full flex-1 bg-[var(--color-app)]"> */}
+        <View className="w-full flex-1">
           <StatusBar barStyle="dark-content" />
 
-          <Activity mode={showAppLayout ? 'visible' : 'hidden'}>
+          <View className="w-full flex-1">
+            <ToastMessagesComponent />
             <AppLayout />
-          </Activity>
+          </View>
 
-          <AnimatedSplashOverlayComponent />
+          {!showAppLayout && (
+            <AnimatedSplashOverlayComponent
+              onAnimationComplete={() => setShowAppLayout(true)}
+            />
+          )}
         </View>
       </ThemeProvider>
     </SafeAreaProvider>
