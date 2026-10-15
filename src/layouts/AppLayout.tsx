@@ -22,7 +22,7 @@ export default function AppLayout() {
                 </Text>
             </View> */}
 
-            <View className='w-full h-full p-5'>
+            <View className='w-full h-full'>
                 {/* <Text className="text-black">Safe area content</Text> */}
                 <Slot />
                 {/* <Stack

@@ -1,9 +1,10 @@
-import { Text, View } from 'react-native'
+import DashboardScreenComponent from '@/screens/DashboardScreenComponent'
+import { View } from 'react-native'
 
 export default function DashboardIndex() {
   return (
     <View>
-      <Text>DashboardIndex</Text>
+      <DashboardScreenComponent/>
     </View>
   )
 }
