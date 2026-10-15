@@ -5,44 +5,53 @@ import { Platform, Pressable } from 'react-native';
 
 const buttonVariants = cva(
   cn(
-    'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none',
+    'group shrink-0 flex-row items-center justify-center gap-2 shadow-none',
     Platform.select({
-      web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+      web: "whitespace-nowrap outline-none transition-all disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     })
   ),
   {
     variants: {
       variant: {
         default: cn(
-          'bg-primary active:bg-primary/90 shadow-sm shadow-black/5',
-          Platform.select({ web: 'hover:bg-primary/90' })
+          'bg-[var(--color-navy)] active:bg-[var(--color-navy-active)] rounded-[var(--radius-control)] shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-[var(--color-navy-active)]' })
         ),
         destructive: cn(
-          'bg-destructive active:bg-destructive/90 dark:bg-destructive/60 shadow-sm shadow-black/5',
-          Platform.select({
-            web: 'hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
-          })
+          'bg-[var(--color-status-danger)] active:bg-[var(--color-status-danger)]/90 rounded-[var(--radius-control)] shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-[var(--color-status-danger)]/90' })
         ),
         outline: cn(
-          'border-border bg-background active:bg-accent dark:bg-input/30 dark:border-input dark:active:bg-input/50 border shadow-sm shadow-black/5',
-          Platform.select({
-            web: 'hover:bg-accent dark:hover:bg-input/50',
-          })
+          'border border-[var(--color-line)] bg-[var(--color-app-surface)] active:bg-[var(--color-app-hover)] rounded-[var(--radius-control)] shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-[var(--color-app-hover)]' })
         ),
         secondary: cn(
-          'bg-secondary active:bg-secondary/80 shadow-sm shadow-black/5',
-          Platform.select({ web: 'hover:bg-secondary/80' })
+          'bg-[var(--color-app-subtle)] active:bg-[var(--color-app-hover)] rounded-[var(--radius-control)] shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-[var(--color-app-hover)]' })
         ),
         ghost: cn(
-          'active:bg-accent dark:active:bg-accent/50',
-          Platform.select({ web: 'hover:bg-accent dark:hover:bg-accent/50' })
+          'rounded-[var(--radius-control)] active:bg-[var(--color-app-hover)]',
+          Platform.select({ web: 'hover:bg-[var(--color-app-hover)]' })
         ),
         link: '',
+        navy: cn(
+          'bg-[var(--color-navy)] border border-[var(--color-gold)] active:bg-[var(--color-navy-active)] rounded-[var(--radius-control)] shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-[var(--color-navy-active)]' })
+        ),
+        gold: cn(
+          'bg-[var(--color-gold)] active:bg-[var(--color-gold-light)] rounded-[var(--radius-control)] shadow-sm shadow-black/5',
+          Platform.select({ web: 'hover:bg-[var(--color-gold-light)]' })
+        ),
+        authResend: cn(
+          'border border-[var(--color-line)] bg-[var(--color-app-surface)] active:bg-[var(--color-app-hover)] rounded-[var(--radius-control)]',
+          Platform.select({ web: 'hover:bg-[var(--color-app-hover)]' })
+        ),
+        authLink: '',
       },
       size: {
         default: cn('h-10 px-4 py-2 sm:h-9', Platform.select({ web: 'has-[>svg]:px-3' })),
-        sm: cn('h-9 gap-1.5 rounded-md px-3 sm:h-8', Platform.select({ web: 'has-[>svg]:px-2.5' })),
-        lg: cn('h-11 rounded-md px-6 sm:h-10', Platform.select({ web: 'has-[>svg]:px-4' })),
+        sm: cn('h-9 gap-1.5 px-3 sm:h-8', Platform.select({ web: 'has-[>svg]:px-2.5' })),
+        lg: cn('h-11 px-6 sm:h-10', Platform.select({ web: 'has-[>svg]:px-4' })),
         icon: 'h-10 w-10 sm:h-9 sm:w-9',
       },
     },
@@ -55,23 +64,30 @@ const buttonVariants = cva(
 
 const buttonTextVariants = cva(
   cn(
-    'text-foreground text-sm font-medium',
+    'text-[var(--color-ink)] text-sm font-medium',
     Platform.select({ web: 'pointer-events-none transition-colors' })
   ),
   {
     variants: {
       variant: {
-        default: 'text-primary-foreground',
+        default: 'text-white',
         destructive: 'text-white',
         outline: cn(
-          'group-active:text-accent-foreground',
-          Platform.select({ web: 'group-hover:text-accent-foreground' })
+          'text-[var(--color-ink)]',
+          Platform.select({ web: 'group-hover:text-[var(--color-ink-secondary)]' })
         ),
-        secondary: 'text-secondary-foreground',
-        ghost: 'group-active:text-accent-foreground',
+        secondary: 'text-[var(--color-ink-secondary)]',
+        ghost: 'text-[var(--color-ink)]',
         link: cn(
-          'text-primary group-active:underline',
-          Platform.select({ web: 'underline-offset-4 hover:underline group-hover:underline' })
+          'text-[var(--color-link)] group-active:underline',
+          Platform.select({ web: 'underline-offset-4 group-hover:underline' })
+        ),
+        navy: 'text-white',
+        gold: 'text-white',
+        authResend: 'text-[var(--color-ink-secondary)]',
+        authLink: cn(
+          'text-[var(--color-link)] group-active:underline',
+          Platform.select({ web: 'underline-offset-4 group-hover:underline' })
         ),
       },
       size: {

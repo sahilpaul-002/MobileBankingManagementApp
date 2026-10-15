@@ -49,6 +49,8 @@ Always follow the guidelines for:
 - Use TypeScript and preserve strict type safety.
 - Prefer function components and current React patterns.
 - Use React Native primitives such as `View`, `Text`, `Pressable`, `TextInput`, `ScrollView`, and `FlatList`, or existing project components.
+- **Portal alternatives:** Never use `createPortal` from `react-dom` in React Native. Use `@rn-primitives/portal` for supported overlay use cases, such as popovers, dropdowns, and tooltips, following its installed API and provider requirements. Use React Native's `Modal` for modal dialogs and full-screen overlays. Prefer existing project components and portal infrastructure where available.
+- **Conditional rendering with `Activity`:** Prefer React's `<Activity>` component for conditional visibility when the UI should be hidden while preserving its component state, and the installed React Native runtime supports it. Use `mode="visible"` or `mode="hidden"` to control visibility. Use ordinary conditional rendering (`{condition && <Component />}`) when the component should unmount and its local state should be reset. Do not use `<Activity>` indiscriminately when unmounting is the intended behavior.
 - Use Expo Router for navigation; do not introduce another navigation system without explicit approval.
 - Use RTK Query for server-state fetching and mutations when it fits the existing API architecture.
 - Use Redux Toolkit only for shared client state that genuinely belongs in the store.
@@ -57,6 +59,7 @@ Always follow the guidelines for:
 - Match the established project structure and import aliases.
 - Prefer maintainable, accessible, platform-correct solutions over shortcuts.
 - Explain any required package/configuration changes and provide the exact npm command when installation is needed.
+- **React Native Reusables:** Prefer React Native Reusables for customizable native UI components. Follow the official documentation, verify compatibility with the existing project configuration, and reuse established components and theme tokens before adding new dependencies.
 
 # Code Review Rules
 

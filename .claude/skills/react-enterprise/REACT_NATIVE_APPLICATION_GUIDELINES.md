@@ -128,6 +128,9 @@ Do not rename existing files just to enforce a new convention in an unrelated ta
 - Use React 19 APIs only when supported by the installed React Native runtime and when they fit the native use case. Do not blindly transfer browser React patterns to React Native.
 - Do not use DOM elements, `document`, `window`, `createPortal`, `react-dom` form APIs, or browser-only APIs in native code.
 - Do not use web-only shadcn/ui components in native screens. Prefer existing native components or compatible native primitives.
+- Alternative to createPortal — use @rn-primitives/portal for overlays and React Native's Modal for modal dialogs. Never use react-dom's createPortal in native code.
+- Prefer <Activity> for conditional visibility — use React 19's <Activity> when hiding UI while preserving its component state. Use normal conditional rendering when the component should unmount and reset its state.
+- **React Native Reusables:** Prefer [React Native Reusables](https://reactnativereusables.com/docs) as the primary source for reusable, customizable native UI components, similar to shadcn/ui for web. Reuse existing components and follow the project's NativeWind configuration and Midnight Navy + Gold theme. Before installing or adding components, verify compatibility with the installed Expo SDK, React Native, NativeWind, and Tailwind CSS versions. Follow the official installation instructions, avoid reinitializing the existing project, and do not introduce duplicate UI primitives or unnecessary dependencies.
 
 ## 6. Expo Router and Navigation
 
