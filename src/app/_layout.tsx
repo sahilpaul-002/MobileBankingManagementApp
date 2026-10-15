@@ -36,9 +36,10 @@ export default function AppRootLayout() {
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         {/* <View className="w-full flex-1 bg-[var(--color-app)]"> */}
         <View className="w-full flex-1">
-          <StatusBar barStyle="dark-content" />
+          {/* <StatusBar barStyle="dark-content" /> */}
+          <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
 
-          <View className="w-full flex-1">
+          <View className="w-full flex-1 bg-[var(--color-app)]">
             <ToastMessagesComponent />
             <AppLayout />
           </View>

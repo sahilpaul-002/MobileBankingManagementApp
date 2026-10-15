@@ -1,0 +1,146 @@
+{
+  "themes": {
+    "midnight": {
+      "name": "Midnight Navy + Gold",
+      "description": "Card Management React Native theme: cool light surfaces, deep navy brand structure, warm gold accents, and semantic status colors.",
+      "colors": {
+        "surfaces": {
+          "app": "#f4f6fa",
+          "surface": "#ffffff",
+          "subtle": "#f8f9fc",
+          "hover": "#f0f3f9"
+        },
+        "navigation": {
+          "bg": "#0c1830",
+          "bg2": "#0a1428",
+          "active": "#16264a",
+          "text": "#c8d2e6",
+          "textMute": "#6b7a99",
+          "textStrong": "#ffffff"
+        },
+        "ink": {
+          "primary": "#0c1830",
+          "secondary": "#2a3450",
+          "soft": "#4a5673",
+          "mute": "#8a93a8",
+          "mute2": "#b4bbcc"
+        },
+        "lines": {
+          "default": "#e6e8ee",
+          "strong": "#d2d6de",
+          "faint": "#f0f1f5"
+        },
+        "brand": {
+          "gold": "#d49a4d",
+          "gold2": "#e2b06b",
+          "goldSoft": "#f5e6cc"
+        },
+        "status": {
+          "ok": "#1f8a5b",
+          "okBg": "#e6f3ec",
+          "warn": "#c47a1a",
+          "warnBg": "#fbecd3",
+          "danger": "#b03333",
+          "dangerBg": "#fbe7e7",
+          "info": "#2a6fdb",
+          "infoBg": "#e8f0fd"
+        },
+        "links": {
+          "link1": "#9193f7",
+          "link2": "#383acf",
+          "link3": "#2e30a3"
+        }
+      },
+      "typography": {
+        "fonts": {
+          "sans": "system-ui",
+          "display": "system-ui",
+          "mono": "monospace"
+        },
+        "sizes": {
+          "base": 14,
+          "lineHeight": 1.5,
+          "fontWeight": "400"
+        },
+        "notes": [
+          "Use platform system fonts by default; no custom font files are currently declared in the provided package.json.",
+          "If custom fonts are added later, load them through the project's Expo font setup and document the font roles here."
+        ]
+      },
+      "sizing": {
+        "controlRadius": 6,
+        "cardRadius": 12,
+        "spacingUnit": 4
+      },
+      "shadows": {
+        "guidance": "Use subtle platform-appropriate elevation/shadow styles only when needed. No shared shadow token system is currently defined."
+      },
+      "motion": {
+        "guidance": "Use Reanimated for purposeful native motion. Keep durations subtle, avoid blocking the JS thread, and respect reduced-motion/accessibility needs."
+      },
+      "formFeedback": {
+        "inputHint": {
+          "fontSize": 11,
+          "color": "#c47a1a",
+          "fontWeight": "400"
+        },
+        "inputError": {
+          "fontSize": 11,
+          "color": "#b03333",
+          "fontWeight": "400"
+        }
+      }
+    }
+  },
+  "semanticTokens": {
+    "light": {
+      "background": "#f4f6fa",
+      "foreground": "#0c1830",
+      "surface": "#ffffff",
+      "surfaceSubtle": "#f8f9fc",
+      "primary": "#0c1830",
+      "primaryForeground": "#ffffff",
+      "accent": "#d49a4d",
+      "accentForeground": "#0c1830",
+      "muted": "#f0f3f9",
+      "mutedForeground": "#4a5673",
+      "border": "#e6e8ee",
+      "input": "#e6e8ee",
+      "success": "#1f8a5b",
+      "successBackground": "#e6f3ec",
+      "warning": "#c47a1a",
+      "warningBackground": "#fbecd3",
+      "destructive": "#b03333",
+      "destructiveBackground": "#fbe7e7",
+      "info": "#2a6fdb",
+      "infoBackground": "#e8f0fd"
+    }
+  },
+  "nativewind": {
+    "version": "5.0.0-rc.0",
+    "tailwindcssVersion": "4.1.12",
+    "guidance": [
+      "Use utility classes supported by the installed NativeWind version and project's CSS setup.",
+      "Do not assume web-only CSS features, hover behavior, scrollbar styling, or shadcn semantic utilities are available on native platforms.",
+      "Confirm token exposure in the actual NativeWind theme configuration before using token class names."
+    ]
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "system": "CMA React Native Design System",
+    "theme": "Midnight Navy + Gold",
+    "defaultTheme": "midnight",
+    "themeModes": [
+      "light"
+    ],
+    "fontSystem": [
+      "system-ui",
+      "monospace"
+    ],
+    "styling": "NativeWind 5 RC + Tailwind CSS 4",
+    "componentSystem": "React Native components and existing shared components",
+    "animationSystem": "React Native Reanimated 4 + Worklets where appropriate",
+    "source": "React Native package.json and supplied global CSS tokens",
+    "lastUpdated": "2026-10-15"
+  }
+}
