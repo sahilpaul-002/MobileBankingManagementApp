@@ -8,6 +8,7 @@ import { aesEncryption, aesEncryptMultipartFile } from '@/utils/aesEncryption';
 import GetDeviceId from '@/utils/GetDeviceId';
 import { rsaEncryption } from '@/utils/rsaEncryption';
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import * as Crypto from 'expo-crypto';
 
 const NODE_BASE_URL = process.env.EXPO_PUBLIC_NODE_BASE_URL
 
@@ -33,7 +34,7 @@ const setupInterceptors = (instance: AxiosInstance) => {
             req.headers = req.headers ?? {};
             req.headers["portal"] = "business";
             req.headers["from-portal"] = "true";
-            req.headers["request-id"] = crypto.randomUUID();
+            req.headers["request-id"] = Crypto.randomUUID();
             // const deviceId = await GetDeviceId();
             // req.headers["x-device-id"] = deviceId
 

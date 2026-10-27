@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { Text } from '@/components/ui/text';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as Clipboard from 'expo-clipboard';
+import { router } from 'expo-router';
+import { Copy, Landmark } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -6,12 +12,6 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { router } from 'expo-router';
-import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as Clipboard from 'expo-clipboard';
-import { Copy, Landmark } from 'lucide-react-native';
 import { z } from 'zod';
 
 import CustomButtonComponent from '@/components/common/CustomButtonComponent';
@@ -257,7 +257,8 @@ export default function SignInScreenComponent() {
         text1: 'Copied & Applied',
         text2: `${label} copied and filled in form`,
       });
-    } catch {
+    } 
+    catch {
       showToastMessage({
         type: 'error',
         text1: 'Clipboard Error',

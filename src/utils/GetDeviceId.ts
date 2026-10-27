@@ -1,11 +1,12 @@
-import { Platform } from "react-native";
 import * as Application from "expo-application";
+import * as Crypto from "expo-crypto";
+import { Platform } from "react-native";
 
 let cachedDeviceId: string | null = null;
 
 const generateFallbackId = (): string => {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
+    return Crypto.randomUUID();;
   }
   return "dev-" + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 };

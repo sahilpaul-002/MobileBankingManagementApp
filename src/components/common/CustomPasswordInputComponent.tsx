@@ -65,7 +65,7 @@ const CustomPasswordInputComponent = forwardRef<
             secureTextEntry={!showPassword}
             placeholderTextColor={placeholderTextColor}
             className={cn(
-              "h-11 pl-3.5 pr-11 rounded-[var(--radius-control)] border bg-[var(--color-app-surface)] text-[var(--color-ink)] text-sm",
+              "h-11 pl-3.5! pr-11! rounded-[var(--radius-control)] border bg-[var(--color-app-surface)] text-[var(--color-ink)] text-sm",
               error
                 ? "border-[var(--color-status-danger)]"
                 : "border-[var(--color-line-strong)] focus:border-[var(--color-gold)]",

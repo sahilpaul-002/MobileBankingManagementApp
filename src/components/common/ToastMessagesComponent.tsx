@@ -40,15 +40,13 @@ export default function ToastMessagesComponent(
 export function showToastMessage(options: ToastShowOptions = {}) {
     const type = options.type ?? 'success';
 
-    const defaultText1 =
-        DEFAULT_TOAST_TITLES[type] ??
-        `${type.charAt(0).toUpperCase()}${type.slice(1)}`;
+    const defaultText1 = DEFAULT_TOAST_TITLES[type] ?? `${type.charAt(0).toUpperCase()}${type.slice(1)}`;
 
     Toast.show({
         ...options,
         type,
         text1: options.text1 ?? defaultText1,
-        position: options.position ?? 'bottom',
+        position: options.position ?? 'top',
         visibilityTime: options.visibilityTime ?? 4000,
         autoHide: options.autoHide ?? true,
         topOffset: options.topOffset ?? 40,

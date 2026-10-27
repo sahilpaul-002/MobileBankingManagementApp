@@ -1,6 +1,8 @@
 import AnimatedSplashOverlayComponent from '@/components/common/AnimatedSplashOverlayComponent';
 import ToastMessagesComponent from '@/components/common/ToastMessagesComponent';
+import { setAxiosDispatch } from '@/configs/axiosConfig';
 import AppLayout from '@/layouts/AppLayout';
+import { store, storeDispatch } from '@/redux/sotre';
 import {
   DarkTheme,
   DefaultTheme,
@@ -12,11 +14,15 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import { StatusBar, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
 import '../global.css';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function AppRootLayout() {
+  // Set Global Store Dispatch
+  setAxiosDispatch(storeDispatch);
+
   const [showAppLayout, setShowAppLayout] = useState(false);
   const colorScheme = useColorScheme();
 
@@ -32,25 +38,27 @@ export default function AppRootLayout() {
   }, [segments]);
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        {/* <View className="w-full flex-1 bg-[var(--color-app)]"> */}
-        <View className="w-full flex-1">
-          {/* <StatusBar barStyle="dark-content" /> */}
-          <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          {/* <View className="w-full flex-1 bg-[var(--color-app)]"> */}
+          <View className="w-full flex-1">
+            {/* <StatusBar barStyle="dark-content" /> */}
+            <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
 
-          <View className="w-full flex-1 bg-[var(--color-app)]">
-            <ToastMessagesComponent />
             <AppLayout />
-          </View>
 
-          {!showAppLayout && (
-            <AnimatedSplashOverlayComponent
-              onAnimationComplete={() => setShowAppLayout(true)}
-            />
-          )}
-        </View>
-      </ThemeProvider>
-    </SafeAreaProvider>
+            {!showAppLayout && (
+              <AnimatedSplashOverlayComponent
+                onAnimationComplete={() => setShowAppLayout(true)}
+              />
+            )}
+
+            {/* Toast Message to be rendered above all */}
+            <ToastMessagesComponent />
+          </View>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </Provider>
   );
 }

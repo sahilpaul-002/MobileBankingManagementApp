@@ -1,18 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { beneficiariesApis } from './features/beneficiaries/beneficiariesApi.js'
-import { cardApis } from './features/card/cardApi.js'
-import { cardholdersApis } from './features/cardholder/cardholdersApi.js'
-import { configApis } from './features/config/configApi.js'
-import { helperApis } from './features/helper/helperApis.js'
-import { kycApis } from './features/kyc/kycApis.js'
-import { transferApis } from './features/transfer/transferApis.js'
-import { twoFaApis } from './features/twoFa/twoFaApis.js'
-import { userApis } from './features/user/userApis.js'
-import { walletApis } from './features/wallet/walletApis.js'
-import appSessionSlice from './slice/appSession/appSessionSlice.js'
-import configSlice from './slice/config/configSlice.js'
-import userSlice from "./slice/user/userSlice.js"
-import utilitySlice from './slice/utility/utilitySlice.js'
+import { beneficiariesApis } from './features/beneficiaries/beneficiariesApi'
+import { cardApis } from './features/card/cardApi'
+import { cardholdersApis } from './features/cardholder/cardholdersApi'
+import { configApis } from './features/config/configApi'
+import { helperApis } from './features/helper/helperApis'
+import { kycApis } from './features/kyc/kycApis'
+import { transferApis } from './features/transfer/transferApis'
+import { twoFaApis } from './features/twoFa/twoFaApis'
+import { userApis } from './features/user/userApis'
+import { walletApis } from './features/wallet/walletApis'
+import appSessionSlice from './slice/appSession/appSessionSlice'
+import configSlice from './slice/config/configSlice'
+import userSlice from "./slice/user/userSlice"
+import utilitySlice from './slice/utility/utilitySlice'
 
 // EXPORT RTK STORE
 export const store = configureStore({
