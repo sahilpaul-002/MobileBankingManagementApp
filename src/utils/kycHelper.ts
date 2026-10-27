@@ -1,7 +1,13 @@
-export function isKycApproved(kycDetails: any): boolean {
-    if (!kycDetails) return false;
+export interface KycDetails {
+  kyc_status?: string;
+  [key: string]: unknown;
+}
 
-    const status = kycDetails?.kyc_status?.toUpperCase?.();
+export function isKycApproved(kycDetails: KycDetails | null | undefined | unknown): boolean {
+  if (!kycDetails || typeof kycDetails !== "object") return false;
 
-    return status === "COMPLETED";
+  const details = kycDetails as KycDetails;
+  const status = details.kyc_status;
+
+  return typeof status === "string" && status.toUpperCase() === "COMPLETED";
 }

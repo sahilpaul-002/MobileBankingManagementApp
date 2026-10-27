@@ -2,9 +2,9 @@
  * Logs debug information only during development.
  *
  * @param message - Description of the log message.
- * @param value - Optional object containing additional data to log.
+ * @param value - Optional data to log.
  */
-const ShowInConsole = (message: string, value: object | null = null): void => {
+const ShowInConsole = (message: string, value?: unknown): void => {
   // __DEV__ is true in development and false in production builds.
   // Prevents debug logs from being printed in production.
   if (!__DEV__) return;
@@ -21,9 +21,9 @@ const ShowInConsole = (message: string, value: object | null = null): void => {
   // Print the message, additional data, and caller information.
   console.log({
     message,
-    value,
+    value: value !== undefined ? value : null,
     // Remove the leading "at " prefix when present in the stack trace.
-    caller: callerLine?.replace(/^at\s+/, ""),
+    caller: callerLine ? callerLine.replace(/^at\s+/, "") : undefined,
   });
 };
 
