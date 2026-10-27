@@ -9,7 +9,7 @@ import executeBaseQuery from '../executeBaseQuery';
 import { userApis } from '../user/userApis';
 import { walletApis } from '../wallet/walletApis';
 
-const ENVIRONMENT = import.meta.env.VITE_REACT_ENV
+const ENVIRONMENT = process.env.EXPO_PUBLIC_REACT_NATIVE_ENV
 
 type apiResponseDataType = Record<string, any> | Record<string, any>[]
 type apiResponseType<T> = {

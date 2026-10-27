@@ -5,7 +5,7 @@ import type { apiErrorType } from "@/errorHandling/handleErrors"
 import { createApi, type FetchBaseQueryError } from "@reduxjs/toolkit/query/react"
 
 
-const ENVIRONMENT = import.meta.env.VITE_REACT_ENV
+const ENVIRONMENT = process.env.EXPO_PUBLIC_REACT_NATIVE_ENV
 
 type getSessionResponseType = {
     sessionId?: string;

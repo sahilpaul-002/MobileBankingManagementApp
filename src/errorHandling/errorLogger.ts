@@ -36,7 +36,7 @@ export const logError = (
     }
 
     // Dev vs Prod handling
-    if (import.meta.env.VITE_REACT_ENV === "DEVELOPMENT") {
+    if (process.env.EXPO_PUBLIC_REACT_NATIVE_ENV === "DEVELOPMENT") {
         console.error("[APP ERROR]:", logData);
     }
 };

@@ -1,4 +1,3 @@
-import App from '@/App';
 import { AppErrorClass } from '@/errorHandling/appError';
 import { ApplicationServiceError, InternalApplicationError } from '@/errorHandling/error';
 import { logError } from '@/errorHandling/errorLogger';
@@ -8,9 +7,9 @@ import { aesDecryption } from '@/utils/aesDecryption';
 import { aesEncryption, aesEncryptMultipartFile } from '@/utils/aesEncryption';
 import GetDeviceId from '@/utils/GetDeviceId';
 import { rsaEncryption } from '@/utils/rsaEncryption';
-import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios'
+import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
 
-const NODE_BASE_URL = import.meta.env.VITE_NODE_BASE_URL
+const NODE_BASE_URL = process.env.EXPO_PUBLIC_NODE_BASE_URL
 
 // Global Dispatch Handling - (To avoid circular store dependencies)
 let globalDispatch: any = null;

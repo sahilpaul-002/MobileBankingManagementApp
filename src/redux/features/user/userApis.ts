@@ -1,19 +1,17 @@
-import { createApi, type BaseQueryFn } from '@reduxjs/toolkit/query/react'
-import { selectApplicaitonHeaders, selectDnsConfigDetails, setAppliationHeaders, type applicationHeaderItemsType, type dnsConfigDataType } from '@/redux/slice/config/configSlice'
-import type { rootStateType } from '@/redux/sotre'
-import { configApis } from '../config/configApi'
-import { USER_PUBLIC_URL, USER_URL } from '@/configs/constants'
 import { axiosBaseQuery, getAxiosInstance } from '@/configs/axiosConfig'
+import { USER_URL } from '@/configs/constants'
 import { ApplicationServiceError } from '@/errorHandling/error'
-import mapToRtkError from '@/errorHandling/mapToRtkError'
-import { helperApis } from '../helper/helperApis'
 import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
-import executeBaseQuery from '../executeBaseQuery'
+import { selectApplicaitonHeaders, selectDnsConfigDetails, setAppliationHeaders, type applicationHeaderItemsType, type dnsConfigDataType } from '@/redux/slice/config/configSlice'
 import { setAuthenticated, setIsAdmin, setIsMasterAdmin } from '@/redux/slice/user/userSlice'
+import type { rootStateType } from '@/redux/sotre'
 import { rsaEncryption } from '@/utils/rsaEncryption'
+import { createApi } from '@reduxjs/toolkit/query/react'
+import { configApis } from '../config/configApi'
+import executeBaseQuery from '../executeBaseQuery'
+import { helperApis } from '../helper/helperApis'
 
-const ENVIRONMENT = import.meta.env.VITE_REACT_ENV
-const dnsXApiKey = import.meta.env.VITE_DNS_X_API_KEY
+const ENVIRONMENT = process.env.EXPO_PUBLIC_REACT_NATIVE_ENV
 
 type apiResponseDataType = Record<string, any>
 

@@ -1,18 +1,18 @@
-import { axiosBaseQuery, getAxiosInstance, setAxiosBaseURL } from '@/configs/axiosConfig'
-import { ApplicationServiceError, InternalApplicationError } from '@/errorHandling/error'
+import { axiosBaseQuery, getAxiosInstance } from '@/configs/axiosConfig'
+import { CONFIG_URL } from '@/configs/constants'
+import { ApplicationServiceError } from '@/errorHandling/error'
+import { logError } from '@/errorHandling/errorLogger'
 import type { apiErrorType } from '@/errorHandling/handleErrors'
+import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
 import { setAppliationHeaders, setDnsConfigDetails, type applicationHeaderItemsType } from '@/redux/slice/config/configSlice'
 import { aesDecryption, type DecryptResult } from '@/utils/aesDecryption'
 import { aesEncryption } from '@/utils/aesEncryption'
 import { rsaEncryption } from '@/utils/rsaEncryption'
 import { createApi, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
-import type { apiResponseType, dnsConfigRequestType, dnsConfigResponseType, encryptionKeyResponseType, processedDnsDataObjectType } from './configApisDataTypes'
-import { logError } from '@/errorHandling/errorLogger'
-import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
-import { CONFIG_URL } from '@/configs/constants'
 import executeBaseQuery from '../executeBaseQuery'
+import type { apiResponseType, dnsConfigRequestType, dnsConfigResponseType, encryptionKeyResponseType, processedDnsDataObjectType } from './configApisDataTypes'
 
-const ENVIRONMENT = import.meta.env.VITE_REACT_ENV
+const ENVIRONMENT = process.env.EXPO_PUBLIC_REACT_NATIVE_ENV
 
 // ============================
 // GET AXIOS INSTANCE
