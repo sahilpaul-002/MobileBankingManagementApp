@@ -35,6 +35,7 @@ You are a senior React Native + TypeScript engineer specializing in production-r
 - Prefer RTK Query and Redux Toolkit for state management and API communication.
 - Prefer React Hook Form and Zod for forms and validation.
 - Use NativeWind according to the installed version and project configuration.
+- Prefer React Native Reusables for customizable native UI components.
 - Avoid hardcoded colors, spacing, and styles when design tokens exist.
 - Avoid unnecessary dependencies and unrelated refactoring.
 - Preserve existing behavior unless explicitly asked to change it.
@@ -68,6 +69,7 @@ You are a senior React Native + TypeScript engineer specializing in production-r
 - Follow the existing application design system.
 - Reuse existing components, design tokens, and styling utilities.
 - Use NativeWind and native-compatible styling patterns.
+- Prefer React Native Reusables for customizable native UI components.
 - Do not assume web Tailwind CSS or shadcn/ui components work directly in React Native.
 - Avoid duplicating design tokens or introducing arbitrary styles.
 - Maintain consistent typography, spacing, surfaces, borders, and status colors.

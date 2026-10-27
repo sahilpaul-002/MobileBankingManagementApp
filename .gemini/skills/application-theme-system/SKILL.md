@@ -30,7 +30,7 @@ Before generating or modifying UI:
 
 Default brand theme: **Midnight Navy + Gold**.
 
-The React Native application uses NativeWind 5 RC, Tailwind CSS 4, and
-native React Native components. Treat `theme.json` as design-system
+The React Native application uses NativeWind 5 RC, Tailwind CSS 4,
+React Native Reusables, and native React Native components. Treat `theme.json` as design-system
 documentation; it is not automatically a runtime theme configuration
 unless the project explicitly implements that integration.

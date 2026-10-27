@@ -1,4 +1,4 @@
-import SignInScreenComponent from "@/screens/SignInScreenComponent";
+import SignInScreenComponent from "@/screens/auth/SignInScreenComponent";
 import { View } from "react-native";
 
 export default function AuthIndex() {

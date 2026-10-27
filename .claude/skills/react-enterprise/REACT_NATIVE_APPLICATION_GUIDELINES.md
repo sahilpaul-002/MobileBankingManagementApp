@@ -46,6 +46,7 @@ This document is the source of truth for the React Native application. Existing 
 ### Styling and UI
 
 - NativeWind 5 RC / Tailwind CSS 4, as currently configured
+- React Native Reusables for customizable native UI components
 - Existing application theme tokens and reusable native UI components
 - `react-native-safe-area-context`
 - `lucide-react-native`

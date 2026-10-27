@@ -21,6 +21,7 @@ Read and follow `REACT_NATIVE_APPLICATION_GUIDELINES.md`. Treat it as the source
 - RTK Query for API communication
 - React Hook Form and Zod
 - NativeWind 5 RC / Tailwind CSS 4, according to the current project configuration
+- React Native Reusables for customizable native UI components
 - `react-native-safe-area-context`
 - React Native Reanimated 4 and `react-native-worklets`
 - `react-native-toast-message`
