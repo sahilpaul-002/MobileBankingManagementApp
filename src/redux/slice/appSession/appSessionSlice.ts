@@ -28,3 +28,7 @@ export const {
 } = appSessionSlice.actions;
 
 export default appSessionSlice;
+
+// Selector
+export const selectIsLoggingOut = (state: { appSession: AppSessionStateType }) =>
+    state.appSession.isLoggingOut;
