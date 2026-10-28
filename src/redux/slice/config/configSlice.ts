@@ -1,5 +1,5 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { rootStateType } from '../../sotre'
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { rootStateType } from '../../sotre';
 
 // 🔐 Define State Type
 export type portalType = 'admin' | 'business' | 'user'
@@ -39,12 +39,18 @@ export interface dnsConfigDataType {
 interface ConfigState {
   applicationHeaders: applicationHeaderItemsType | null
   dnsConfigData: dnsConfigDataType | null
+  aesEncryptionKeyHex: string | null
+  rsaEncryptionPublicKey: string | null
+  rsaEncryptionHeaderPublicKey: string | null
 }
 
 // 🧠 Initial State
 const initialState: ConfigState = {
   applicationHeaders: null,
   dnsConfigData: null,
+  aesEncryptionKeyHex: null,
+  rsaEncryptionPublicKey: null,
+  rsaEncryptionHeaderPublicKey: null
 }
 
 // ⚙️ Create Slice
@@ -65,6 +71,21 @@ const configSlice = createSlice({
       state.dnsConfigData = action.payload
     },
 
+    // Set AES Encryption Key Hex
+    setAesEncryptionKeyHex: (state, action: PayloadAction<string | null>) => {
+      state.aesEncryptionKeyHex = action.payload
+    },
+
+    // Set RSA Encryption Public Key
+    setRsaEncryptionPublicKey: (state, action: PayloadAction<string | null>) => {
+      state.rsaEncryptionPublicKey = action.payload
+    },
+
+    // Set RSA Encryption Header Public Key
+    setRsaEncryptionHeaderPublicKey: (state, action: PayloadAction<string | null>) => {
+      state.rsaEncryptionHeaderPublicKey = action.payload
+    },
+
     // Reset Config States
     resetConfigStates: () => initialState
 
@@ -72,7 +93,7 @@ const configSlice = createSlice({
 })
 
 // 📤 Export actions
-export const { setAppliationHeaders, setDnsConfigDetails, resetConfigStates } = configSlice.actions
+export const { setAppliationHeaders, setDnsConfigDetails, setAesEncryptionKeyHex, setRsaEncryptionPublicKey, setRsaEncryptionHeaderPublicKey, resetConfigStates } = configSlice.actions
 
 // 📤 Export reducer
 export default configSlice
@@ -80,3 +101,6 @@ export default configSlice
 // 📌 Selectors (best practice)
 export const selectDnsConfigDetails = (state: rootStateType) => state.config.dnsConfigData
 export const selectApplicaitonHeaders = (state: rootStateType) => state.config.applicationHeaders
+export const selectAesEncryptionKeyHex = (state: rootStateType) => state.config.aesEncryptionKeyHex
+export const selectRsaEncryptionPublicKey = (state: rootStateType) => state.config.rsaEncryptionPublicKey
+export const selectRsaEncryptionHeaderPublicKey = (state: rootStateType) => state.config.rsaEncryptionHeaderPublicKey

@@ -7,10 +7,13 @@ import { aesDecryption } from '@/utils/aesDecryption';
 import { aesEncryption, aesEncryptMultipartFile } from '@/utils/aesEncryption';
 import GetDeviceId from '@/utils/GetDeviceId';
 import { rsaEncryption } from '@/utils/rsaEncryption';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
 import * as Crypto from 'expo-crypto';
 
-const NODE_BASE_URL = process.env.EXPO_PUBLIC_NODE_BASE_URL
+const ENVIRONMENT = process.env.EXPO_PUBLIC_REACT_NATIVE_ENV;
+const NODE_BASE_URL = process.env.EXPO_PUBLIC_NODE_BASE_URL;
+const DEV_API_BASE_URL = process.env.EXPO_PUBLIC_DEV_API_BASE_URL;
 
 // Global Dispatch Handling - (To avoid circular store dependencies)
 let globalDispatch: any = null;
@@ -359,7 +362,33 @@ const setupInterceptors = (instance: AxiosInstance) => {
 };
 
 // BASE URL CONFIGURATION
-const API_BASE = window.location.hostname.includes("localhost") ? `${window.location.protocol}//${window.location.hostname}:3000` : NODE_BASE_URL;
+// const API_BASE_URL = ENVIRONMENT === 'DEVELOPMENT' ? 'http://localhost:3000' : NODE_BASE_URL;
+
+// if (!API_BASE_URL) {
+//     throw new Error('API base URL is not configured');
+// }
+const getApiBaseUrl = async (): Promise<string> => {
+    if (ENVIRONMENT === 'DEVELOPMENT') {
+        if (!DEV_API_BASE_URL) {
+            throw new ApplicationServiceError(
+                'Development API base URL is not configured',
+            );
+        }
+
+        return DEV_API_BASE_URL;
+    }
+
+    const dnsBaseUrl = await AsyncStorage.getItem('dnsBaseUrl');
+    const baseURL = dnsBaseUrl || NODE_BASE_URL;
+
+    if (!baseURL) {
+        throw new ApplicationServiceError(
+            'API base URL is not configured',
+        );
+    }
+
+    return baseURL;
+};
 
 let axiosInstance: AxiosInstance | null = null;
 
@@ -406,7 +435,8 @@ export const apiRequest = async ({
     const axiosInstance = getAxiosInstance();
 
     return axiosInstance.request({
-        url: `${API_BASE}${url}` || `${sessionStorage.getItem("dnsBaseUrl")}${url}`,
+        baseURL: await getApiBaseUrl(),
+        url,
         method,
         data,
         params,
@@ -434,13 +464,13 @@ export const axiosBaseQuery =
         }) => {
             try {
                 const result = await axiosInstance.request({
-                    // url,
-                    url: `${API_BASE}${url}` || `${sessionStorage.getItem("dnsBaseUrl")}${url}`,
+                    baseURL: await getApiBaseUrl(),
+                    url,
                     method,
                     data,
                     params,
                     ...(headers && { headers }),
-                })
+                });
                 return { data: result.data }
             } catch (err) {
                 const error = err as any;

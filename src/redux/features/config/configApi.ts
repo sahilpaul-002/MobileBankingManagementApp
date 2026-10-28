@@ -4,10 +4,11 @@ import { ApplicationServiceError } from '@/errorHandling/error'
 import { logError } from '@/errorHandling/errorLogger'
 import type { apiErrorType } from '@/errorHandling/handleErrors'
 import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
-import { setAppliationHeaders, setDnsConfigDetails, type applicationHeaderItemsType } from '@/redux/slice/config/configSlice'
+import { setAesEncryptionKeyHex, setAppliationHeaders, setDnsConfigDetails, setRsaEncryptionHeaderPublicKey, setRsaEncryptionPublicKey, type applicationHeaderItemsType } from '@/redux/slice/config/configSlice'
 import { aesDecryption, type DecryptResult } from '@/utils/aesDecryption'
 import { aesEncryption } from '@/utils/aesEncryption'
 import { rsaEncryption } from '@/utils/rsaEncryption'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createApi, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
 import executeBaseQuery from '../executeBaseQuery'
 import type { apiResponseType, dnsConfigRequestType, dnsConfigResponseType, encryptionKeyResponseType, processedDnsDataObjectType } from './configApisDataTypes'
@@ -41,7 +42,7 @@ export const configApis = createApi({
                     if (!aesEncryptionKeyHex) {
                         throw new ApplicationServiceError("Failed to get AES key")
                     }
-                    sessionStorage.setItem('keyHex', aesEncryptionKeyHex);
+                    dispatch(setAesEncryptionKeyHex(aesEncryptionKeyHex));
                     // console.log("aesEncryptionKeyHex: ", aesEncryptionKeyHex)
                     // ----------------------------- XXXXXXXXXXXXXXXXXXXXXXXX ----------------------------- \\
                     // ----------------------------- Get RSA Encryption Key ----------------------------- \\
@@ -53,7 +54,7 @@ export const configApis = createApi({
                     if (!rsaEncryptionPublicKey) {
                         throw new ApplicationServiceError("Failed to get RSA key");
                     }
-                    sessionStorage.setItem('publicKey', rsaEncryptionPublicKey);
+                    dispatch(setRsaEncryptionPublicKey(rsaEncryptionPublicKey));
                     // console.log("RsaEncryptionPublicKey : ", rsaEncryptionPublicKey)
                     // ----------------------------- XXXXXXXXXXXXXXXXXXXXXX ----------------------------- \\
 
@@ -120,7 +121,7 @@ export const configApis = createApi({
                     if (!rsaHeaderEncryptionPublicKey) {
                         throw new ApplicationServiceError("Failed to get Header RSA key");
                     }
-                    sessionStorage.setItem('headerPublicKey', rsaHeaderEncryptionPublicKey);
+                    dispatch(setRsaEncryptionHeaderPublicKey(rsaHeaderEncryptionPublicKey));
                     // console.log("RsaEncryptionPublicKey : ", rsaEncryptionPublicKey)
                     // ----------------------------- XXXXXXXXXXXXXXXXXXXXXX ----------------------------- \\
                     // Encrypt header using RSA
@@ -147,7 +148,7 @@ export const configApis = createApi({
                     // ================================ XXXXXXXXXXXXXXXXXXXXXX ================================ \\
 
                     // Sanitaze dns data
-                    const {x_api_key, accessToken, ...sanitizedDecryptedData} = decryptedData;
+                    const { x_api_key, accessToken, ...sanitizedDecryptedData } = decryptedData;
 
                     return {
                         data: {
@@ -171,8 +172,11 @@ export const configApis = createApi({
                     dispatch(setDnsConfigDetails(rest))
                     // Set the dns base url in session storage
                     const dnsBaseUrl = rest?.base_url_api;
+                    await AsyncStorage.removeItem('dnsBaseUrl');
+                    if (dnsBaseUrl) {
+                        await AsyncStorage.setItem('dnsBaseUrl', dnsBaseUrl);
+                    }
                     // setAxiosBaseURL(dnsBaseUrl)
-                    sessionStorage.setItem('dnsBaseUrl', dnsBaseUrl)
                 } catch (err) {
                     const error = err as any;
                     const url =
@@ -270,13 +274,13 @@ export const configApis = createApi({
                 };
             },
 
-            async onQueryStarted(_, { queryFulfilled }) {
+            async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
 
                     const key = data?.data?.key;
                     if (key) {
-                        sessionStorage.setItem('keyHex', key);
+                        dispatch(setAesEncryptionKeyHex(key));
                     }
                 } catch (err) {
                     const error = err as any;
@@ -375,14 +379,14 @@ export const configApis = createApi({
                 };
             },
 
-            async onQueryStarted(_, { queryFulfilled }) {
+            async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
                     console.log(data);
 
                     const publicKey = data?.data?.key;
                     if (publicKey) {
-                        sessionStorage.setItem('publicKey', publicKey);
+                        dispatch(setRsaEncryptionPublicKey(publicKey));
                     }
                 } catch (err) {
                     const error = err as any;
@@ -481,14 +485,14 @@ export const configApis = createApi({
                 };
             },
 
-            async onQueryStarted(_, { queryFulfilled }) {
+            async onQueryStarted(_, { dispatch, queryFulfilled }) {
                 try {
                     const { data } = await queryFulfilled;
                     console.log(data);
 
                     const publicKey = data?.data?.key;
                     if (publicKey) {
-                        sessionStorage.setItem('headerPublicKey', publicKey);
+                        dispatch(setRsaEncryptionHeaderPublicKey(publicKey));
                     }
                 } catch (err) {
                     const error = err as any;

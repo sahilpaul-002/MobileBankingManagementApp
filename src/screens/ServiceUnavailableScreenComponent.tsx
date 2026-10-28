@@ -1,7 +1,8 @@
+import CustomButtonComponent from '@/components/common/CustomButtonComponent';
+import { ROUTE_NAMES } from '@/routes/routeNames';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text, View } from 'react-native';
-import CustomButtonComponent from '@/components/common/CustomButtonComponent';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -219,7 +220,7 @@ export default function ServiceUnavailableScreenComponent() {
           variant="navy"
           size="lg"
           className="px-10!"
-          onPress={() => router.back()}
+          onPress={() => router.replace(ROUTE_NAMES.SIGN_IN)}
         />
 
         {/* Contact support */}
