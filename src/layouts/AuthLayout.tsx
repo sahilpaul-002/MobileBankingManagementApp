@@ -1,17 +1,14 @@
 
-import ApplicationLoaderComponent from '@/components/common/loaders/ApplicationLoaderComponent';
 import { useLazyGetDnsConfigQuery } from '@/redux/features/config/configApi';
 import { useAppSelector } from '@/redux/hooks/reduxHooks';
 import { selectDnsConfigDetails } from '@/redux/slice/config/configSlice';
 import ShowInConsole from '@/utils/ShowInConsole';
 import { Slot, useRouter } from 'expo-router';
-import { Activity, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 
-import { StyleSheet } from 'react-native';
 import Animated, {
-  FadeIn,
-  FadeOut,
+  FadeIn
 } from 'react-native-reanimated';
 
 const APP_LOADER_DURATION = 3000;
@@ -81,23 +78,9 @@ export default function AuthLayout() {
   // ----------------------------------------
   // Render
   // ----------------------------------------
-  // return (
-  //   <View style={{ flex: 1 }}>
-  //     {/* Display Application Loader */}
-  //     <Activity mode={displayPageLoader ? 'visible' : 'hidden'}>
-  //       <ApplicationLoaderComponent />
-  //     </Activity>
-
-  //     {/* Display Auth Screens */}
-  //     <Activity mode={!displayPageLoader ? 'visible' : 'hidden'}>
-  //       <Slot />
-  //     </Activity>
-  //     {/* {!displayPageLoader && <Slot />} */}
-  //   </View>
-  // );
   return (
-    <View className="flex-1 bg-[#0C1830]">
-      <Activity mode={displayPageLoader ? "visible" : "hidden"}>
+    <View className="flex-1">
+      {/* <Activity mode={displayPageLoader ? "visible" : "hidden"}>
         <Animated.View
           key="application-loader"
           entering={FadeIn.duration(350)}
@@ -106,9 +89,9 @@ export default function AuthLayout() {
         >
           <ApplicationLoaderComponent />
         </Animated.View>
-      </Activity>
+      </Activity> */}
 
-      <Activity mode={!displayPageLoader ? "visible" : "hidden"}>
+      {/* <Activity mode={!displayPageLoader ? "visible" : "hidden"}>
         <Animated.View
           key="auth-screens"
           entering={FadeIn.duration(350)}
@@ -116,23 +99,15 @@ export default function AuthLayout() {
         >
           <Slot />
         </Animated.View>
-      </Activity>
+      </Activity> */}
+
+      <Animated.View
+        key="auth-screens"
+        entering={FadeIn.duration(350)}
+        className="flex-1 bg-[#f4f6fa]"
+      >
+        <Slot />
+      </Animated.View>
     </View>
   );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0C1830',
-  },
-  loaderOverlay: {
-    ...StyleSheet.absoluteFill,
-    zIndex: 1000,
-  },
-  screenContainer: {
-    flex: 1,
-    backgroundColor: '#f4f6fa',
-  },
-});

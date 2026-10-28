@@ -289,7 +289,7 @@ export const configApis = createApi({
                         error?.url ||
                         "UNKNOWN_URL";
                     logError("ERROR", {
-                        message: "GetAesEncryptionKey query failed while storing data in sessionStorage",
+                        message: "GetAesEncryptionKey query failed while storing data in redux store storage",
                         error: err,
                         context: url,
                     });
@@ -395,7 +395,7 @@ export const configApis = createApi({
                         error?.url ||
                         "UNKNOWN_URL";
                     logError("ERROR", {
-                        message: "GetRsaEncryptionPublicKey query failed while storing data in sessionStorage",
+                        message: "GetRsaEncryptionPublicKey query failed while storing data in redux store storage",
                         error: err,
                         context: url,
                     });
@@ -501,7 +501,7 @@ export const configApis = createApi({
                         error?.url ||
                         "UNKNOWN_URL";
                     logError("ERROR", {
-                        message: "GetHeaderRsaEncryptionPublicKey query failed while storing data in sessionStorage",
+                        message: "GetHeaderRsaEncryptionPublicKey query failed while storing data in redux store storage",
                         error: err,
                         context: url,
                     });

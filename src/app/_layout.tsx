@@ -1,6 +1,6 @@
 import ApplicationLoaderSplashScreenComponent from '@/components/common/loaders/ApplicationLoaderSplashScreenComponent';
 import ToastMessagesComponent from '@/components/common/ToastMessagesComponent';
-import { setAxiosDispatch } from '@/configs/axiosConfig';
+import { setAxiosDispatch, setAxiosReduxAccess } from '@/configs/axiosConfig';
 import AppLayout from '@/layouts/AppLayout';
 import { store, storeDispatch } from '@/redux/sotre';
 import {
@@ -20,6 +20,11 @@ import '../global.css';
 void SplashScreen.preventAutoHideAsync();
 
 export default function AppRootLayout() {
+  // Set Global Redux Access
+  setAxiosReduxAccess({
+    getState: store.getState,
+    dispatch: store.dispatch,
+  });
   // Set Global Store Dispatch
   setAxiosDispatch(storeDispatch);
 
@@ -42,12 +47,12 @@ export default function AppRootLayout() {
       <SafeAreaProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <View className="w-full flex-1 bg-[var(--color-app)]">
-            {!showAppLayout && (
+            {/* {!showAppLayout && (
               <View
                 pointerEvents="none"
                 className="absolute inset-0 z-0 bg-[#0C1830]"
               />
-            )}
+            )} */}
 
             <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
 
@@ -58,13 +63,10 @@ export default function AppRootLayout() {
               />
             </Activity>
 
-            {/* Render App Layout */}
-            <Activity mode={showAppLayout ? "visible" : "hidden"}>
-              <AppLayout />
+            <AppLayout />
 
-              {/* Toast Message to be rendered above all */}
-              <ToastMessagesComponent />
-            </Activity>
+            {/* Toast Message to be rendered above all */}
+            <ToastMessagesComponent />
           </View>
         </ThemeProvider>
       </SafeAreaProvider>

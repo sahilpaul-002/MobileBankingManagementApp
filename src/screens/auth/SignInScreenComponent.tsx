@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { Copy, Landmark } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
 import {
   KeyboardAvoidingView,
@@ -17,9 +17,11 @@ import { z } from 'zod';
 import CustomButtonComponent from '@/components/common/CustomButtonComponent';
 import CustomInputComponent from '@/components/common/CustomInputComponent';
 import CustomPasswordInputComponent from '@/components/common/CustomPasswordInputComponent';
+import FormSkeletonComponent from '@/components/common/FormSkeletonComponent';
 import { showToastMessage } from '@/components/common/ToastMessagesComponent';
 import { useSignInMutation } from '@/redux/features/user/userApis';
-import { useappDispatchType } from '@/redux/hooks/reduxHooks';
+import { useappDispatchType, useAppSelector } from '@/redux/hooks/reduxHooks';
+import { selectDnsConfigDetails } from '@/redux/slice/config/configSlice';
 import { setIsEmail } from '@/redux/slice/user/userSlice';
 import ShowInConsole from '@/utils/ShowInConsole';
 
@@ -51,6 +53,41 @@ const DEMO_CREDENTIALS = [
 
 export default function SignInScreenComponent() {
   const dispatch = useappDispatchType();
+  const dnsData = useAppSelector(selectDnsConfigDetails);
+  const isDnsAvailable = Boolean(dnsData && Object.keys(dnsData).length > 0);
+
+  const [showSkeleton, setShowSkeleton] = useState(false);
+  const skeletonFinishedRef = useRef(false);
+
+  // Form skeletal animation: starts 4s after mount if DNS data is not ready,
+  // runs for up to 4s or stops immediately once DNS data becomes available.
+  useEffect(() => {
+    if (isDnsAvailable || skeletonFinishedRef.current) {
+      return;
+    }
+
+    let maxDurationTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const startDelayTimer = setTimeout(() => {
+      if (!skeletonFinishedRef.current) {
+        setShowSkeleton(true);
+
+        maxDurationTimer = setTimeout(() => {
+          setShowSkeleton(false);
+          skeletonFinishedRef.current = true;
+        }, 4000);
+      }
+    }, 4000);
+
+    return () => {
+      clearTimeout(startDelayTimer);
+      if (maxDurationTimer) {
+        clearTimeout(maxDurationTimer);
+      }
+    };
+  }, [isDnsAvailable]);
+
+  const shouldDisplaySkeleton = showSkeleton && !isDnsAvailable;
 
   // Clear userEmail state on mount
   useEffect(() => {
@@ -293,91 +330,100 @@ export default function SignInScreenComponent() {
             </Text>
           </View>
 
-          {/* Form Fields */}
-          <View className="w-full space-y-3.5">
-            {/* Email Field */}
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <CustomInputComponent
-                  id="signinForm-input-email"
-                  label="Email"
-                  placeholder="Enter Email"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors?.email?.message}
-                />
-              )}
+          {/* Form Fields / Form Skeleton Animation */}
+          {shouldDisplaySkeleton ? (
+            <FormSkeletonComponent
+              fieldCount={2}
+              showTitle={false}
+              showSubmitButton={true}
+              showFooter={true}
             />
-
-            {/* Password Field + Forgot Password */}
-            <View className="w-full flex-col gap-1.5">
+          ) : (
+            <View className="w-full space-y-3.5">
+              {/* Email Field */}
               <Controller
                 control={control}
-                name="password"
+                name="email"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <CustomPasswordInputComponent
-                    id="signinForm-input-password"
-                    label="Password"
-                    placeholder="Enter Password"
+                  <CustomInputComponent
+                    id="signinForm-input-email"
+                    label="Email"
+                    placeholder="Enter Email"
+                    keyboardType="email-address"
                     autoCapitalize="none"
-                    autoComplete="current-password"
+                    autoComplete="email"
                     value={value}
-                    password={value}
-                    showPassword={showPassword}
-                    setShowPassword={setShowPassword}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    error={errors?.password?.message}
+                    error={errors?.email?.message}
                   />
                 )}
               />
 
-              {/* Forgot Password */}
-              <View className="w-full items-end pt-1">
+              {/* Password Field + Forgot Password */}
+              <View className="w-full flex-col gap-1.5">
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <CustomPasswordInputComponent
+                      id="signinForm-input-password"
+                      label="Password"
+                      placeholder="Enter Password"
+                      autoCapitalize="none"
+                      autoComplete="current-password"
+                      value={value}
+                      password={value}
+                      showPassword={showPassword}
+                      setShowPassword={setShowPassword}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={errors?.password?.message}
+                    />
+                  )}
+                />
+
+                {/* Forgot Password */}
+                <View className="w-full items-end pt-1">
+                  <Pressable
+                    onPress={() => router.push('/reset-password/send-code')}
+                    hitSlop={8}
+                  >
+                    <Text className="text-xs font-semibold text-[var(--color-link)] active:opacity-70">
+                      Forgot Password ?
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Sign In Button */}
+              <View className="w-full pt-3 items-center">
+                <CustomButtonComponent
+                  id="signPage-signinForm-button"
+                  label="Sign In"
+                  variant="navy"
+                  size="lg"
+                  showButtonLoader={isLoading}
+                  onPress={handleSubmit(onSigninFormSubmit)}
+                />
+              </View>
+
+              {/* Create Account Link */}
+              <View className="w-full flex-row justify-center items-center gap-1.5 pt-2">
+                <Text className="text-xs text-[var(--color-ink-muted)]">
+                  Create a new account -
+                </Text>
                 <Pressable
-                  onPress={() => router.push('/reset-password/send-code')}
+                  onPress={() => router.push('/signUp')}
                   hitSlop={8}
                 >
                   <Text className="text-xs font-semibold text-[var(--color-link)] active:opacity-70">
-                    Forgot Password ?
+                    Sign Up
                   </Text>
                 </Pressable>
               </View>
             </View>
-
-            {/* Sign In Button */}
-            <View className="w-full pt-3 items-center">
-              <CustomButtonComponent
-                id="signPage-signinForm-button"
-                label="Sign In"
-                variant="navy"
-                size="lg"
-                showButtonLoader={isLoading}
-                onPress={handleSubmit(onSigninFormSubmit)}
-              />
-            </View>
-
-            {/* Create Account Link */}
-            <View className="w-full flex-row justify-center items-center gap-1.5 pt-2">
-              <Text className="text-xs text-[var(--color-ink-muted)]">
-                Create a new account -
-              </Text>
-              <Pressable
-                onPress={() => router.push('/signUp')}
-                hitSlop={8}
-              >
-                <Text className="text-xs font-semibold text-[var(--color-link)] active:opacity-70">
-                  Sign Up
-                </Text>
-              </Pressable>
-            </View>
-          </View>
+          )}
 
           {/* Demo Credentials Card */}
           <View className="w-full rounded-xl border border-[var(--color-gold)]/30 bg-[var(--color-app-surface)] p-4 space-y-2.5 mt-2 shadow-sm shadow-black/5">

@@ -1,55 +1,52 @@
-import { InternalApplicationError } from "@/errorHandling/error";
-import { logError } from "@/errorHandling/errorLogger";
-import { createAsyncThunk } from "@reduxjs/toolkit";
-import { configApis } from "../features/config/configApi";
-import { helperApis } from "../features/helper/helperApis";
-import { kycApis } from "../features/kyc/kycApis";
-import { twoFaApis } from "../features/twoFa/twoFaApis";
-import { userApis } from "../features/user/userApis";
-import { resetConfigStates } from "../slice/config/configSlice";
-import { resetUserState } from "../slice/user/userSlice";
-import { clearBanner, clearDestroySession, resetUtilityStates } from "../slice/utility/utilitySlice";
-// import { cardholderApis } from "../features/cardholder/cardholderApis";
-// import { cardsApis } from "../features/cards/cardsApis";
-import { beneficiariesApis } from "../features/beneficiaries/beneficiariesApi";
-import { transferApis } from "../features/transfer/transferApis";
-import { walletApis } from "../features/wallet/walletApis";
-import { finishLogout, startLogout } from "../slice/appSession/appSessionSlice";
+import { InternalApplicationError } from '@/errorHandling/error';
+import { logError } from '@/errorHandling/errorLogger';
+import { createAsyncThunk } from '@reduxjs/toolkit';
+
+import { beneficiariesApis } from '../features/beneficiaries/beneficiariesApi';
+import { configApis } from '../features/config/configApi';
+import { helperApis } from '../features/helper/helperApis';
+import { kycApis } from '../features/kyc/kycApis';
+import { transferApis } from '../features/transfer/transferApis';
+import { twoFaApis } from '../features/twoFa/twoFaApis';
+import { userApis } from '../features/user/userApis';
+import { walletApis } from '../features/wallet/walletApis';
+
+import { finishLogout, startLogout } from '../slice/appSession/appSessionSlice';
+import { resetConfigStates } from '../slice/config/configSlice';
+import { resetUserState } from '../slice/user/userSlice';
+import {
+    clearBanner,
+    clearDestroySession,
+    resetUtilityStates,
+} from '../slice/utility/utilitySlice';
 
 let isLoggingOut = false;
 
 export const logoutUser = createAsyncThunk(
-    "user/logoutUser",
+    'user/logoutUser',
     async (_, { dispatch }) => {
-        // Prevent multiple logout requests
         if (isLoggingOut) {
             return;
         }
 
         isLoggingOut = true;
-
-        // Inform UI logout has started
         dispatch(startLogout());
 
         try {
-            // Destroy servier-side session before cleareing ui data
+            // Attempt server-side session destruction first.
             try {
                 await dispatch(
-                    helperApis.endpoints.destroySession.initiate()
+                    helperApis.endpoints.destroySession.initiate(),
                 ).unwrap();
             } catch (error) {
-                logError("WARN", {
-                    message: "Failed to destroy server session during logout",
+                logError('WARN', {
+                    message: 'Failed to destroy server session during logout',
                     error,
-                    context: "LogoutUser.destroySession",
+                    context: 'LogoutUser.destroySession',
                 });
             }
 
-            // Clear browser storage
-            localStorage.clear();
-            sessionStorage.clear();
-
-            // Clear RTK Query caches
+            // Clear RTK Query caches.
             dispatch(configApis.util.resetApiState());
             dispatch(helperApis.util.resetApiState());
             dispatch(userApis.util.resetApiState());
@@ -57,56 +54,38 @@ export const logoutUser = createAsyncThunk(
             dispatch(kycApis.util.resetApiState());
             dispatch(walletApis.util.resetApiState());
             dispatch(beneficiariesApis.util.resetApiState());
-            dispatch(transferApis.util.resetApiState())
-            // dispatch(cardholderApis.util.resetApiState());
-            // dispatch(cardsApis.util.resetApiState());
-            // dispatch(accountApis.util.resetApiState());
+            dispatch(transferApis.util.resetApiState());
 
-            // Reset normal Redux slices.
+            // Clear application state.
             dispatch(resetUserState());
             dispatch(resetConfigStates());
             dispatch(resetUtilityStates());
             dispatch(clearDestroySession());
             dispatch(clearBanner());
 
-            /*
-             * Redirect only AFTER cleanup is complete.
-             *
-             * replace() prevents the user from using the browser's
-             * back button to return to the authenticated page.
-             */
-            window.location.replace("/");
-        }
-        catch (err) {
-            const error = err as any;
+            dispatch(finishLogout());
+        } catch (err: unknown) {
+            const error = err as {
+                config?: { url?: string };
+                url?: string;
+                message?: string;
+            };
 
-            const url =
-                error?.config?.url ||
-                error?.url ||
-                "UNKNOWN_URL";
-
-            const service = "LogoutUser";
-
-            logError("ERROR", {
-                message: `{ ${service} } query faced internal service error: ${error?.message || "Unknown error"
-                    }`,
-                error,
-                context: url,
+            logError('ERROR', {
+                message: `LogoutUser failed: ${error.message ?? 'Unknown error'}`,
+                error: err,
+                context: error.config?.url ?? error.url ?? 'UNKNOWN_URL',
             });
 
-            // If logout fails allow the ui to reder again
             dispatch(finishLogout());
-            isLoggingOut = false;
 
             throw new InternalApplicationError(
-                `${service} query faced unknown internal application error: ${error?.message || "No error message"
-                }`,
-                service,
-                error
+                `LogoutUser failed: ${error.message ?? 'Unknown error'}`,
+                'LogoutUser',
+                err,
             );
-        }
-        finally {
+        } finally {
             isLoggingOut = false;
         }
-    }
+    },
 );

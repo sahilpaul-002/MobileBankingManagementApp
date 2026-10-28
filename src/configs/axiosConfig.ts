@@ -2,6 +2,8 @@ import { AppErrorClass } from '@/errorHandling/appError';
 import { ApplicationServiceError, InternalApplicationError } from '@/errorHandling/error';
 import { logError } from '@/errorHandling/errorLogger';
 import handleErrors from '@/errorHandling/handleErrors';
+import { setAesEncryptionKeyHex, setRsaEncryptionHeaderPublicKey, setRsaEncryptionPublicKey } from '@/redux/slice/config/configSlice';
+import type { appDispatchType, rootStateType } from '@/redux/sotre';
 import { getAesEncryptionKey, getRsaHeaderPublicKey, getRsaPublicKey } from '@/services/getEncryptionKeys';
 import { aesDecryption } from '@/utils/aesDecryption';
 import { aesEncryption, aesEncryptMultipartFile } from '@/utils/aesEncryption';
@@ -10,6 +12,25 @@ import { rsaEncryption } from '@/utils/rsaEncryption';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
 import * as Crypto from 'expo-crypto';
+
+type AxiosReduxAccess = {
+    getState: () => rootStateType;
+    dispatch: appDispatchType;
+};
+
+let reduxAccess: AxiosReduxAccess | null = null;
+
+export const setAxiosReduxAccess = (access: AxiosReduxAccess): void => {
+    reduxAccess = access;
+};
+
+export const getAxiosReduxAccess = (): AxiosReduxAccess => {
+    if (!reduxAccess) {
+        throw new Error('Redux access has not been initialized for Axios');
+    }
+
+    return reduxAccess;
+};
 
 const ENVIRONMENT = process.env.EXPO_PUBLIC_REACT_NATIVE_ENV;
 const NODE_BASE_URL = process.env.EXPO_PUBLIC_NODE_BASE_URL;
@@ -52,16 +73,17 @@ const setupInterceptors = (instance: AxiosInstance) => {
             }
 
             // Add encrypted device id
-            let headerPublicKey = sessionStorage.getItem("headerPublicKey");
+            const { getState, dispatch } = getAxiosReduxAccess();
+            let headerPublicKey = getState().config.rsaEncryptionHeaderPublicKey;
             if (!headerPublicKey || req.url?.includes("/login") || req.url?.includes("/signUp")) {
-                sessionStorage.removeItem("headerPublicKey");
+                dispatch(setRsaEncryptionHeaderPublicKey(null));
                 headerPublicKey = await getRsaHeaderPublicKey()
 
                 if (!headerPublicKey) {
                     throw new ApplicationServiceError("Request header encryption service cause error - Encryption keys missing");
                 }
 
-                sessionStorage.setItem('headerPublicKey', headerPublicKey);
+                dispatch(setRsaEncryptionHeaderPublicKey(headerPublicKey));
             }
             const deviceId = await GetDeviceId();
             const response = await rsaEncryption(
@@ -74,28 +96,35 @@ const setupInterceptors = (instance: AxiosInstance) => {
             req.headers["x-device-id"] = response.ciphertextBase64;
 
             try {
-                // GET KEYS (SESSION FIRST)
-                let aesKey = sessionStorage.getItem('keyHex');
-                let rsaKey = sessionStorage.getItem('publicKey');
+                // GET ENCRYPTION KEYS FROM REDUX
+                let aesKey = getState().config.aesEncryptionKeyHex;
+                let rsaKey = getState().config.rsaEncryptionPublicKey;
 
-                if (!aesKey || !rsaKey || req.url?.includes("/login") || req.url?.includes("/signUp")) {
-                    sessionStorage.clear();
-                    localStorage.clear();
+                const shouldRefreshKeys = !aesKey || !rsaKey || req.url?.includes('/login') || req.url?.includes('/signUp');
+
+                if (shouldRefreshKeys) {
+                    // Clear old keys before fetching fresh ones.
+                    dispatch(setAesEncryptionKeyHex(null));
+                    dispatch(setRsaEncryptionPublicKey(null));
+
                     [aesKey, rsaKey] = await Promise.all([
                         getAesEncryptionKey(),
-                        getRsaPublicKey()
+                        getRsaPublicKey(),
                     ]);
 
                     if (!aesKey || !rsaKey) {
-                        throw new ApplicationServiceError("Request payload encryption service cause error - Encryption keys missing");
+                        throw new ApplicationServiceError(
+                            'Request payload encryption service cause error - Encryption keys missing',
+                        );
                     }
 
-                    sessionStorage.setItem('keyHex', aesKey);
-                    sessionStorage.setItem('publicKey', rsaKey);
+                    // Save the fresh keys in Redux.
+                    dispatch(setAesEncryptionKeyHex(aesKey));
+                    dispatch(setRsaEncryptionPublicKey(rsaKey));
                 }
 
                 // GENERATE IV
-                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+                const iv = Crypto.getRandomBytes(12);
                 const ivHex = Array.from(iv)
                     .map(b => b.toString(16).padStart(2, '0'))
                     .join('');
@@ -301,7 +330,7 @@ const setupInterceptors = (instance: AxiosInstance) => {
                 const data = res?.data;
 
                 if (data?.data && typeof data.data === 'string') {
-                    const aesKey = sessionStorage.getItem('keyHex');
+                    const aesKey = getAxiosReduxAccess().getState().config.aesEncryptionKeyHex;
                     const ivHex = ivStore.get(res.config);
 
                     if (aesKey && ivHex) {
@@ -323,18 +352,6 @@ const setupInterceptors = (instance: AxiosInstance) => {
             }
             catch (err) {
                 const error = err as any;
-                if (__DEV__) {
-                    console.log('[Axios Network Error]', {
-                        baseURL: error.config?.baseURL,
-                        url: error.config?.url,
-                        method: error.config?.method,
-                        message: error.message,
-                        code: error.code,
-                        responseStatus: error.response?.status,
-                        responseData: error.response?.data,
-                    });
-                }
-
                 const url =
                     error?.config?.url ||
                     error?.url ||
@@ -374,11 +391,6 @@ const setupInterceptors = (instance: AxiosInstance) => {
 };
 
 // BASE URL CONFIGURATION
-// const API_BASE_URL = ENVIRONMENT === 'DEVELOPMENT' ? 'http://localhost:3000' : NODE_BASE_URL;
-
-// if (!API_BASE_URL) {
-//     throw new Error('API base URL is not configured');
-// }
 const getApiBaseUrl = async (): Promise<string> => {
     if (ENVIRONMENT === 'DEVELOPMENT') {
         if (!DEV_API_BASE_URL) {
@@ -391,7 +403,7 @@ const getApiBaseUrl = async (): Promise<string> => {
     }
 
     const dnsBaseUrl = await AsyncStorage.getItem('dnsBaseUrl');
-    const baseURL = dnsBaseUrl || NODE_BASE_URL;
+    const baseURL = NODE_BASE_URL || dnsBaseUrl;
 
     if (!baseURL) {
         throw new ApplicationServiceError(
@@ -446,8 +458,10 @@ export const apiRequest = async ({
 }) => {
     const axiosInstance = getAxiosInstance();
 
+    const baseURL = await getApiBaseUrl();
+
     return axiosInstance.request({
-        baseURL: await getApiBaseUrl(),
+        baseURL: baseURL,
         url,
         method,
         data,
@@ -475,8 +489,10 @@ export const axiosBaseQuery =
             headers?: AxiosRequestConfig["headers"]
         }) => {
             try {
+                const baseURL = await getApiBaseUrl();
+
                 const result = await axiosInstance.request({
-                    baseURL: await getApiBaseUrl(),
+                    baseURL: baseURL,
                     url,
                     method,
                     data,
@@ -486,17 +502,6 @@ export const axiosBaseQuery =
                 return { data: result.data }
             } catch (err) {
                 const error = err as any;
-                if (__DEV__) {
-                    console.log('[Axios Network Error]', {
-                        baseURL: error.config?.baseURL,
-                        url: error.config?.url,
-                        method: error.config?.method,
-                        message: error.message,
-                        code: error.code,
-                        responseStatus: error.response?.status,
-                        responseData: error.response?.data,
-                    });
-                }
 
                 const url =
                     error?.config?.url ||

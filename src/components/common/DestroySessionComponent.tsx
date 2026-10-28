@@ -1,7 +1,8 @@
 import { useappDispatchType } from "@/redux/hooks/reduxHooks";
 import { logoutUser } from "@/redux/thunks/userThunks";
+import { router } from "expo-router";
 import { LogOut, ShieldAlert } from "lucide-react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
 export type destroySessionPropsTypes = {
@@ -29,18 +30,33 @@ export default function DestroySessionComponent({
         setTimeLeft(initialDuration);
     }
 
-    const handleLogout = useCallback(() => {
-        dispatch(logoutUser());
+    const isLoggingOutRef = useRef(false);
+
+    const handleLogout = useCallback(async () => {
+        if (isLoggingOutRef.current) {
+            return;
+        }
+
+        isLoggingOutRef.current = true;
+
+        try {
+            await dispatch(logoutUser()).unwrap();
+        } catch {
+            // Logout thunk already logs errors.
+            // Continue to the authentication route regardless.
+        } finally {
+            router.replace('/');
+        }
     }, [dispatch]);
 
     useEffect(() => {
         if (timeLeft <= 0) {
-            handleLogout();
+            void handleLogout();
             return;
         }
 
         const timer = setTimeout(() => {
-            setTimeLeft((prev) => prev - 1);
+            setTimeLeft((previous) => previous - 1);
         }, 1000);
 
         return () => clearTimeout(timer);
