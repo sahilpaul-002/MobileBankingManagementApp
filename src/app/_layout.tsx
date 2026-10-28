@@ -1,4 +1,4 @@
-import AnimatedSplashOverlayComponent from '@/components/common/AnimatedSplashOverlayComponent';
+import ApplicationLoaderSplashScreenComponent from '@/components/common/loaders/ApplicationLoaderSplashScreenComponent';
 import ToastMessagesComponent from '@/components/common/ToastMessagesComponent';
 import { setAxiosDispatch } from '@/configs/axiosConfig';
 import AppLayout from '@/layouts/AppLayout';
@@ -11,13 +11,13 @@ import {
   useSegments,
 } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { Activity, useEffect, useState } from 'react';
 import { StatusBar, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import '../global.css';
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 export default function AppRootLayout() {
   // Set Global Store Dispatch
@@ -41,21 +41,30 @@ export default function AppRootLayout() {
     <Provider store={store}>
       <SafeAreaProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          {/* <View className="w-full flex-1 bg-[var(--color-app)]"> */}
-          <View className="w-full flex-1">
-            {/* <StatusBar barStyle="dark-content" /> */}
-            <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
-
-            <AppLayout />
-
+          <View className="w-full flex-1 bg-[var(--color-app)]">
             {!showAppLayout && (
-              <AnimatedSplashOverlayComponent
-                onAnimationComplete={() => setShowAppLayout(true)}
+              <View
+                pointerEvents="none"
+                className="absolute inset-0 z-0 bg-[#0C1830]"
               />
             )}
 
-            {/* Toast Message to be rendered above all */}
-            <ToastMessagesComponent />
+            <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
+
+            {/* Render Animated Splash Screen */}
+            <Activity mode={!showAppLayout ? "visible" : "hidden"}>
+              <ApplicationLoaderSplashScreenComponent
+                onAnimationComplete={() => setShowAppLayout(true)}
+              />
+            </Activity>
+
+            {/* Render App Layout */}
+            <Activity mode={showAppLayout ? "visible" : "hidden"}>
+              <AppLayout />
+
+              {/* Toast Message to be rendered above all */}
+              <ToastMessagesComponent />
+            </Activity>
           </View>
         </ThemeProvider>
       </SafeAreaProvider>

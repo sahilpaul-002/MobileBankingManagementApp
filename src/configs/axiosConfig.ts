@@ -323,6 +323,18 @@ const setupInterceptors = (instance: AxiosInstance) => {
             }
             catch (err) {
                 const error = err as any;
+                if (__DEV__) {
+                    console.log('[Axios Network Error]', {
+                        baseURL: error.config?.baseURL,
+                        url: error.config?.url,
+                        method: error.config?.method,
+                        message: error.message,
+                        code: error.code,
+                        responseStatus: error.response?.status,
+                        responseData: error.response?.data,
+                    });
+                }
+
                 const url =
                     error?.config?.url ||
                     error?.url ||
@@ -474,6 +486,18 @@ export const axiosBaseQuery =
                 return { data: result.data }
             } catch (err) {
                 const error = err as any;
+                if (__DEV__) {
+                    console.log('[Axios Network Error]', {
+                        baseURL: error.config?.baseURL,
+                        url: error.config?.url,
+                        method: error.config?.method,
+                        message: error.message,
+                        code: error.code,
+                        responseStatus: error.response?.status,
+                        responseData: error.response?.data,
+                    });
+                }
+
                 const url =
                     error?.config?.url ||
                     error?.url ||

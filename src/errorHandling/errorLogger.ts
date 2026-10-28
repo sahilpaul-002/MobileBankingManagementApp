@@ -37,6 +37,6 @@ export const logError = (
 
     // Dev vs Prod handling
     if (process.env.EXPO_PUBLIC_REACT_NATIVE_ENV === "DEVELOPMENT") {
-        console.error("[APP ERROR]:", logData);
+        console.log("[APP ERROR]:", logData);
     }
 };

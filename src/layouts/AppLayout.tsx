@@ -17,7 +17,7 @@ import {
 } from "@/redux/slice/utility/utilitySlice";
 import { Slot } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // 15 minutes of inactivity before session expiry warning
@@ -92,7 +92,7 @@ export default function AppLayout() {
     return (
         <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
             <View
-                style={styles.rootContainer}
+                className="h-full w-full bg-[#f4f6fa]"
                 onStartShouldSetResponderCapture={() => {
                     if (!showInactivityModal && !showDestroySession) {
                         resetInactivityTimer();
@@ -136,11 +136,15 @@ export default function AppLayout() {
 
                 {/* Blocking Full-Screen Overlay During Logout */}
                 {isLoggingOut && (
-                    <View style={styles.loggingOutOverlay}>
-                        <View style={styles.loggingOutCard}>
+                    <View className="absolute inset-0 z-[99999] items-center justify-center bg-[rgba(12,24,48,0.85)] p-6">
+                        <View className="w-full max-w-80 items-center rounded-2xl border border-[#243452] bg-[#0c1830] p-7 shadow-2xl">
                             <ActivityIndicator size="large" color="#d49a4d" />
-                            <Text style={styles.loggingOutTitle}>Signing Out</Text>
-                            <Text style={styles.loggingOutSubtitle}>
+
+                            <Text className="mb-1 mt-[18px] text-lg font-bold text-white">
+                                Signing Out
+                            </Text>
+
+                            <Text className="text-center text-[13px] leading-[18px] text-[#c8d2e6]">
                                 Securing your session and signing you out...
                             </Text>
                         </View>
@@ -150,51 +154,3 @@ export default function AppLayout() {
         </SafeAreaView>
     );
 }
-
-const styles = StyleSheet.create({
-    rootContainer: {
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#f4f6fa",
-    },
-    loggingOutOverlay: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(12, 24, 48, 0.85)",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 99999,
-        padding: 24,
-    },
-    loggingOutCard: {
-        width: "100%",
-        maxWidth: 320,
-        backgroundColor: "#0c1830",
-        borderRadius: 16,
-        padding: 28,
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: "#243452",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 12,
-    },
-    loggingOutTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-        color: "#ffffff",
-        marginTop: 18,
-        marginBottom: 6,
-    },
-    loggingOutSubtitle: {
-        fontSize: 13,
-        color: "#c8d2e6",
-        textAlign: "center",
-        lineHeight: 18,
-    },
-});
