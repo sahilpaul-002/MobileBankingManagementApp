@@ -56,7 +56,7 @@ const setupInterceptors = (instance: AxiosInstance) => {
     instance.interceptors.request.use(
         async (req) => {
             req.headers = req.headers ?? {};
-            req.headers["portal"] = "business";
+            req.headers["portal"] = "user";
             req.headers["from-portal"] = "true";
             req.headers["request-id"] = Crypto.randomUUID();
             // const deviceId = await GetDeviceId();

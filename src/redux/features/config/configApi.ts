@@ -10,6 +10,7 @@ import { aesEncryption } from '@/utils/aesEncryption'
 import { rsaEncryption } from '@/utils/rsaEncryption'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createApi, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
+import * as Crypto from 'expo-crypto'
 import executeBaseQuery from '../executeBaseQuery'
 import type { apiResponseType, dnsConfigRequestType, dnsConfigResponseType, encryptionKeyResponseType, processedDnsDataObjectType } from './configApisDataTypes'
 
@@ -60,8 +61,8 @@ export const configApis = createApi({
 
                     // --------------------------- Request Payload Creation --------------------------- \\ 
                     // Generate IV for decryption
-                    const iv = window.crypto.getRandomValues(new Uint8Array(12));
-                    const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, '0')).join('');
+                    const iv = Crypto.getRandomBytes(12);
+                    const ivHex = Array.from(iv).map((byte) => byte.toString(16).padStart(2, '0')).join('');
                     // Encrypt payload using RSA
                     const rsaEncryptionResponse = await rsaEncryption({ ivHex }, rsaEncryptionPublicKey as string)
 
