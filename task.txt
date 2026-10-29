@@ -1,0 +1,4 @@
+1. react-native-quick-crypto to be used for encryption and decryption
+2. Use Secure storage to store the cryptographic keys
+3. Apply authorization technique to protect from deep linking (react native docs -> security)
+4. Use Async Storage to store the dns base url , and user email, user id, cardholder id
