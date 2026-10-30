@@ -13,9 +13,12 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { Activity, useEffect, useState } from 'react';
 import { StatusBar, useColorScheme, View } from 'react-native';
+import { install } from 'react-native-quick-crypto';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import '../global.css';
+
+install();  // Global install of react-native-quick-crypto modules like crypto and Buffer
 
 void SplashScreen.preventAutoHideAsync();
 
