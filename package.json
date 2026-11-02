@@ -46,6 +46,7 @@
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
     "react-native-toast-message": "^2.5.2",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.1",
@@ -75,5 +76,9 @@
     "web": "expo start --web",
     "lint": "expo lint"
   },
-  "private": true
+  "private": true,
+  "allowScripts": {
+    "@tailwindcss/oxide@4.1.12": true,
+    "unrs-resolver@1.12.2": true
+  }
 }

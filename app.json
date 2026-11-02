@@ -8,7 +8,7 @@
     "scheme": "cardmanagementapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./src/assets/otherLogos/expo.icon"
+      "icon": "./src/assets/otherLogos/icon.png"
     },
     "android": {
       "adaptiveIcon": {
