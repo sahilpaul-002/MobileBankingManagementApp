@@ -69,9 +69,9 @@
   },
   "scripts": {
     "start": "expo start",
-    "dev": "npm run start",
+    "dev": "expo start --dev-client --lan",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo run:android",
+    "android": "expo run:android --device",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint"
