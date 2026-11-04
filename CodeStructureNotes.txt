@@ -1,0 +1,24 @@
+ADD EMAIL SENDING WEBHOOK LATER IN PRODUCTION
+
+// ----------------------------------- GET CONFIG DNS ----------------------------------- \\
+1. After DNS data is fetch initiate the session set session items values (initiated, lastActivity)
+2. Generate JWT Auth Token using domain_name of DNS data to set acccessToken in sessionData in session
+3. Set sessiondata in session
+4. Before any api call , call getDnsConfig api to initiate the session
+
+// ----------------------------------- USER SIGN UP ----------------------------------- \\
+1. If session is not initiated before login then use function to initiate session
+2. User sign up api is excluded from session validity and user existance check
+3. Authorization bearer token must same as the request signed cookie (accessToken) generated from getConfigDns
+
+// ----------------------------------- USER LOGIN ----------------------------------- \\
+1. If session is not initiated before login then use function to initiate session
+2. After successfull login update the user_details DB items (is_active, status) if not already logged in user
+3. After successfull login update the session item (valid) to make the session the valid
+4. The user configuration sent from login api will be saved in redux and attached to next request headers to pass header validations
+
+complete sign up - refine the return data with only needed data
+Add global session logout in frontend
+Check lru cache for required apis
+update address till kyc not completed
+implementation of swagger documentation

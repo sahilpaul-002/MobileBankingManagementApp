@@ -1,0 +1,753 @@
+import type { Request, Response } from "express"
+import type { failedResponseJson, successResponseJson } from "../types/responseJson.js"
+import logger from "../utils/logger.js";
+import { AppErrorClass, BadRequestError, ForbiddenError, InvalidRequestBodyError, InvalidSessionError, NotFoundError, ServiceError, ServiceUnavailableError, UnauthenticatedError, UnauthorizedError } from "../utils/AppErrorClass.js";
+import checkMongoDbCollectionExist from "../utils/checkMongoDbCollectionExist.js";
+import { userKycDetailsModel as user_kyc_details } from "../models/user_kyc_details.js";
+import type { Schema } from "mongoose";
+import checkStringBody from "../utils/checkStringBody.js";
+import uploadOnCloudinary, { type UploadCloudinaryResponse } from "../configs/claudinary.js";
+import { Types } from "mongoose";
+import jwt, { type JwtPayload } from "jsonwebtoken";
+import dotenv from "dotenv"
+import generateEmailTemplate from "../utils/generateEmailTemplate.js";
+import { gmailSendService } from "./gmailSendService.js";
+import { userDetailsModel as user_details } from "../models/user_details.js";
+import type { ParsedQs } from "qs";
+import checkStringQueryParams from "../utils/checkStringQueryParams.js";
+import UserKycVerifyUpdateTransaction from "../mongoDbTransactions/verifyUserKycDetailsTransaction.js";
+import crypto from "crypto";
+import sanitizeApiError from "../utils/sanitizeApiError.js";
+import deleteFromCloudinary from "../configs/claudinaryDelete.js";
+
+dotenv.config();
+
+const fromEmail = process.env.MAIL_SERVICE_SENDING_EMAIL || "nodemailtesting02@gmail.com"
+const bmaNotificationMail = process.env.BMA_EMAIL || "bma_notification@yopmail.com"
+
+// ------------------------------------- GET KYC SERVICE ------------------------------------- \\
+export const getKycService = async (requestSession: Request["session"], aesDecryptedQueryData: Record<string, string> | ParsedQs | undefined): Promise<successResponseJson> => {
+    try {
+        if (!aesDecryptedQueryData) {
+            throw new BadRequestError("Invalid request body data");
+        }
+
+        // Check collection esistance
+        const isCollectionPresent1 = await checkMongoDbCollectionExist("user_kyc_details");
+        if (isCollectionPresent1.status !== "SUCCESS") {
+            throw new NotFoundError("User_kyc_details collection does not exist in MongoDB");
+        }
+
+        // Check email present in request body
+        const email: string | null = checkStringQueryParams(aesDecryptedQueryData, "email")
+        if (!email) {
+            throw new InvalidRequestBodyError("Email not present in the request body");
+        }
+
+        // Check request body email with session email
+        if (requestSession?.userEmail !== email) {
+            throw new UnauthorizedError("Unauthorized access detected - invalid email provided")
+        }
+
+        // Get user id from session
+        const sessionUserId = requestSession?.userId;
+        if (!sessionUserId || !Types.ObjectId.isValid(sessionUserId)) {
+            throw new UnauthenticatedError(
+                "Unauthorized session detected - invalid user id"
+            );
+        }
+        const userId = new Types.ObjectId(sessionUserId)
+
+        // Get user kyc details
+        const userKycDetailsDoc = await user_kyc_details.findOne({
+            user_id: userId as Types.ObjectId
+        }, { _id: 0, kyc_status: 1, poi_document: 1, poa_document: 1, kyc_request_id: 1 }).lean();
+
+        if (!userKycDetailsDoc) {
+            throw new NotFoundError("User kyc details not found")
+        }
+
+        const kycDetails = {
+            email,
+            ...userKycDetailsDoc
+        }
+
+        return { status: "SUCCESS", data: kycDetails, message: "User kyc details fetched" }
+    }
+    catch (err) {
+        const error = err as any;
+        // const url = req?.path || "UNKNOWN_URL";
+        const errorStatus = error?.status || "UnknownErrorStatus";
+
+        logger.error(error, {
+            serviceName: "GetKycService",
+            // url: req.path,
+            // method: req.method
+        });
+
+        const sanitizedError = sanitizeApiError(error);
+
+        if (error instanceof AppErrorClass) {
+            throw error;
+        }
+        throw new ServiceError(
+            `GetKycService facing issue`,
+            sanitizedError
+        );
+    }
+}
+// ------------------------------------- XXXXXXXXXXXXXXXXXXXXXX ------------------------------------- \\
+
+// ------------------------------------- UPLOAD KYC DETAILS SERVICE ------------------------------------- \\
+interface kycMulterFiles {
+    poi_document?: Express.Multer.File[];
+    poa_document?: Express.Multer.File[];
+}
+
+const MAX_KYC_FILE_SIZE = 5 * 1024 * 1024;
+
+const allowedKycMimeTypes = [
+    "application/pdf",
+    "image/jpeg",
+    "image/png"
+];
+
+const validateKycDocument = (
+    file: Express.Multer.File,
+    documentName: string
+) => {
+    if (file.size > MAX_KYC_FILE_SIZE) {
+        throw new BadRequestError(
+            `${documentName} size must not exceed 5 MB`
+        );
+    }
+
+    // Mime type check not possible for encrypted payload files as mime becomes application/octet-stream
+    // if (!allowedKycMimeTypes.includes(file.mimetype)) {
+    //     throw new BadRequestError(
+    //         `${documentName} must be a PDF, JPEG, JPG, or PNG file`
+    //     );
+    // }
+
+    // File Type Check
+    const buffer = file.buffer;
+
+    if (!buffer || buffer.length === 0) {
+        throw new BadRequestError(
+            `${documentName} is empty or invalid`
+        );
+    }
+
+    const isPdf =
+        buffer.subarray(0, 5).toString("ascii") === "%PDF-";
+
+    const isJpeg =
+        buffer[0] === 0xff &&
+        buffer[1] === 0xd8 &&
+        buffer[2] === 0xff;
+
+    const isPng =
+        buffer.length >= 8 &&
+        buffer.subarray(0, 8).equals(
+            Buffer.from([
+                0x89,
+                0x50,
+                0x4e,
+                0x47,
+                0x0d,
+                0x0a,
+                0x1a,
+                0x0a,
+            ])
+        );
+
+    if (!isPdf && !isJpeg && !isPng) {
+        throw new BadRequestError(
+            `${documentName} must be a PDF, JPEG, JPG, or PNG file`
+        );
+    }
+};
+
+const isNumericString = (value: string): boolean => {
+    return /^\d+$/.test(value);
+};
+
+const uploadKycDocuments = async (poiDocumentFile: Express.Multer.File, poaDocumentFile: Express.Multer.File, session: Request["session"], userId: string) => {
+    let poiUploadResponse: UploadCloudinaryResponse | undefined;
+    let poaUploadResponse: UploadCloudinaryResponse | undefined;
+
+    try {
+        const uploadResults = await Promise.allSettled([
+            uploadOnCloudinary(
+                poiDocumentFile,
+                session?.userConfiguration?.businessId as string,
+                session?.userConfiguration?.programId as string,
+                session?.userConfiguration?.agentCode as string,
+                session?.userConfiguration?.subAgentCode as string,
+                userId
+            ),
+            uploadOnCloudinary(
+                poaDocumentFile,
+                session?.userConfiguration?.businessId as string,
+                session?.userConfiguration?.programId as string,
+                session?.userConfiguration?.agentCode as string,
+                session?.userConfiguration?.subAgentCode as string,
+                userId
+            )
+        ]);
+
+        const poiResult = uploadResults[0];
+        const poaResult = uploadResults[1];
+        if (poiResult.status === "fulfilled") {
+            poiUploadResponse = poiResult.value;
+        }
+        if (poaResult.status === "fulfilled") {
+            poaUploadResponse = poaResult.value;
+        }
+        // If either upload failed, cleanup whichever one succeeded
+        if (poiResult.status === "rejected" || poaResult.status === "rejected") {
+            await Promise.allSettled([
+                poiUploadResponse?.public_id
+                    ? deleteFromCloudinary(poiUploadResponse.public_id)
+                    : Promise.resolve(),
+
+                poaUploadResponse?.public_id
+                    ? deleteFromCloudinary(poaUploadResponse.public_id)
+                    : Promise.resolve(),
+            ]);
+
+            throw new ServiceError("Failed to upload KYC documents");
+        }
+
+        return {
+            status: "SUCCESS" as const,
+            data: {
+                poiUploadResponse,
+                poaUploadResponse,
+            }
+        };
+    }
+    catch (err) {
+        throw err;
+    }
+};
+
+export const uploadKycService = async (req: Request, aesDecryptedBodyData: Record<string, string> | undefined): Promise<successResponseJson> => {
+    let poiPublicId: string | undefined;
+    let poaPublicId: string | undefined;
+
+    try {
+        if (!aesDecryptedBodyData) {
+            throw new BadRequestError("Invalid request body data");
+        }
+
+        // Validate Request Body Fields
+        const requiredFields = ["poi_number", "poa_number"] as const;
+        const validatedData: Record<string, string> = {};
+        for (const field of requiredFields) {
+            const value = checkStringBody(aesDecryptedBodyData, field);
+
+            if (!value) {
+                throw new InvalidRequestBodyError(
+                    `${field} not present in request body`
+                );
+            }
+
+            validatedData[field] = value;
+        }
+        // Extract validated values
+        const poiNumber = validatedData.poi_number;
+        const poaNumber = validatedData.poa_number;
+
+        // Validate POI and POA as number
+        if (!isNumericString(poiNumber!)) {
+            throw new InvalidRequestBodyError("POI number must contain only numeric digits");
+        }
+        if (!isNumericString(poaNumber!)) {
+            throw new InvalidRequestBodyError("POA number must contain only numeric digits");
+        }
+
+        // Validate Uploaded Files
+        const files = req.files as kycMulterFiles;
+        if (!files?.poi_document?.[0]) {
+            throw new BadRequestError("POI document file is required");
+        }
+        if (!files?.poa_document?.[0]) {
+            throw new BadRequestError("POA document file is required");
+        }
+        const poiDocumentFile = files.poi_document[0];
+        const poaDocumentFile = files.poa_document[0];
+
+        // Validate documents
+        validateKycDocument(poiDocumentFile, "POI document");
+        validateKycDocument(poaDocumentFile, "POA document");
+
+        // Check collection existance
+        const isCollectionPresent1 = await checkMongoDbCollectionExist("user_kyc_details");
+        if (isCollectionPresent1.status !== "SUCCESS") {
+            throw new NotFoundError("User_kyc_details collection does not exist in MongoDB");
+        }
+
+        // Check email present in request body
+        const email: string | null = checkStringBody(aesDecryptedBodyData, "email")
+        if (!email) {
+            throw new InvalidRequestBodyError("Email not present in the request body");
+        }
+
+        // Check request body email with session email
+        if (req.session?.userEmail !== email) {
+            throw new UnauthorizedError("Unauthorized access detected - invalid email provided")
+        }
+
+        // Get user id from session
+        const sessionUserId = req.session?.userId;
+        if (!sessionUserId || !Types.ObjectId.isValid(sessionUserId)) {
+            throw new UnauthenticatedError(
+                "Unauthorized session detected - invalid user id"
+            );
+        }
+        const userId = new Types.ObjectId(sessionUserId)
+
+        // Check Existing KYC
+        const existingKycDoc = await user_kyc_details.findOne({
+            user_id: userId as Types.ObjectId,
+        }).select("_id kyc_status").lean();
+
+        // Check KYC upload allowance
+        const allowUpload = !existingKycDoc || existingKycDoc?.kyc_status === "RFI";
+        if (!allowUpload) {
+            throw new ServiceError("KYC details already exist for this user");
+        }
+
+        // Check if POI or POA number already exists
+        const existingDocument = await user_kyc_details
+            .findOne({
+                $or: [
+                    { "poi_document.poi_number": poiNumber! },
+                    { "poa_document.poa_number": poaNumber! },
+                ],
+            })
+            .select("user_id poi_document poa_document")
+            .lean();
+
+        if (existingDocument && existingDocument.user_id.toString() !== userId.toString()) {
+            const poiExists = existingDocument.poi_document?.poi_number === poiNumber;
+            const poaExists = existingDocument.poa_document?.poa_number === poaNumber;
+            if (poiExists && poaExists) {
+                throw new ServiceError("POI number and POA number already exist");
+            }
+            if (poiExists) {
+                throw new ServiceError("POI number already exists");
+            }
+            if (poaExists) {
+                throw new ServiceError("POA number already exists");
+            }
+        }
+
+        // Upload Kyc Documents
+        const uploadKycDocumentsResponse = await uploadKycDocuments(poiDocumentFile, poaDocumentFile, req.session, userId.toString());
+        if (uploadKycDocumentsResponse?.status !== "SUCCESS") {
+            throw new ServiceError("Failed to upload KYC documents");
+        }
+        const poiUploadResponse = uploadKycDocumentsResponse.data.poiUploadResponse;
+        const poaUploadResponse = uploadKycDocumentsResponse.data.poaUploadResponse;
+
+        // Keep track of uploaded Cloudinary files
+        poiPublicId = poiUploadResponse?.public_id;
+        poaPublicId = poaUploadResponse?.public_id;
+
+        // Update DB with KYC Details
+        const kycDetailsDoc = await user_kyc_details.findOneAndUpdate(
+            {
+                user_id: userId as Types.ObjectId
+            },
+            {
+                kyc_status: "IN-PROGRESS",
+                poi_document: {
+                    poi_number: poiNumber as string,
+                    secure_url: poiUploadResponse?.secure_url,
+                    public_id: poiUploadResponse?.public_id
+                },
+                poa_document: {
+                    poa_number: poaNumber as string,
+                    secure_url: poaUploadResponse?.secure_url,
+                    public_id: poaUploadResponse?.public_id
+                },
+                kyc_request_id: crypto.randomUUID()
+            },
+            {
+                upsert: true,
+                new: true,
+                runValidators: true
+            }
+        ).select("kyc_status poi_document poa_document kyc_request_id").lean();
+
+        const kycDetails = {
+            email,
+            poaDocDetails: {
+                poaNumber: kycDetailsDoc?.poa_document?.poa_number,
+                poaSecureUrl: kycDetailsDoc?.poa_document?.secure_url,
+            },
+            poiDocDetails: {
+                poiNumber: kycDetailsDoc?.poi_document?.poi_number,
+                poiSecureUrl: kycDetailsDoc?.poi_document?.secure_url,
+            }
+        }
+
+        if (!existingKycDoc) {
+            if (!kycDetailsDoc) {
+                throw new ServiceError("Failed to add KYC details");
+            }
+            else {
+                return { status: "SUCCESS", message: "User kyc details uploaded.", data: kycDetails }
+            }
+        }
+        else {
+            if (!kycDetailsDoc) {
+                throw new ServiceError("Failed to update RFI KYC details");
+            }
+            else {
+                return { status: "SUCCESS", message: "User kyc details updated.", data: kycDetails }
+            }
+        }
+    }
+    catch (err) {
+        const error = err as any;
+        // const url = req?.path || "UNKNOWN_URL";
+        const errorStatus = error?.status || "UnknownErrorStatus";
+
+        logger.error(error, {
+            serviceName: "UploadKycService",
+            // url: req.path,
+            // method: req.method
+        });
+
+        // Cleanup Cloudinary files if they were uploaded
+        const cleanupPromises: Promise<unknown>[] = [];
+        if (poiPublicId) {
+            cleanupPromises.push(deleteFromCloudinary(poiPublicId));
+        }
+        if (poaPublicId) {
+            cleanupPromises.push(deleteFromCloudinary(poaPublicId));
+        }
+        if (cleanupPromises.length > 0) {
+            const cleanupResults = await Promise.allSettled(cleanupPromises);
+
+            const cleanupFailed = cleanupResults.some(
+                (result) => result.status === "rejected"
+            );
+
+            if (cleanupFailed) {
+                logger.error(cleanupResults as any, {
+                    serviceName: "UploadKycService",
+                    message: "Failed to cleanup KYC documents from Cloudinary"
+                });
+            }
+        }
+
+        const sanitizedError = sanitizeApiError(error);
+
+        if (error instanceof AppErrorClass) {
+            throw error;
+        }
+        throw new ServiceError(
+            `UploadKycService facing issue`,
+            sanitizedError
+        );
+    }
+}
+// ------------------------------------- XXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------- \\
+
+// ------------------------------------- SEND KYC VERIFICATION MAIL SERVICE ------------------------------------- \\
+export const sendKycVerificationMailService = async (requestSession: Request["session"], aesDecryptedBodyData: Record<string, string> | undefined): Promise<successResponseJson> => {
+    try {
+        if (!aesDecryptedBodyData) {
+            throw new BadRequestError("Invalid request body data");
+        }
+
+        // Check email present in request body
+        const email: string | null = checkStringBody(aesDecryptedBodyData, "email")
+        if (!email) {
+            throw new InvalidRequestBodyError("Email not present in the request body");
+        }
+
+        // Get user data from session
+        const userEmail = requestSession?.userEmail
+        if (!userEmail || userEmail !== email) {
+            throw new UnauthenticatedError("Unauthenticated session detected");
+        }
+        const sessionUserId = requestSession?.userId;
+        if (!sessionUserId || !Types.ObjectId.isValid(sessionUserId)) {
+            throw new UnauthenticatedError(
+                "Unauthorized session detected - invalid user id"
+            );
+        }
+        const userId = new Types.ObjectId(sessionUserId)
+        const userName = requestSession?.userName || "User"
+        if (!userName) {
+            throw new UnauthenticatedError("Unauthenticated session detected");
+        }
+        const dashboardName = requestSession?.sessiondata?.dashboardName || "BMA"
+        if (!dashboardName) {
+            throw new UnauthenticatedError("Unauthenticated session detected");
+        }
+
+        // Get user details
+        const userDetails = await user_details.findOne({
+            _id: userId as Types.ObjectId
+        }).select(" business_id program_id agent_code subagent_code email");
+        if (!userDetails) {
+            throw new NotFoundError("User details not found");
+        }
+        // Check user admin
+        let adminEmail: string
+        if (userDetails?.subagent_code !== "01") {
+            const adminUser = await user_details.findOne({
+                business_id: userDetails?.business_id,
+                program_id: userDetails?.program_id,
+                agent_code: "01",
+                subagent_code: "01"
+            }).select("email").lean()
+            if (!adminUser) {
+                throw new ServiceError("Admin user not found or issue in user configuration - please contact support")
+            }
+            adminEmail = adminUser?.email
+        }
+        else {
+            adminEmail = requestSession?.sessiondata?.adminEmail || bmaNotificationMail
+            if (!adminEmail) {
+                throw new UnauthenticatedError("Unauthenticated session detected");
+            }
+        }
+
+        // Get user kyc details
+        const userKycDetailsDoc = await user_kyc_details.findOne({
+            user_id: userId as Types.ObjectId
+        }).select("kyc_status poi_document poa_document kyc_request_id").lean();
+        if (!userKycDetailsDoc) {
+            throw new NotFoundError("User kyc details not found")
+        }
+
+        const jwtSecretKey = process.env.JWT_SECRET_KEY || "e4b7c2a9d1f6e8c3b5a7d9f2c4e1a6b8d3f0c7a9e5b2d4"
+        // Create Kyv Verification Approve Auth Token
+        const approveToken = jwt.sign(
+            {
+                userId,
+                userName,
+                dashboardName,
+                adminEmail: adminEmail,
+                action: "APPROVE",
+                kycRequestId: userKycDetailsDoc?.kyc_request_id
+            },
+            jwtSecretKey,
+            {
+                expiresIn: "2d",
+            }
+        );
+        const rejectToken = jwt.sign(
+            {
+                userId,
+                userName,
+                dashboardName,
+                adminEmail: adminEmail,
+                action: "REJECT",
+                kycRequestId: userKycDetailsDoc?.kyc_request_id
+            },
+            jwtSecretKey,
+            {
+                expiresIn: "2d",
+            }
+        );
+
+        // Backend webhook URLs
+        const approveUrl = `${requestSession?.sessiondata?.baseUrl}/api/v1/public/kyc/kycVerificationWebhook?token=${encodeURIComponent(approveToken)}`;
+        const rejectUrl = `${requestSession?.sessiondata?.baseUrl}/api/v1/public/kyc/kycVerificationWebhook?token=${encodeURIComponent(rejectToken)}`;
+
+        // Generate email template
+        const poiDocumentUrl = userKycDetailsDoc?.poi_document?.secure_url
+        const poaDocumentUrl = userKycDetailsDoc?.poa_document?.secure_url
+        const emailTemplate = generateEmailTemplate(
+            "KYC_VERIFICATION",
+            {
+                userId: userId.toString(),
+                userName: userName,
+                poiDocumentUrl,
+                poaDocumentUrl,
+                dashboardName: dashboardName,
+                approveUrl,
+                rejectUrl
+            }
+        );
+
+        const toEmail: string = adminEmail
+        const sendEmail: string = fromEmail
+        const mainConfig = { toEmail, sendEmail, dashboardName, emailTemplate }
+        // const resendMailSendServiceResponse = await resendMailSendService(mainConfig)
+        const gmailMailServiceResponse = await gmailSendService(mainConfig)
+
+        if (gmailMailServiceResponse?.status !== "SUCCESS") {
+            throw new ServiceError("GmailSendService is facing error")
+        }
+
+        return { status: "SUCCESS", data: {}, message: "Kyc verificaiton email sent" }
+    }
+    catch (err) {
+        const error = err as any;
+        // const url = req?.path || "UNKNOWN_URL";
+        const errorStatus = error?.status || "UnknownErrorStatus";
+
+        logger.error(error, {
+            serviceName: "SendKycVerificationMailService",
+            // url: req.path,
+            // method: req.method
+        });
+
+        const sanitizedError = sanitizeApiError(error);
+
+        if (error instanceof AppErrorClass) {
+            throw error;
+        }
+        throw new ServiceError(
+            `SendKycVerificationMailService facing issue`,
+            sanitizedError
+        );
+    }
+}
+// ------------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------- \\
+
+// ------------------------------------- KYC VERIFICATION WEBHOOK SERVICE ------------------------------------- \\
+interface kycVerificationJwtPayloadType extends JwtPayload {
+    userId: string;
+    userName: string;
+    dashboardName: string;
+    adminEmail: string;
+    action: "APPROVE" | "REJECT";
+    kycRequestId: string;
+}
+
+export const kycVerificationWebhookService = async (aesDecryptedQueryData: Record<string, string> | ParsedQs | undefined): Promise<successResponseJson | failedResponseJson | void> => {
+    try {
+        if (!aesDecryptedQueryData) {
+            throw new BadRequestError("Invalid request query params data");
+        }
+
+        // Verify JWT kyc verification auth token
+        const token = aesDecryptedQueryData.token;
+        if (!token || typeof token !== "string") {
+            throw new BadRequestError("Invalid or incomplete token in kyc verification webhook");
+        }
+
+        const jwtSecret = process.env.JWT_SECRET_KEY as string;
+        const decoded = jwt.verify(token, jwtSecret) as kycVerificationJwtPayloadType
+
+        const userKycVerifyUpdateTransactionResult = await UserKycVerifyUpdateTransaction(decoded);
+        if (userKycVerifyUpdateTransactionResult.status !== "SUCCESS") {
+            if (userKycVerifyUpdateTransactionResult?.message?.toLowerCase()?.includes("expired verification link or rfi requested")) {
+                throw new ServiceError("Expired verification link or RFI requested")
+            }
+            else {
+                throw new ServiceError("UserKycVerifyUpdateTransaction is facing issue - failed to update kyc status");
+            }
+        }
+        const userDetailsDoc = userKycVerifyUpdateTransactionResult?.data?.userDetailsDoc
+        const kycDetailsDoc = userKycVerifyUpdateTransactionResult?.data?.userKycDetailsDoc
+        if (!userDetailsDoc || !kycDetailsDoc) {
+            throw new ServiceError("UserKycVerifyUpdateTransaction is facing issue - failed to fetch user details or kyc details");
+        }
+
+        // Send email to user and admin based on action
+        if (decoded.action === "APPROVE") {
+            // =======================
+            // Success mail to kyc user
+            // =======================
+            // Generate email template
+            const emailTemplate = generateEmailTemplate(
+                "KYC_ACCEPTED",
+                {
+                    userName: decoded?.userName,
+                    dashboardName: decoded?.dashboardName,
+                }
+            );
+
+            const toEmail: string = userDetailsDoc?.email;
+            const sendEmail: string = fromEmail
+            const mainConfig = { toEmail, sendEmail, dashboardName: decoded?.dashboardName, emailTemplate }
+            // const resendMailSendServiceResponse = await resendMailSendService(mainConfig)
+            const gmailMailServiceResponse1 = await gmailSendService(mainConfig)
+
+            if (gmailMailServiceResponse1?.status !== "SUCCESS") {
+                throw new ServiceError("GmailSendService is facing error")
+            }
+
+
+            // =======================
+            // Success mail to BMA admin
+            // =======================
+            // Generate email template
+            const adminUserName = "User"
+            const emailTemplateAdmin = generateEmailTemplate(
+                "KYC_ACCEPTED_ADMIN",
+                {
+                    userId: decoded?.userId,
+                    userName: adminUserName,
+                    dashboardName: decoded?.dashboardName,
+                }
+            );
+
+            const toAdminEmail: string = decoded?.adminEmail || bmaNotificationMail;
+            const mainConfigAdmin = { toEmail: toAdminEmail, sendEmail, dashboardName: "BMA_Admin", emailTemplate: emailTemplateAdmin }
+            // const resendMailSendServiceResponse = await resendMailSendService(mainConfig)
+            const gmailMailServiceResponse2 = await gmailSendService(mainConfigAdmin)
+
+            if (gmailMailServiceResponse2?.status !== "SUCCESS") {
+                throw new ServiceError("GmailSendService is facing error")
+            }
+
+            return { status: "SUCCESS", data: "Kyc verification accepted", message: "Kyc verification email webhook send succesfully" }
+        }
+        else if (decoded.action === "REJECT") {
+            // Generate email template
+            const emailTemplate = generateEmailTemplate(
+                "KYC_REJECTED",
+                {
+                    userName: decoded?.userName,
+                    dashboardName: decoded?.dashboardName,
+                }
+            );
+
+            const toEmail: string = userDetailsDoc?.email;
+            const sendEmail: string = fromEmail
+            const mainConfig = { toEmail, sendEmail, dashboardName: decoded?.dashboardName, emailTemplate }
+            // const resendMailSendServiceResponse = await resendMailSendService(mainConfig)
+            const gmailMailServiceResponse = await gmailSendService(mainConfig)
+
+            if (gmailMailServiceResponse?.status !== "SUCCESS") {
+                throw new ServiceError("GmailSendService is facing error")
+            }
+
+            return { status: "SUCCESS", data: "Kyc verification rejected", message: "Kyc verification email webhook send succesfully" }
+        }
+    }
+    catch (err) {
+        const error = err as any;
+        // const url = req?.path || "UNKNOWN_URL";
+        const errorStatus = error?.status || "UnknownErrorStatus";
+
+        logger.error(error, {
+            serviceName: "GetKycVerificationWebhookService",
+            // url: req.path,
+            // method: req.method
+        });
+
+        const sanitizedError = sanitizeApiError(error);
+
+        if (error instanceof AppErrorClass) {
+            throw error;
+        }
+        throw new ServiceError(
+            `GetKycVerificationWebhookService facing issue`,
+            sanitizedError
+        );
+    }
+}
+// ------------------------------------- XXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------- \\

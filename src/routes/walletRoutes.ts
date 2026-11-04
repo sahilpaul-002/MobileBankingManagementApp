@@ -1,0 +1,21 @@
+import express from "express"
+import type { Router } from "express";
+import { createWallet, createWalletCurrencyConversionPayoutQuote, executeWalletCurrencyConversionPayoutQuote, getAllWalletsBalances, getWallet, getWalletTransactionDetails, getWalletTransactions, loadWallet, withdrAawWallet, walletToWalletLoad } from "../controllers/walletController.js";
+
+const router: Router = express.Router()
+
+router.get("/", getWallet)
+router.get("/balances", getAllWalletsBalances);
+router.post("/create", createWallet)
+router.post("/load", loadWallet)
+router.post("/withdraw", withdrAawWallet)
+router.get("/transactions", getWalletTransactions);
+router.get("/transaction/:id", getWalletTransactionDetails);
+router.post("/walletCurrencyConversion/createPayout", createWalletCurrencyConversionPayoutQuote)
+router.post("/walletCurrencyConversion/executePayout", executeWalletCurrencyConversionPayoutQuote)
+router.post("/walletToWalletLoad", walletToWalletLoad)
+
+router.get("/:currencyType", getWallet) // Dynamic router lower in heirarchy to that it does not overplay specific routes
+// If this route above other then anything after / in url will treated as currencyType in req.params
+
+export default router
