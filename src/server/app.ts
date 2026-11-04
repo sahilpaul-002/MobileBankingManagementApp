@@ -8,7 +8,6 @@ import timeout from "connect-timeout";
 import dynamicSession from "../middlewares/dynamicSession.js";
 import rateLimiter from "../middlewares/rateLimiter.js";
 import sessionExistance from "../middlewares/sessionExistance.js";
-import checkOriginExist from "../middlewares/checkOriginExist.js";
 import { redisConfig } from "../configs/redisConfig.js";
 import type { RedisClientType } from "redis";
 import portalHeaderCheck from "../middlewares/portalHeaderCheck.js";
@@ -153,9 +152,6 @@ app.use(dynamicSession())
 
 // Check Database Connection
 app.use(asyncRequestHandler(checkDatabaseConnection));
-
-// Check Origin Header Exist Middleware
-app.use(asyncRequestHandler(checkOriginExist))
 
 // Check Portal Header Exist Middleware
 app.use(asyncRequestHandler(portalHeaderCheck));

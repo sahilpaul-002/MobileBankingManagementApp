@@ -22,3 +22,4 @@ Add global session logout in frontend
 Check lru cache for required apis
 update address till kyc not completed
 implementation of swagger documentation
+not to use cookie
