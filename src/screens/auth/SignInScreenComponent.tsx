@@ -77,7 +77,7 @@ export default function SignInScreenComponent() {
           skeletonFinishedRef.current = true;
         }, 4000);
       }
-    }, 4000);
+    }, 3000);
 
     return () => {
       clearTimeout(startDelayTimer);

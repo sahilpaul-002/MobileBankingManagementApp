@@ -4,9 +4,10 @@ import { ApplicationServiceError } from '@/errorHandling/error'
 import { logError } from '@/errorHandling/errorLogger'
 import type { apiErrorType } from '@/errorHandling/handleErrors'
 import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
-import { setAesEncryptionKeyHex, setAppliationHeaders, setDnsConfigDetails, setRsaEncryptionHeaderPublicKey, setRsaEncryptionPublicKey, type applicationHeaderItemsType } from '@/redux/slice/config/configSlice'
+import { setAppliationHeaders, setDnsConfigDetails, type applicationHeaderItemsType } from '@/redux/slice/config/configSlice'
 import { aesDecryption, type DecryptResult } from '@/utils/aesDecryption'
 import { aesEncryption } from '@/utils/aesEncryption'
+import { saveEncryptionKey } from '@/utils/expoSecureEncryptionKeysStorage'
 import { rsaEncryption } from '@/utils/rsaEncryption'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createApi, type FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
@@ -43,7 +44,10 @@ export const configApis = createApi({
                     if (!aesEncryptionKeyHex) {
                         throw new ApplicationServiceError("Failed to get AES key")
                     }
-                    dispatch(setAesEncryptionKeyHex(aesEncryptionKeyHex));
+
+                    // Store the AES encryption key in expo secure storage
+                    await saveEncryptionKey('AES_ENCRYPTION_KEY', aesEncryptionKeyHex)
+
                     // console.log("aesEncryptionKeyHex: ", aesEncryptionKeyHex)
                     // ----------------------------- XXXXXXXXXXXXXXXXXXXXXXXX ----------------------------- \\
                     // ----------------------------- Get RSA Encryption Key ----------------------------- \\
@@ -55,7 +59,10 @@ export const configApis = createApi({
                     if (!rsaEncryptionPublicKey) {
                         throw new ApplicationServiceError("Failed to get RSA key");
                     }
-                    dispatch(setRsaEncryptionPublicKey(rsaEncryptionPublicKey));
+
+                    // Store the RSA encryption public key in expo secure storage
+                    await saveEncryptionKey('RSA_ENCRYPTION_PUBLIC_KEY', rsaEncryptionPublicKey)
+
                     // console.log("RsaEncryptionPublicKey : ", rsaEncryptionPublicKey)
                     // ----------------------------- XXXXXXXXXXXXXXXXXXXXXX ----------------------------- \\
 
@@ -122,7 +129,10 @@ export const configApis = createApi({
                     if (!rsaHeaderEncryptionPublicKey) {
                         throw new ApplicationServiceError("Failed to get Header RSA key");
                     }
-                    dispatch(setRsaEncryptionHeaderPublicKey(rsaHeaderEncryptionPublicKey));
+
+                    // Store the RSA encryption header public key in expo secure storage
+                    await saveEncryptionKey('RSA_HEADER_ENCRYPTION_PUBLIC_KEY', rsaHeaderEncryptionPublicKey)
+
                     // console.log("RsaEncryptionPublicKey : ", rsaEncryptionPublicKey)
                     // ----------------------------- XXXXXXXXXXXXXXXXXXXXXX ----------------------------- \\
                     // Encrypt header using RSA
@@ -281,7 +291,8 @@ export const configApis = createApi({
 
                     const key = data?.data?.key;
                     if (key) {
-                        dispatch(setAesEncryptionKeyHex(key));
+                        // Store the AES encryption key in expo secure storage
+                        await saveEncryptionKey('AES_ENCRYPTION_KEY', key)
                     }
                 } catch (err) {
                     const error = err as any;
@@ -387,7 +398,8 @@ export const configApis = createApi({
 
                     const publicKey = data?.data?.key;
                     if (publicKey) {
-                        dispatch(setRsaEncryptionPublicKey(publicKey));
+                        // Store the RSA public key in in expo secure storage
+                        await saveEncryptionKey('RSA_ENCRYPTION_PUBLIC_KEY', publicKey)
                     }
                 } catch (err) {
                     const error = err as any;
@@ -493,7 +505,8 @@ export const configApis = createApi({
 
                     const publicKey = data?.data?.key;
                     if (publicKey) {
-                        dispatch(setRsaEncryptionHeaderPublicKey(publicKey));
+                        // Store the RSA encryption header public key in expo secure storage
+                        await saveEncryptionKey('RSA_HEADER_ENCRYPTION_PUBLIC_KEY', publicKey)
                     }
                 } catch (err) {
                     const error = err as any;

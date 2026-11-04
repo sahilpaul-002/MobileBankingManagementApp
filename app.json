@@ -36,7 +36,8 @@
         }
       ],
       "expo-status-bar",
-      "react-native-quick-crypto"
+      "react-native-quick-crypto",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

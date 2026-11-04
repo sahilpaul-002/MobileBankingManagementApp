@@ -1,9 +1,12 @@
-import { apiRequest, getAxiosReduxAccess } from '@/configs/axiosConfig';
+import { apiRequest } from '@/configs/axiosConfig';
 import { CONFIG_URL } from '@/configs/constants';
 import { AppErrorClass } from '@/errorHandling/appError';
 import { InternalApplicationError } from '@/errorHandling/error';
 import { logError } from '@/errorHandling/errorLogger';
-import { setAesEncryptionKeyHex, setRsaEncryptionHeaderPublicKey, setRsaEncryptionPublicKey } from '@/redux/slice/config/configSlice';
+import {
+    getEncryptionKey as getSecureEncryptionKey,
+    saveEncryptionKey,
+} from '@/utils/expoSecureEncryptionKeysStorage';
 
 type EncryptionKeyResponse = {
     data?: {
@@ -18,17 +21,17 @@ type EncryptionKeyType = 'aes' | 'rsa' | 'header-rsa';
 const KEY_CONFIG = {
     aes: {
         endpoint: `${CONFIG_URL}/getEncryptionKey`,
-        stateKey: 'aesEncryptionKeyHex',
+        secureKeyName: 'AES_ENCRYPTION_KEY',
         errorName: 'GetAesEncryptionKey',
     },
     rsa: {
         endpoint: `${CONFIG_URL}/getPublicKey`,
-        stateKey: 'rsaEncryptionPublicKey',
+        secureKeyName: 'RSA_ENCRYPTION_PUBLIC_KEY',
         errorName: 'GetRsaEncryptionKey',
     },
     'header-rsa': {
         endpoint: `${CONFIG_URL}/getHeaderPublicKey`,
-        stateKey: 'rsaEncryptionHeaderPublicKey',
+        secureKeyName: 'RSA_HEADER_ENCRYPTION_PUBLIC_KEY',
         errorName: 'GetRsaHeaderEncryptionKey',
     },
 } as const;
@@ -39,17 +42,15 @@ const getEncryptionKey = async (
     const config = KEY_CONFIG[type];
 
     try {
-        const { getState, dispatch } = getAxiosReduxAccess();
-        const cachedKey = getState().config[config.stateKey];
+        // 1. Check SecureStore for an existing encryption key.
+        const cachedKey = await getSecureEncryptionKey(config.secureKeyName, );
 
         if (cachedKey) {
             return cachedKey;
         }
 
-        const result = (await apiRequest({
-            url: config.endpoint,
-            method: 'GET',
-        })) as EncryptionKeyResponse;
+        // 2. Fetch the encryption key from the backend.
+        const result = (await apiRequest({url: config.endpoint, method: 'GET', })) as EncryptionKeyResponse;
 
         const key = result?.data?.data?.key;
 
@@ -57,21 +58,12 @@ const getEncryptionKey = async (
             return null;
         }
 
-        switch (type) {
-            case 'aes':
-                dispatch(setAesEncryptionKeyHex(key));
-                break;
+        // 3. Store the fetched key in Expo SecureStore.
+        await saveEncryptionKey(config.secureKeyName, key);
 
-            case 'rsa':
-                dispatch(setRsaEncryptionPublicKey(key));
-                break;
-
-            case 'header-rsa':
-                dispatch(setRsaEncryptionHeaderPublicKey(key));
-                break;
-        }
-
+        // 4. Return the encryption key.
         return key;
+
     } catch (err: unknown) {
         const error = err as {
             config?: { url?: string };
@@ -99,11 +91,8 @@ const getEncryptionKey = async (
     }
 };
 
-export const getAesEncryptionKey = (): Promise<string | null> =>
-    getEncryptionKey('aes');
+export const getAesEncryptionKey = (): Promise<string | null> => getEncryptionKey('aes');
 
-export const getRsaPublicKey = (): Promise<string | null> =>
-    getEncryptionKey('rsa');
+export const getRsaPublicKey = (): Promise<string | null> => getEncryptionKey('rsa');
 
-export const getRsaHeaderPublicKey = (): Promise<string | null> =>
-    getEncryptionKey('header-rsa');
+export const getRsaHeaderPublicKey = (): Promise<string | null> => getEncryptionKey('header-rsa');

@@ -2,11 +2,11 @@ import { AppErrorClass } from '@/errorHandling/appError';
 import { ApplicationServiceError, InternalApplicationError } from '@/errorHandling/error';
 import { logError } from '@/errorHandling/errorLogger';
 import handleErrors from '@/errorHandling/handleErrors';
-import { setAesEncryptionKeyHex, setRsaEncryptionHeaderPublicKey, setRsaEncryptionPublicKey } from '@/redux/slice/config/configSlice';
 import type { appDispatchType, rootStateType } from '@/redux/sotre';
 import { getAesEncryptionKey, getRsaHeaderPublicKey, getRsaPublicKey } from '@/services/getEncryptionKeys';
 import { aesDecryption } from '@/utils/aesDecryption';
 import { aesEncryption, aesEncryptMultipartFile } from '@/utils/aesEncryption';
+import { getEncryptionKey, saveEncryptionKey } from '@/utils/expoSecureEncryptionKeysStorage';
 import GetDeviceId from '@/utils/GetDeviceId';
 import { rsaEncryption } from '@/utils/rsaEncryption';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -55,6 +55,18 @@ const setupInterceptors = (instance: AxiosInstance) => {
     // ==========================
     instance.interceptors.request.use(
         async (req) => {
+            // // DEBUG: Log actual API request URL
+            // console.log("========== API REQUEST ==========");
+            // console.log("Environment:", ENVIRONMENT);
+            // console.log("Base URL:", req.baseURL);
+            // console.log("Request URL:", req.url);
+            // console.log(
+            //     "Full URL:",
+            //     `${req.baseURL ?? ""}${req.url ?? ""}`
+            // );
+            // console.log("Method:", req.method?.toUpperCase());
+            // console.log("=================================");
+
             req.headers = req.headers ?? {};
             req.headers["portal"] = "user";
             req.headers["from-portal"] = "true";
@@ -72,41 +84,37 @@ const setupInterceptors = (instance: AxiosInstance) => {
                 return req;
             }
 
-            // Add encrypted device id
-            const { getState, dispatch } = getAxiosReduxAccess();
-            let headerPublicKey = getState().config.rsaEncryptionHeaderPublicKey;
-            if (!headerPublicKey || req.url?.includes("/login") || req.url?.includes("/signUp")) {
-                dispatch(setRsaEncryptionHeaderPublicKey(null));
-                headerPublicKey = await getRsaHeaderPublicKey()
-
-                if (!headerPublicKey) {
-                    throw new ApplicationServiceError("Request header encryption service cause error - Encryption keys missing");
-                }
-
-                dispatch(setRsaEncryptionHeaderPublicKey(headerPublicKey));
-            }
-            const deviceId = await GetDeviceId();
-            const response = await rsaEncryption(
-                { value: deviceId },
-                headerPublicKey
-            );
-            if (response?.status !== "SUCCESS") {
-                throw new ApplicationServiceError("RsaHeaderEncryption facing unknown error", "RsaHeaderEncryption")
-            }
-            req.headers["x-device-id"] = response.ciphertextBase64;
-
             try {
-                // GET ENCRYPTION KEYS FROM REDUX
-                let aesKey = getState().config.aesEncryptionKeyHex;
-                let rsaKey = getState().config.rsaEncryptionPublicKey;
+                // ADD ENCRYPTED DEVICES ID
+                // Get RSA header encryption public key from expo secure storage
+                let headerPublicKey = await getEncryptionKey('RSA_HEADER_ENCRYPTION_PUBLIC_KEY')
+
+                if (!headerPublicKey || req.url?.includes("/login") || req.url?.includes("/signUp")) {
+                    headerPublicKey = await getRsaHeaderPublicKey()
+
+                    if (!headerPublicKey) {
+                        throw new ApplicationServiceError("Request header encryption service cause error - Encryption keys missing");
+                    }
+
+                    await saveEncryptionKey('RSA_HEADER_ENCRYPTION_PUBLIC_KEY', headerPublicKey)
+                }
+                const deviceId = await GetDeviceId();
+                const response = await rsaEncryption(
+                    { value: deviceId },
+                    headerPublicKey
+                );
+                if (response?.status !== "SUCCESS") {
+                    throw new ApplicationServiceError("RsaHeaderEncryption facing unknown error", "RsaHeaderEncryption")
+                }
+                req.headers["x-device-id"] = response.ciphertextBase64;
+
+                // Get Encryption keys from expo secure storage
+                let aesKey = await getEncryptionKey('AES_ENCRYPTION_KEY')
+                let rsaKey = await getEncryptionKey('RSA_ENCRYPTION_PUBLIC_KEY')
 
                 const shouldRefreshKeys = !aesKey || !rsaKey || req.url?.includes('/login') || req.url?.includes('/signUp');
 
                 if (shouldRefreshKeys) {
-                    // Clear old keys before fetching fresh ones.
-                    dispatch(setAesEncryptionKeyHex(null));
-                    dispatch(setRsaEncryptionPublicKey(null));
-
                     [aesKey, rsaKey] = await Promise.all([
                         getAesEncryptionKey(),
                         getRsaPublicKey(),
@@ -118,9 +126,11 @@ const setupInterceptors = (instance: AxiosInstance) => {
                         );
                     }
 
-                    // Save the fresh keys in Redux.
-                    dispatch(setAesEncryptionKeyHex(aesKey));
-                    dispatch(setRsaEncryptionPublicKey(rsaKey));
+                    // Store the AES encryption key / RSA encryption public key in expo secure storage
+                    await Promise.all([
+                        saveEncryptionKey('AES_ENCRYPTION_KEY', aesKey),
+                        saveEncryptionKey('RSA_ENCRYPTION_PUBLIC_KEY', rsaKey),
+                    ])
                 }
 
                 // GENERATE IV
@@ -134,6 +144,9 @@ const setupInterceptors = (instance: AxiosInstance) => {
 
                 // RSA encrypt IV
                 const rsaRes = await rsaEncryption({ ivHex }, rsaKey as string);
+                if (rsaRes?.status !== 'SUCCESS' || !rsaRes.ciphertextBase64) {
+                    throw new ApplicationServiceError('RSA encryption of IV failed', 'RsaEncryption');
+                }
 
                 // ENCRYPT MULTIPART FORMDATA
                 if (req.data instanceof FormData) {
@@ -330,7 +343,7 @@ const setupInterceptors = (instance: AxiosInstance) => {
                 const data = res?.data;
 
                 if (data?.data && typeof data.data === 'string') {
-                    const aesKey = getAxiosReduxAccess().getState().config.aesEncryptionKeyHex;
+                    const aesKey = await getEncryptionKey('AES_ENCRYPTION_KEY')
                     const ivHex = ivStore.get(res.config);
 
                     if (aesKey && ivHex) {
