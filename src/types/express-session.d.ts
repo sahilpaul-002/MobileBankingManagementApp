@@ -1,9 +1,15 @@
-import "express-session";
-import type { sessionItemsTypes } from "./sessionTypes.ts";
+import type {sessionItemsTypes, SessionPortal} from "./sessionTypes.js";
 
-declare module "express-session" {
-    interface Session {
-        isNew: boolean;
+declare global {
+    namespace Express {
+        interface Request {
+            session: sessionItemsTypes | undefined;
+            sessionID: string | undefined;
+            sessionRedisKey: string | undefined;
+            sessionPortal: SessionPortal | undefined;
+            sessionDestroyed: boolean;
+        }
     }
-    interface SessionData extends sessionItemsTypes { }
 }
+
+export { };

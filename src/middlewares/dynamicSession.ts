@@ -1,69 +1,198 @@
-import session from "express-session";
-import type { NextFunction, RequestHandler, Request, Response } from "express";
-import type { sessionConfig, sessionError } from "../types/sessionTypes.js";
-import type { failedResponseJson, successResponseJsonRedisCLient, successResponseJsonRedisStore } from "../types/responseJson.js";
-import { getRedisClient } from "../configs/redisConfig.js";
+import crypto from "crypto";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { RedisClientType } from "redis";
-import getRedisStore from "../configs/redisStore.js";
+import type { SessionPortal, sessionItemsTypes } from "../types/sessionTypes.js";
+import type { failedResponseJson, successResponseJsonRedisCLient } from "../types/responseJson.js";
+import { getRedisClient } from "../configs/redisConfig.js";
 import buildSession from "./buildSession.js";
-import type { RedisStore } from "connect-redis";
 
-const dynamicSession = (): RequestHandler => async (req: Request, res: Response, next: NextFunction): Promise<Response<failedResponseJson> | void> => {
+const SESSION_ID_REGEX = /^[A-Za-z0-9_-]{43}$/;
 
-    // Get Redis Client
-    const redisClientResponse: successResponseJsonRedisCLient | failedResponseJson = getRedisClient();
-    if (redisClientResponse.status === "SERVICE_ERROR") {
-        return res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Failed to get Redis client", error: redisClientResponse.error });
-    }
-    const redisClient: RedisClientType | undefined = redisClientResponse.status === "SUCCESS" ? redisClientResponse.client : undefined;
-    // Create Redis Store
-    const redisStoreResponse: failedResponseJson | successResponseJsonRedisStore = await getRedisStore(redisClient);
-    // console.log("Redis store response from getRedisStore function in dynamicSession middleware:", redisStoreResponse);
+const dynamicSession = (): RequestHandler => {
+    return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+        try {
+            // Get Redis client
+            const redisClientResponse: successResponseJsonRedisCLient | failedResponseJson = getRedisClient();
 
-    if (redisStoreResponse.status === "SERVICE_ERROR") {
-        console.error("Failed to create Redis store:", redisStoreResponse.message);
-    }
-    const redisStore: RedisStore | undefined = redisStoreResponse.status === "SUCCESS" ? redisStoreResponse.store : undefined;
+            if (redisClientResponse.status !== "SUCCESS") {
+                res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Failed to get Redis client" });
+                return;
+            }
 
-    // Get Sessions
-    const sessions: sessionConfig | sessionError | undefined = buildSession(req, redisStore);
-    // console.log("Session configuration returned from buildSession function in dynamicSession middleware:", sessions);
+            const redisClient: RedisClientType = redisClientResponse.client;
 
-    // Check Session
-    if (!sessions) {
-        return res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Failed to build session configuration" });
-    }
-    const sessionStatus: string = sessions && ("status" in sessions) ? sessions.status : "SUCCESS";
-    if (sessionStatus === "INTERNAL_SERVER_ERROR") {
-        return res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Failed to build session configuration" });
-    }
-    // Get business session from sessions
-    const businessSession: session.SessionOptions | undefined = sessions && "businessSession" in sessions ? sessions.businessSession : undefined;
-    // Get admin session from sessions
-    const adminSession: session.SessionOptions | undefined = sessions && "adminSession" in sessions ? sessions.adminSession : undefined;
-    // Get user session from sesssions
-    const userSession: session.SessionOptions | undefined = sessions && "userSession" in sessions ? sessions.userSession : undefined;
+            if (!redisClient.isReady) {
+                res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Redis client is not ready" });
+                return;
+            }
 
-    // Get Portal Header
-    const portal: string = req.headers["portal"] as string; // Portal header is checked for string in previous middleware
+            // Validate portal
+            const portalHeader = req.headers.portal;
 
-    // const reqSession = req.app.locals.sessions;
-    let activeSession: session.SessionOptions | undefined;
-    if (portal?.toUpperCase() === "BUSINESS" ) {
-        activeSession = businessSession
-    }
-    else if (portal?.toUpperCase() === "ADMIN") {
-        activeSession = adminSession
-    }
-    else {
-        activeSession = userSession
-    }
+            const portal: SessionPortal | undefined = typeof portalHeader === "string" ? portalHeader.toUpperCase() as SessionPortal : undefined;
 
-    if (!activeSession) {
-        return res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Failed to determine active session configuration" });
-    }
+            if (!portal || !["BUSINESS", "ADMIN", "USER"].includes(portal)) {
+                res.status(400).json({ status: "BAD_REQUEST", message: "Invalid portal header" });
+                return;
+            }
 
-    session(activeSession)(req, res, next);    // Call the express session middleware with the selected session config
-}
+            // Get session configuration
+            const sessionConfig = buildSession()[portal];
+
+            // Get incoming session ID
+            const incomingSessionId = req.headers["x-session-id"];
+
+            let sessionId: string | undefined =
+                typeof incomingSessionId === "string" &&
+                    incomingSessionId.trim()
+                    ? incomingSessionId
+                    : undefined;
+
+            let sessionRedisKey: string | undefined;
+
+            let sessionTarget: Partial<sessionItemsTypes> = {};
+
+            // Load an existing session when an ID is supplied
+            if (sessionId) {
+                if (!SESSION_ID_REGEX.test(sessionId)) {
+                    res.status(401).json({
+                        status: "UNAUTHENTICATED",
+                        message: "Invalid session ID"
+                    });
+                    return;
+                }
+
+                sessionRedisKey = `${sessionConfig.prefix}:${sessionId}`;
+
+                const storedSession = await redisClient.get(sessionRedisKey);
+
+                if (!storedSession) {
+                    res.status(401).json({
+                        status: "UNAUTHENTICATED",
+                        message: "Session expired or not found"
+                    });
+                    return;
+                }
+
+                try {
+                    sessionTarget = JSON.parse(storedSession) as sessionItemsTypes;
+                }
+                catch {
+                    await redisClient.del(sessionRedisKey);
+
+                    res.status(401).json({status: "UNAUTHENTICATED", message: "Invalid session data"});
+                    return;
+                }
+
+                if (!sessionTarget || typeof sessionTarget !== "object" || !sessionTarget.initiated || !sessionTarget.valid) {
+                    await redisClient.del(sessionRedisKey);
+
+                    res.status(401).json({status: "UNAUTHENTICATED", message: "Invalid or inactive session"});
+                    return;
+                }
+            }
+
+            // Track session state
+            let sessionDirty = false;
+
+            req.sessionID = sessionId;
+            req.sessionRedisKey = sessionRedisKey;
+            req.sessionPortal = portal;
+            req.sessionDestroyed = false;
+
+            // Create the lazy session Proxy
+            const sessionProxy = new Proxy(sessionTarget, {
+                set: (target, property, value): boolean => {
+                    // Generate a session ID on the first assignment.
+                    if (!sessionId) {
+                        sessionId = crypto.randomBytes(32).toString("base64url");
+
+                        sessionRedisKey = `${sessionConfig.prefix}:${sessionId}`;
+
+                        req.sessionID = sessionId;
+                        req.sessionRedisKey = sessionRedisKey;
+
+                        // Send the new session ID to React Native.
+                        res.setHeader("x-session-id", sessionId);
+                    }
+
+                    Reflect.set(target, property, value);
+
+                    sessionDirty = true;
+
+                    return true;
+                },
+
+                deleteProperty: (target, property): boolean => {
+                    const deleted = Reflect.deleteProperty(target, property);
+
+                    if (deleted) {
+                        sessionDirty = true;
+                    }
+
+                    return deleted;
+                }
+            });
+
+            req.session = sessionProxy as sessionItemsTypes;
+
+            // Persist session before completing the response
+            const originalEnd = res.end.bind(res);
+
+            let responseEnding = false;
+
+            res.end = ((...args: any[]) => {
+                if (responseEnding) {
+                    return res;
+                }
+
+                responseEnding = true;
+
+                void (async () => {
+                    try {
+                        if (sessionId &&
+                            sessionRedisKey &&
+                            req.session &&
+                            !req.sessionDestroyed &&
+                            (sessionDirty || Boolean(req.sessionID))
+                        ) {
+                            await redisClient.set(
+                                sessionRedisKey,
+                                JSON.stringify(req.session),
+                                {
+                                    EX: sessionConfig.ttl
+                                }
+                            );
+                        }
+
+                        originalEnd(...args);
+                    } catch (error) {
+                        console.error("Failed to save Redis session:", error);
+
+                        if (!res.headersSent) {
+                            res.statusCode = 500;
+
+                            res.setHeader("Content-Type", "application/json");
+
+                            originalEnd(JSON.stringify({status: "INTERNAL_SERVER_ERROR", message: "Failed to persist session"}));
+                            
+                            return;
+                        }
+
+                        originalEnd();
+                    }
+                })();
+
+                return res;
+            }) as typeof res.end;
+
+            return next();
+        } catch (error) {
+            console.error("Dynamic session middleware error:", error);
+
+            return next(error);
+        }
+    };
+};
 
 export default dynamicSession;

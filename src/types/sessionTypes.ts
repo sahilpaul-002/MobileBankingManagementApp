@@ -1,23 +1,12 @@
-import session from "express-session";
 
-// Session return configuration type
-export interface sessionConfig {
-    businessSession: session.SessionOptions;
-    adminSession: session.SessionOptions;
-    userSession: session.SessionOptions;
-}
+export type UserType = "ADMIN" | "USER" | "MASTER_ADMIN";
 
-// Session error type
-export interface sessionError {
-    status: string;
-    message: string;
-}
+export type SessionPortal = "BUSINESS" | "ADMIN" | "USER";
 
-// Session data stored in session
-export type sessionDataTypes = {
+export interface sessionDataTypes {
     domainName: string;
     dashboardName: string;
-    baseUrl: string
+    baseUrl: string;
     m2pAllowed: boolean;
     p2pAllowed: boolean;
     adminEmail: string;
@@ -25,10 +14,6 @@ export type sessionDataTypes = {
     accessToken: string;
 }
 
-// User type values
-type UserType = "ADMIN" | "USER" | "MASTER_ADMIN";
-
-// Meta information stored in session
 export interface sessionMetaTypes {
     clientIp: string;
     deviceId: string;
@@ -36,7 +21,7 @@ export interface sessionMetaTypes {
     createdAt?: number;
 }
 
-export type userConfigurationTypes = {
+export interface userConfigurationTypes {
     businessName: string;
     programType: string;
     businessId: string;
@@ -45,13 +30,11 @@ export type userConfigurationTypes = {
     subAgentCode: string;
 }
 
-// Encryption keys for headers
-type headerKeysType = {
-    publicKey: string,
-    privateKey: string
+export interface headerKeysType {
+    publicKey: string;
+    privateKey: string;
 }
 
-// Session items stored in session
 export interface sessionItemsTypes {
     initiated: boolean;
     lastActivity: number;
@@ -61,7 +44,7 @@ export interface sessionItemsTypes {
     encryptionKey: string;
     userEmail: string;
     userConfiguration: userConfigurationTypes;
-    userName: string
+    userName: string;
     userId?: string;
     passwordHash: string;
     userType: UserType;
@@ -73,7 +56,9 @@ export interface sessionItemsTypes {
     meta?: sessionMetaTypes;
 }
 
-// // Augment express-session to include custom session fields
-// declare module "express-session" {
-//     interface SessionData extends sessionItemsTypes {}
-// }
+export interface SessionConfig {
+    prefix: string;
+    ttl: number;
+}
+
+export type SessionConfigMap = Record<SessionPortal, SessionConfig>;

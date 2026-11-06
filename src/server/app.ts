@@ -1,6 +1,5 @@
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors";
 import helmet from "helmet";
 import rid from "connect-rid"
 import cookieParser from "cookie-parser";
@@ -59,25 +58,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.text());
 
-// CORS Middleware
-const corsOptions: cors.CorsOptions = {
-    origin: true,
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-    credentials: true,
-};
-
-app.use(cors(corsOptions));
-
 // Helmet Middleware
 app.use(helmet());
 
 // Unique Request ID Middleware
 app.use(rid());
-
-// Cookie Parser Middleware
-app.use(cookieParser(process.env.COOKIE_SECRET_KEY || "jsev4jdls6sb15h2n5lujfj8b8m8sz5gv1f2d4eg1hfs"));
 
 // Log Request
 app.use(requestLogger);

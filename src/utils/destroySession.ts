@@ -1,50 +1,47 @@
-import type { Request, Response } from "express";
-import type { failedResponseJson, successResponseJson } from "../types/responseJson.js";
+import type { Request } from "express";
+import type {failedResponseJson, successResponseJson} from "../types/responseJson.js";
+import { getRedisClient } from "../configs/redisConfig.js";
 
-// const destroySession = async (req: Request, res: Response): Promise<successResponseJson | failedResponseJson | void> => {
-const destroySession = async (requestSession: Request["session"] & {
-    destroy: (callback: (err?: any) => void) => void;
-}, res: Response): Promise<successResponseJson | failedResponseJson | void> => {
+const destroySession = async (req: Request): Promise<successResponseJson | failedResponseJson> => {
     try {
-        // if (!req.session) {
-        if (!requestSession) {
-            return { status: "NOT_FOUND", message: "NO ACTIVE SESSION FOUND" };
+        if (!req.sessionRedisKey) {
+            return {status: "NOT_FOUND", message: "NO ACTIVE SESSION FOUND"};
         }
 
-        // const sessionId = req.sessionID;
+        const redisClientResponse = getRedisClient();
 
-        return await new Promise<successResponseJson | failedResponseJson>((resolve) => {
-            // req.session.destroy((err) => {
-            requestSession.destroy((err) => {
-                if (err) {
-                    console.error("Session destroy error:", err);
+        if (redisClientResponse.status !== "SUCCESS") {
+            return {status: "INTERNAL_SERVER_ERROR", message: "FAILED TO GET REDIS CLIENT"};
+        }
 
-                    return resolve({
-                        status: "INTERNAL_SERVER_ERROR",
-                        message: "FAILED TO DESTROY SESSION",
-                        error: err
-                    });
-                }
+        const redisClient = redisClientResponse.client;
 
-                if (!res.headersSent) {
-                    res.clearCookie("BMA_Business_Session");
-                    res.clearCookie("BMA_Admin_Session");
-                    res.clearCookie("BMA_User_Session");
-                    res.clearCookie("authToken");
-                    res.clearCookie("refreshToken");
-                }
+        // Delete session from Redis.
+        await redisClient.del(req.sessionRedisKey);
 
-                resolve({
-                    status: "SUCCESS",
-                    message: "SESSION DESTROYED SUCCESSFULLY",
-                    // data: { sessionId }
-                });
-            });
-        });
+        // Prevent dynamicSession from saving the deleted session again.
+        req.sessionDestroyed = true;
+
+        // Clear session information from the current request.
+        req.session = undefined;
+        req.sessionID = undefined;
+        req.sessionRedisKey = undefined;
+        req.sessionPortal = undefined;
+
+        return {
+            status: "SUCCESS",
+            message: "SESSION DESTROYED SUCCESSFULLY"
+        };
+
+    } catch (error) {
+        console.error("Session destroy error:", error);
+
+        return {
+            status: "INTERNAL_SERVER_ERROR",
+            message: "FAILED TO DESTROY SESSION",
+            error
+        };
     }
-    catch (error) {
-        return { status: "INTERNAL_SERVER_ERROR", message: "DESTROY SESSION SERVICE FACING ISSUE." };
-    }
-}
+};
 
 export default destroySession;
