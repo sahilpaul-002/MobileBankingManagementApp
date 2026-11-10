@@ -25,7 +25,7 @@ const headerTypeValidation = (req: Request, res: Response, next: NextFunction): 
 
         // Check if the api call is not from portal
         if (fromPortal?.toLowerCase() === "true") {
-            if (!req.session.headerKeys?.publicKey || !req.session.headerKeys.privateKey) {
+            if (!req.session?.headerKeys?.publicKey || !req.session?.headerKeys?.privateKey) {
                 throw new UnauthenticatedError("Unauthenticated session");
             }
 

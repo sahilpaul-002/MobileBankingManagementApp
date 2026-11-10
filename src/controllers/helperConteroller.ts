@@ -21,6 +21,7 @@ import { beneficiariesBankDetailsModel } from "../models/beneficiaries_bank_deta
 import { fiatPayoutTransactionsModel } from "../models/fiat_payout_transactions.js";
 import { fiatPayoutQuoteModel } from "../models/fiat_payout_quotes.js";
 import sanitizeApiError from "../utils/sanitizeApiError.js";
+import destroySession from "../utils/destroySession.js";
 
 // Health Check
 export const healthCheck = (req: Request, res: Response): Response<successResponseJson> | void => {
@@ -80,27 +81,32 @@ export const getSession = (req: Request, res: Response): Response<successRespons
 }
 
 // Destroy Session
-export const destroySession = (req: Request, res: Response): Response<successResponseJson> | void => {
+export const destroySessionController = async (req: Request, res: Response): Promise<Response<successResponseJson> | void> => {
     try {
-        if (!req.session) {
-            return res.status(404).json({ status: "NOT_FOUND", message: "NO ACTIVE SESSION FOUND" });
-        }
-
         const sessionId = req.sessionID;
 
-        req.session.destroy((err): Response<successResponseJson> | Response<failedResponseJson> => {
-            if (err) {
-                console.error("Session destroy error:", err);
-                return res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "FAILED TO DESTROY SESSION", error: err });
-            }
+        // Check whether an active session exists.
+        if (!sessionId || !req.session || req.sessionDestroyed) {
+            return res.status(404).json({
+                status: "NOT_FOUND",
+                message: "NO ACTIVE SESSION FOUND"
+            });
+        }
 
-            res.clearCookie("BMA_Ausiness_Session");
-            res.clearCookie("BMA_Admin_Session");
-            res.clearCookie("BMA_User_Session");
-            res.clearCookie("authToken");
-            res.clearCookie("refreshToken");
+        // Destroy the Redis session using your existing utility.
+        const destroyResponse = await destroySession(req);
 
-            return res.json({ status: "SUCCESS", message: "SESSION DESTROYED SUCCESSFULLY", data: { sessionId: sessionId } });
+        if (destroyResponse.status !== "SUCCESS") {
+            return res.status(500).json({
+                status: "INTERNAL_SERVER_ERROR",
+                message: "FAILED TO DESTROY SESSION"
+            });
+        }
+
+        return res.json({
+            status: "SUCCESS",
+            message: "SESSION DESTROYED SUCCESSFULLY",
+            data: { sessionId }
         });
     }
     catch (err) {

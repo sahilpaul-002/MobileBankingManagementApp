@@ -18,11 +18,6 @@ const sessionValidation = async (req: Request, res: Response, next: NextFunction
             throw new InvalidSessionError("SESSION NOT FOUND")
         }
 
-        // Check if session is tampered(if tampered then newly created session)
-        if (req.session?.isNew) {
-            throw new InvalidSessionError("SESSION INVALID OR TAMPERED")
-        }
-
         // Skip portal header check for selcted pathes
         const excludedPaths1: string[] = ["/signUp", "/applicationHeaders", "/login", "/sendVerifyEmailCode", "/sendResetPasswordCode", "/verifyResetPasswordCode"];
         if (excludedPaths1.some(path => req.path === path || req.path.startsWith(path + "/"))) {
@@ -45,7 +40,7 @@ const sessionValidation = async (req: Request, res: Response, next: NextFunction
 
             // Check user exist in DB
             if (!userDetails || (userDetails?.email !== req.session.userEmail)) {
-                const destroySessionResponse = await destroySession(req.session, res);
+                const destroySessionResponse = await destroySession(req);
 
                 if (destroySessionResponse?.status !== "SUCCESS") {
                     if ((destroySessionResponse as failedResponseJson)?.error) {
@@ -61,7 +56,7 @@ const sessionValidation = async (req: Request, res: Response, next: NextFunction
 
             // Check user activated
             if (!userDetails?.is_active) {
-                const destroySessionResponse = await destroySession(req.session, res);
+                const destroySessionResponse = await destroySession(req);
                 throw new UnauthorizedError("User is not activated");
             }
 
@@ -83,7 +78,7 @@ const sessionValidation = async (req: Request, res: Response, next: NextFunction
 
             // Check client-ip and device-id in session meata
             if (!req.session?.meta?.clientIp || !req.session?.meta?.deviceId || req.session.meta.clientIp !== clientIp || req.session.meta.deviceId !== deviceId) {
-                const destroySessionResponse = await destroySession(req.session, res);
+                const destroySessionResponse = await destroySession(req);
                 throw new UnauthorizedError("User is not authorized - Invalid user meta details");
             }
 
@@ -104,7 +99,7 @@ const sessionValidation = async (req: Request, res: Response, next: NextFunction
             const isValidMeta = await validateUserMetaDetails(userDetails._id.toString(), clientIp, deviceId as string);
 
             if (!isValidMeta) {
-                const destroySessionResponse = await destroySession(req.session, res);
+                const destroySessionResponse = await destroySession(req);
                 throw new UnauthorizedError("User is not authorized - Invalid user meta details");
             }
 

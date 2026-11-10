@@ -39,6 +39,7 @@ import { userFundingBankAccountDetailsModel as user_funding_bank_account_details
 import { userCryptoDepositAccountDetailsModel as user_crypto_deposit_account_details } from "../models/user_crypto_deposit_accout_details.js";
 import sanitizeApiError from "../utils/sanitizeApiError.js";
 import { Decimal } from "decimal.js";
+import regenerateSession from "../utils/regenerateSession.js";
 
 dotenv.config();
 
@@ -102,7 +103,7 @@ export const userSignUpService = async (req: Request, res: Response, aesDecrypte
             email: validationResult.data.email
         });
         if (emailExists) {
-            const destroySessionResponse = await destroySession(req.session, res);
+            const destroySessionResponse = await destroySession(req);
             throw new ServiceError("User already exists");
         }
 
@@ -251,14 +252,14 @@ export const userLoginService = async (req: Request, res: Response, aesDecrypted
 
         // Check user exist in DB
         if (!userDetails) {
-            const destroySessionResponse = await destroySession(req.session, res);
+            const destroySessionResponse = await destroySession(req);
             throw new ServiceError("User does not exist")
         }
 
         // Check user input password validity
         const isPasswordValid = compareSync(password, userDetails?.password);
         if (!isPasswordValid) {
-            const destroySessionResponse = await destroySession(req.session, res);
+            const destroySessionResponse = await destroySession(req);
             throw new ServiceError("Invalid credentials")
         }
 
@@ -301,7 +302,7 @@ export const userLoginService = async (req: Request, res: Response, aesDecrypted
         }
 
         // Check if session is already valid, if yes then delete the old session and create a new session
-        if (req.session.valid && req.session.userId === userDetails._id.toString()) {
+        if (req.session?.valid && req.session?.userId === userDetails._id.toString()) {
             // Get sessiondata from session before destroying the session
             const sessionData: sessionDataTypes = req.session?.sessiondata as sessionDataTypes;
             const encryptionKey = req.session.encryptionKey
@@ -313,15 +314,7 @@ export const userLoginService = async (req: Request, res: Response, aesDecrypted
             const privateKey = req.session?.privateKey
 
             // Regenerate a new session after destroying older session
-            await new Promise<void>((resolve, reject) => {
-                req.session.regenerate((err) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                })
-            });
+            await regenerateSession(req);
 
             // INITIATE SESSION
             req.session.initiated = true;
@@ -339,8 +332,8 @@ export const userLoginService = async (req: Request, res: Response, aesDecrypted
         }
 
         // Update session with userId and email
-        req.session.userEmail = userDetails.email;
-        req.session.userConfiguration = {
+        req.session!.userEmail = userDetails.email;
+        req.session!.userConfiguration = {
             businessName: userDetails.business_name,
             programType: userDetails.program_type,
             programId: userDetails.program_id,
@@ -348,17 +341,17 @@ export const userLoginService = async (req: Request, res: Response, aesDecrypted
             agentCode: userDetails.agent_code,
             subAgentCode: userDetails.subagent_code
         }
-        req.session.userName = userDetails.full_name;
-        req.session.userId = userDetails._id.toString();
-        req.session.userType = userDetails.is_master_admin === "Y" ? "MASTER_ADMIN" : userDetails.is_admin === "Y" ? "ADMIN" : "USER";
-        req.session.cardholderId = userDetails.cardholder_id?.toString() ?? null
+        req.session!.userName = userDetails.full_name;
+        req.session!.userId = userDetails._id.toString();
+        req.session!.userType = userDetails.is_master_admin === "Y" ? "MASTER_ADMIN" : userDetails.is_admin === "Y" ? "ADMIN" : "USER";
+        req.session!.cardholderId = userDetails.cardholder_id?.toString() ?? null
 
         // Update the session validity
-        req.session.valid = true;
+        req.session!.valid = true;
 
         // Store client IP and device id in session meta
-        req.session.meta = {
-            ...req.session.meta,
+        req.session!.meta = {
+            ...req.session!.meta,
             clientIp: clientIp as string,
             deviceId: deviceId as string,
         }
@@ -464,7 +457,7 @@ export const getApplicationHeadersService = async (req: Request, res: Response, 
         if (!email) {
             throw new InvalidRequestBodyError("Email not present in the request body");
         }
-        if (email !== req.session.userEmail) {
+        if (email !== req.session?.userEmail) {
             throw new UnauthorizedError("Unauthorized access detected - invalid email found")
         }
 
