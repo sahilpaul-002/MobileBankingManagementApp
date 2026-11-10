@@ -7,6 +7,7 @@ import { getAesEncryptionKey, getRsaHeaderPublicKey, getRsaPublicKey } from '@/s
 import { aesDecryption } from '@/utils/aesDecryption';
 import { aesEncryption, aesEncryptMultipartFile } from '@/utils/aesEncryption';
 import { getEncryptionKey, saveEncryptionKey } from '@/utils/expoSecureEncryptionKeysStorage';
+import { clearSessionId, getSessionId, saveSessionId } from '@/utils/expoSecureSessionStorage';
 import GetDeviceId from '@/utils/GetDeviceId';
 import { rsaEncryption } from '@/utils/rsaEncryption';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -73,6 +74,12 @@ const setupInterceptors = (instance: AxiosInstance) => {
             req.headers["request-id"] = Crypto.randomUUID();
             // const deviceId = await GetDeviceId();
             // req.headers["x-device-id"] = deviceId
+
+            // Set Session Id Header
+            const sessionId = await getSessionId();
+            if (sessionId) {
+                req.headers["x-session-id"] = sessionId;
+            }
 
             // SKIP ENCRYPTION FOR ENCRYPTION KEY APIs
             if (
@@ -214,29 +221,30 @@ const setupInterceptors = (instance: AxiosInstance) => {
                         rsaRes?.ciphertextBase64 ?? ""
                     );
 
-                    // Encrypt all file  / Blob Entries
+                    // Encrypt all file entries
                     for (const {
                         fieldName,
                         file,
                         fileName,
                     } of fileEntries) {
-                        const fileToEncrypt =
-                            file instanceof File
-                                ? file
-                                : new File([file], fileName ?? fieldName, {
-                                    type: file.type,
-                                });
 
                         const encryptedFileResult = await aesEncryptMultipartFile(
                             aesKey as string,
-                            fileToEncrypt,
+                            {
+                                uri: (file as File & { uri: string }).uri,
+                                name: fileName ?? ("name" in file ? file.name : fieldName),
+                                mimeType: file.type ?? "application/octet-stream",
+                            },
                             ivHex
                         );
 
                         encryptedFormData.append(
                             fieldName,
-                            encryptedFileResult.encryptedFile.file,
-                            fileName ?? fieldName
+                            {
+                                uri: encryptedFileResult.encryptedFile.uri,
+                                name: fileName ?? fieldName,
+                                type: encryptedFileResult.encryptedFile.type,
+                            } as unknown as Blob
                         );
                     }
 
@@ -339,6 +347,12 @@ const setupInterceptors = (instance: AxiosInstance) => {
     instance.interceptors.response.use(
         async (res) => {
             try {
+                // Store Session Id From Response Header
+                const sessionId = res.headers?.['x-session-id'];
+                if (typeof sessionId === 'string' && sessionId.trim()) {
+                    await saveSessionId(sessionId);
+                }
+
                 // DECRYPT RESPONSE (ONLY IF ENCRYPTED)
                 const data = res?.data;
 
@@ -394,6 +408,22 @@ const setupInterceptors = (instance: AxiosInstance) => {
                 error: err,
                 context: url,
             });
+
+            // Remove Stale Session Id
+            const responseData = error.response?.data;
+            // if (responseData?.code === 'SESSION_EXPIRED' ||
+            //     responseData?.code === 'SESSION_INVALID' ||
+            //     responseData?.code === 'SESSION_DESTROYED'
+            // ) {
+            //     await clearSessionId();
+            // }
+            if (responseData?.message?.toLowerCase() === 'invalid session id' ||
+                responseData?.message?.toLowerCase() === 'session expired or not found' ||
+                responseData?.message?.toLowerCase() === 'invalid session data' ||
+                responseData?.message?.toLowerCase() === 'invalid or inactive session'
+            ) {
+                await clearSessionId();
+            }
 
             if (globalDispatch) {
                 handleErrors(error, globalDispatch);

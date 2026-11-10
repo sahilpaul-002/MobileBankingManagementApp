@@ -11,6 +11,7 @@ import { twoFaApis } from '../features/twoFa/twoFaApis';
 import { userApis } from '../features/user/userApis';
 import { walletApis } from '../features/wallet/walletApis';
 
+import { clearSessionId } from '@/utils/expoSecureSessionStorage';
 import { finishLogout, startLogout } from '../slice/appSession/appSessionSlice';
 import { resetConfigStates } from '../slice/config/configSlice';
 import { resetUserState } from '../slice/user/userSlice';
@@ -43,6 +44,17 @@ export const logoutUser = createAsyncThunk(
                     message: 'Failed to destroy server session during logout',
                     error,
                     context: 'LogoutUser.destroySession',
+                });
+            }
+
+            // Remove expo stored session ID.
+            try {
+                await clearSessionId();
+            } catch (error) {
+                logError('ERROR', {
+                    message: 'Failed to clear locally stored session ID',
+                    error,
+                    context: 'LogoutUser.clearSessionId',
                 });
             }
 
