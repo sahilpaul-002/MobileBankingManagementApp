@@ -5,8 +5,13 @@ import type { SessionPortal, sessionItemsTypes } from "../types/sessionTypes.js"
 import type { failedResponseJson, successResponseJsonRedisCLient } from "../types/responseJson.js";
 import { getRedisClient } from "../configs/redisConfig.js";
 import buildSession from "./buildSession.js";
+import { BadRequestError, InternalServerError, ServiceError, UnauthenticatedError } from "../utils/AppErrorClass.js";
+import logger from "../utils/logger.js";
+import sanitizeApiError from "../utils/sanitizeApiError.js";
 
 const SESSION_ID_REGEX = /^[A-Za-z0-9_-]{43}$/;
+
+const isSessionBootstrapRoute = (req: Request): boolean => req.method === "GET" && req.path.endsWith("/getEncryptionKey");
 
 const dynamicSession = (): RequestHandler => {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -15,15 +20,17 @@ const dynamicSession = (): RequestHandler => {
             const redisClientResponse: successResponseJsonRedisCLient | failedResponseJson = getRedisClient();
 
             if (redisClientResponse.status !== "SUCCESS") {
-                res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Failed to get Redis client" });
-                return;
+                throw new InternalServerError("Failed to get Redis client");
+                // res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Failed to get Redis client" });
+                // return;
             }
 
             const redisClient: RedisClientType = redisClientResponse.client;
 
             if (!redisClient.isReady) {
-                res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Redis client is not ready" });
-                return;
+                throw new InternalServerError("Redis client is not ready");
+                // res.status(500).json({ status: "INTERNAL_SERVER_ERROR", message: "Redis client is not ready" });
+                // return;
             }
 
             // Validate portal
@@ -32,8 +39,9 @@ const dynamicSession = (): RequestHandler => {
             const portal: SessionPortal | undefined = typeof portalHeader === "string" ? portalHeader.toUpperCase() as SessionPortal : undefined;
 
             if (!portal || !["BUSINESS", "ADMIN", "USER"].includes(portal)) {
-                res.status(400).json({ status: "BAD_REQUEST", message: "Invalid portal header" });
-                return;
+                throw new BadRequestError("Invalid portal header");
+                // res.status(400).json({ status: "BAD_REQUEST", message: "Invalid portal header" });
+                // return;
             }
 
             // Get session configuration
@@ -54,41 +62,63 @@ const dynamicSession = (): RequestHandler => {
 
             // Load an existing session when an ID is supplied
             if (sessionId) {
+                // Always validate session ID format, regardless of route.
                 if (!SESSION_ID_REGEX.test(sessionId)) {
-                    res.status(401).json({
-                        status: "UNAUTHENTICATED",
-                        message: "Invalid session ID"
-                    });
-                    return;
+                    throw new UnauthenticatedError("Invalid session ID");
+                    // res.status(401).json({ status: "UNAUTHENTICATED", code: "SESSION_INVALID", message: "Invalid session ID" });
+                    // return;
                 }
+
+                // Check whether the current route is a bootstrap route.
+                const isBootstrapRoute = isSessionBootstrapRoute(req);
 
                 sessionRedisKey = `${sessionConfig.prefix}:${sessionId}`;
 
+                // Check whether the session exists in Redis.
                 const storedSession = await redisClient.get(sessionRedisKey);
 
                 if (!storedSession) {
-                    res.status(401).json({
-                        status: "UNAUTHENTICATED",
-                        message: "Session expired or not found"
-                    });
-                    return;
+                    if (!isBootstrapRoute) {
+                        throw new UnauthenticatedError("Session expired or not found");
+                        // res.status(401).json({ status: "UNAUTHENTICATED", code: "SESSION_EXPIRED", message: "Session expired or not found" });
+                        // return;
+                    }
+
+                    // Allow bootstrap route to continue with a fresh session.
+                    sessionId = undefined;
+                    sessionRedisKey = undefined;
                 }
+                else {
+                    try {
+                        sessionTarget = JSON.parse(storedSession) as sessionItemsTypes;
+                    } catch {
+                        await redisClient.del(sessionRedisKey!);
 
-                try {
-                    sessionTarget = JSON.parse(storedSession) as sessionItemsTypes;
-                }
-                catch {
-                    await redisClient.del(sessionRedisKey);
+                        if (!isBootstrapRoute) {
+                            throw new UnauthenticatedError("Invalid session data");
+                            // res.status(401).json({ status: "UNAUTHENTICATED", code: "SESSION_INVALID", message: "Invalid session data" });
+                            // return;
+                        }
 
-                    res.status(401).json({status: "UNAUTHENTICATED", message: "Invalid session data"});
-                    return;
-                }
+                        sessionId = undefined;
+                        sessionRedisKey = undefined;
+                        sessionTarget = {};
+                    }
 
-                if (!sessionTarget || typeof sessionTarget !== "object" || !sessionTarget.initiated || !sessionTarget.valid) {
-                    await redisClient.del(sessionRedisKey);
+                    // Validate the loaded session object.
+                    if (sessionId && (!sessionTarget || typeof sessionTarget !== "object")) {
+                        await redisClient.del(sessionRedisKey!);
 
-                    res.status(401).json({status: "UNAUTHENTICATED", message: "Invalid or inactive session"});
-                    return;
+                        if (!isBootstrapRoute) {
+                            throw new UnauthenticatedError("Invalid or inactive session");
+                            // res.status(401).json({ status: "UNAUTHENTICATED", code: "SESSION_INVALID", message: "Invalid or inactive session" });
+                            // return;
+                        }
+
+                        sessionId = undefined;
+                        sessionRedisKey = undefined;
+                        sessionTarget = {};
+                    }
                 }
             }
 
@@ -174,8 +204,8 @@ const dynamicSession = (): RequestHandler => {
 
                             res.setHeader("Content-Type", "application/json");
 
-                            originalEnd(JSON.stringify({status: "INTERNAL_SERVER_ERROR", message: "Failed to persist session"}));
-                            
+                            originalEnd(JSON.stringify({ status: "INTERNAL_SERVER_ERROR", message: "Failed to persist session" }));
+
                             return;
                         }
 
@@ -187,8 +217,13 @@ const dynamicSession = (): RequestHandler => {
             }) as typeof res.end;
 
             return next();
-        } catch (error) {
-            console.error("Dynamic session middleware error:", error);
+        }
+        catch (error: any) {
+            logger.error(error, {
+                serviceName: "DynamicSessionMiddleware",
+                url: req.path,
+                method: req.method,
+            });
 
             return next(error);
         }

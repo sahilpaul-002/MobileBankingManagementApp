@@ -1,5 +1,4 @@
 import crypto from "crypto";
-import session, { type SessionData } from "express-session";
 import { type Request } from "express";
 import type { failedResponseJson, successResponseJson } from "../types/responseJson.js";
 import type { decryptionFailedJson, decryptionSuccessJson } from "../types/decryptionRespoonseTypes.js";

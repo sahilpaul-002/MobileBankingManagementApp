@@ -85,7 +85,7 @@ export const getDnsConfigService = async (req: Request, aesDecryptedQueryData: R
 
         // Check cached DNS configuration data
         const cachedDnsConfigData: portalConfigurationDataType | undefined = dnsConfigCache.get(domainName);
-        if (cachedDnsConfigData && req.session.initiated && req.session.lastActivity && req.session.sessiondata && req.session.meta) {
+        if (cachedDnsConfigData && req.session?.initiated && req.session?.lastActivity && req.session?.sessiondata && req.session?.meta) {
             console.log("DNS configuration data fetched from cache", cachedDnsConfigData);
             return { status: "SUCCESS", message: "DNS config fetch successfully", data: cachedDnsConfigData }
         }
@@ -110,12 +110,18 @@ export const getDnsConfigService = async (req: Request, aesDecryptedQueryData: R
         // Set DNS configuration data in DNS configuration cache
         dnsConfigCache.set(domainName, responseDnsData);
 
+        // Ensure session exists before updating it
+        const session = req.session;
+        if (!session) {
+            throw new InvalidSessionError("Session not initialized for DNS configuration request");
+        }
+
         // INITIATE SESSION
-        req.session.initiated = true;
-        req.session.lastActivity = Date.now();
+        session.initiated = true;
+        session.lastActivity = Date.now();
 
         // Set DNS data in session
-        req.session.sessiondata = {
+        session.sessiondata = {
             domainName: dnsData.domain_name,
             dashboardName: dnsData.dashboard_name,
             baseUrl: dnsData?.base_url_api,
@@ -142,8 +148,8 @@ export const getDnsConfigService = async (req: Request, aesDecryptedQueryData: R
         const deviceId = req.headers['x-device-id'];
 
         // Store client IP and device id in session meta
-        req.session.meta = {
-            ...req.session.meta,
+        session.meta = {
+            ...session.meta,
             clientIp: clientIp as string,
             deviceId: deviceId as string,
         }

@@ -1,7 +1,7 @@
 import type {Request, Response, NextFunction} from "express";
 import type { failedResponseJson } from "../types/responseJson.js";
 import destroySession from "../utils/destroySession.js";
-import {AppErrorClass, InternalSeverError, ServiceError, UnauthenticatedError} from "../utils/AppErrorClass.js";
+import {AppErrorClass, InternalServerError, ServiceError, UnauthenticatedError} from "../utils/AppErrorClass.js";
 import logger from "../utils/logger.js";
 
 const SESSION_INACTIVITY_TIMEOUT = 1000 * 60 * 12;
@@ -32,8 +32,7 @@ const sessionExpiration = async (req: Request, res: Response, next: NextFunction
         }
 
         // No existing session.
-        // Allow the request to continue so dynamicSession's Proxy
-        // can initialize a session on the first property assignment.
+        // Allow the request to continue so dynamicSession's Proxy can initialize a session on the first property assignment.
         if (!req.session || !req.sessionID || !req.sessionRedisKey) {
             return next();
         }
@@ -44,7 +43,7 @@ const sessionExpiration = async (req: Request, res: Response, next: NextFunction
 
             if (destroyResponse.status !== "SUCCESS") {
                 return next(
-                    new InternalSeverError("FAILED TO DESTROY SESSION", destroyResponse.error)
+                    new InternalServerError("FAILED TO DESTROY SESSION", destroyResponse.error)
                 );
             }
 
@@ -61,7 +60,7 @@ const sessionExpiration = async (req: Request, res: Response, next: NextFunction
             const destroyResponse = await destroySession(req);
 
             if (destroyResponse.status !== "SUCCESS") {
-                return next(new InternalSeverError("FAILED TO DESTROY SESSION", destroyResponse.error));
+                return next(new InternalServerError("FAILED TO DESTROY SESSION", destroyResponse.error));
             }
 
             return next(new UnauthenticatedError("Session expired due to inactivity")

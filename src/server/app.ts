@@ -2,7 +2,6 @@ import express from "express";
 import dotenv from "dotenv";
 import helmet from "helmet";
 import rid from "connect-rid"
-import cookieParser from "cookie-parser";
 import timeout from "connect-timeout";
 import dynamicSession from "../middlewares/dynamicSession.js";
 import rateLimiter from "../middlewares/rateLimiter.js";

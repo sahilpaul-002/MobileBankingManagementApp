@@ -131,7 +131,7 @@ export class InvalidRequestParamsError extends AppErrorClass {
 export class ServiceTimeoutError extends AppErrorClass {
     constructor(message: string, error?: any) { super(429, 'SERVICE_TIMEOUT', message, error); }
 }
-export class InternalSeverError extends AppErrorClass {
+export class InternalServerError extends AppErrorClass {
     constructor(message: string, error?: any) { super(500, 'INTERNAL_SERVER_ERROR', message, error); }
 }
 export class ServiceUnavailableError extends AppErrorClass {

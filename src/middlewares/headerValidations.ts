@@ -1,8 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import type { failedResponseJson, successResponseJson } from "../types/responseJson.js";
 import extractJwtTokenValue from "../utils/extractJwtTokenValue.js";
-import cookieParser from "cookie-parser";
-import { AppErrorClass, ForbiddenError, InternalSeverError, InvalidHeaderError, ServiceError, UnauthenticatedError, UnauthorizedError } from "../utils/AppErrorClass.js";
+import { AppErrorClass, ForbiddenError, InternalServerError, InvalidHeaderError, ServiceError, UnauthenticatedError, UnauthorizedError } from "../utils/AppErrorClass.js";
 import type { userDetailsSchemaTypes } from "../types/schemaTypes.js";
 import { userDetailsModel as user_details } from "../models/user_details.js";
 import destroySession from "../utils/destroySession.js";
@@ -96,21 +95,21 @@ const headerValidations = async (req: Request, res: Response, next: NextFunction
             let userDetails: userDetailsSchemaTypes | null
             // Get user from DB
             const checkUserExistInDB = async (req: Request): Promise<userDetailsSchemaTypes | null> => {
-                const userExistResponse: userDetailsSchemaTypes | null = await user_details.findById(req.session.userId);
+                const userExistResponse: userDetailsSchemaTypes | null = await user_details.findById(req.session?.userId);
                 return userExistResponse;
             }
             userDetails = await checkUserExistInDB(req);
 
             // Check user exist in DB
             if (!userDetails) {
-                const destroySessionResponse = await destroySession(req.session, res);
+                const destroySessionResponse = await destroySession(req);
 
                 if (destroySessionResponse?.status !== "SUCCESS") {
                     if ((destroySessionResponse as failedResponseJson)?.error) {
-                        throw new InternalSeverError("FAILED TO DESTROY SESSION", (destroySessionResponse as failedResponseJson)?.error)
+                        throw new InternalServerError("FAILED TO DESTROY SESSION", (destroySessionResponse as failedResponseJson)?.error)
                     }
                     else {
-                        throw new InternalSeverError("FAILED TO DESTROY SESSION")
+                        throw new InternalServerError("FAILED TO DESTROY SESSION")
                     }
                 }
                 throw new ForbiddenError("User does not exists");

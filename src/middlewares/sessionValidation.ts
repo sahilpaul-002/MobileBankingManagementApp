@@ -8,7 +8,7 @@ import destroySession from '../utils/destroySession.js';
 import normalizeIp from '../utils/normalizeIp.js';
 import { userMetaDetailsModel as user_meta_details } from '../models/user_meta_details.js';
 import type { ObjectId } from 'mongoose';
-import { AppErrorClass, ForbiddenError, InternalSeverError, InvalidSessionError, ServiceError, ServiceUnavailableError, UnauthenticatedError, UnauthorizedError } from '../utils/AppErrorClass.js';
+import { AppErrorClass, ForbiddenError, InternalServerError, InvalidSessionError, ServiceError, ServiceUnavailableError, UnauthenticatedError, UnauthorizedError } from '../utils/AppErrorClass.js';
 import logger from '../utils/logger.js';
 
 const sessionValidation = async (req: Request, res: Response, next: NextFunction): Promise<Response<failedResponseJson> | void> => {
@@ -49,10 +49,10 @@ const sessionValidation = async (req: Request, res: Response, next: NextFunction
 
                 if (destroySessionResponse?.status !== "SUCCESS") {
                     if ((destroySessionResponse as failedResponseJson)?.error) {
-                        throw new InternalSeverError("FAILED TO DESTROY SESSION", (destroySessionResponse as failedResponseJson)?.error)
+                        throw new InternalServerError("FAILED TO DESTROY SESSION", (destroySessionResponse as failedResponseJson)?.error)
                     }
                     else {
-                        throw new InternalSeverError("FAILED TO DESTROY SESSION")
+                        throw new InternalServerError("FAILED TO DESTROY SESSION")
                     }
                 }
                 throw new ForbiddenError("User does not exists");
