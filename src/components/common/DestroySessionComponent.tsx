@@ -1,9 +1,10 @@
+
 import { useappDispatchType } from "@/redux/hooks/reduxHooks";
 import { logoutUser } from "@/redux/thunks/userThunks";
 import { router } from "expo-router";
 import { LogOut, ShieldAlert } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, Text, View } from "react-native";
 
 export type destroySessionPropsTypes = {
     title: string;
@@ -21,17 +22,20 @@ export default function DestroySessionComponent({
     onCancel,
 }: destroySessionPropsTypes) {
     const dispatch = useappDispatchType();
-    const initialDuration = type === "SESSION_INACTIVITY" ? 60 : duration;
-    const [prevInitialDuration, setPrevInitialDuration] = useState(initialDuration);
-    const [timeLeft, setTimeLeft] = useState(initialDuration);
 
-    if (prevInitialDuration !== initialDuration) {
-        setPrevInitialDuration(initialDuration);
-        setTimeLeft(initialDuration);
-    }
+    const initialDuration = type === "SESSION_INACTIVITY" ? 60 : duration;
+
+    const [timeLeft, setTimeLeft] = useState(initialDuration);
+    const [isModalVisible, setIsModalVisible] = useState(true);
 
     const isLoggingOutRef = useRef(false);
 
+    // Reset countdown when the initial duration changes.
+    useEffect(() => {
+        setTimeLeft(initialDuration);
+    }, [initialDuration]);
+
+    // Logout handler.
     const handleLogout = useCallback(async () => {
         if (isLoggingOutRef.current) {
             return;
@@ -39,17 +43,34 @@ export default function DestroySessionComponent({
 
         isLoggingOutRef.current = true;
 
+        // Close modal immediately.
+        setIsModalVisible(false);
+
         try {
             await dispatch(logoutUser()).unwrap();
         } catch {
             // Logout thunk already logs errors.
             // Continue to the authentication route regardless.
         } finally {
-            router.replace('/');
+            router.replace("/");
         }
     }, [dispatch]);
 
+    // Continue session handler.
+    const handleContinue = useCallback(() => {
+        // Close modal.
+        setIsModalVisible(false);
+
+        // Execute parent's onCancel callback.
+        onCancel?.();
+    }, [onCancel]);
+
+    // Countdown timer.
     useEffect(() => {
+        if (!isModalVisible) {
+            return;
+        }
+
         if (timeLeft <= 0) {
             void handleLogout();
             return;
@@ -60,7 +81,7 @@ export default function DestroySessionComponent({
         }, 1000);
 
         return () => clearTimeout(timer);
-    }, [timeLeft, handleLogout]);
+    }, [timeLeft, isModalVisible, handleLogout]);
 
     const progressPercent = Math.min(
         100,
@@ -72,12 +93,14 @@ export default function DestroySessionComponent({
             transparent
             animationType="fade"
             statusBarTranslucent
-            visible
-            onRequestClose={type === "SESSION_INACTIVITY" ? onCancel : undefined}
+            visible={isModalVisible}
+            onRequestClose={type === "SESSION_INACTIVITY" ? handleContinue : undefined}
         >
-            <View style={styles.overlay}>
-                <View style={styles.card}>
-                    <View style={styles.iconContainer}>
+            <View className="flex-1 bg-[#0c1830]/75 justify-center items-center p-6">
+                <View className="w-full max-w-[380px] bg-white rounded-2xl p-6 items-center border border-[#e6e8ee] shadow-lg">
+
+                    {/* Icon */}
+                    <View className="w-14 h-14 rounded-full bg-[#f4f6fa] items-center justify-center mb-4">
                         {type === "SESSION_INACTIVITY" ? (
                             <ShieldAlert size={28} color="#d49a4d" />
                         ) : (
@@ -85,38 +108,45 @@ export default function DestroySessionComponent({
                         )}
                     </View>
 
-                    <Text style={styles.titleText}>{title}</Text>
-                    <Text style={styles.subtitleText}>{subtitle}</Text>
+                    {/* Title */}
+                    <Text className="text-lg font-bold text-[#0c1830] text-center mb-2">
+                        {title}
+                    </Text>
 
-                    <View style={styles.progressBarTrack}>
+                    {/* Subtitle */}
+                    <Text className="text-sm text-[#4a5673] text-center leading-5 mb-5">
+                        {subtitle}
+                    </Text>
+
+                    {/* Progress Bar */}
+                    <View className="w-full h-1.5 bg-[#e6e8ee] rounded-full overflow-hidden mb-3">
                         <View
-                            style={[
-                                styles.progressBarFill,
-                                {
-                                    width: `${progressPercent}%`,
-                                    backgroundColor:
-                                        type === "SESSION_INACTIVITY" ? "#d49a4d" : "#b03333",
-                                },
-                            ]}
+                            className={`h-full rounded-full ${type === "SESSION_INACTIVITY"
+                                    ? "bg-[#d49a4d]"
+                                    : "bg-[#b03333]"
+                                }`}
+                            style={{ width: `${progressPercent}%` }}
                         />
                     </View>
 
-                    <Text style={styles.countdownText}>
-                        Redirecting in {timeLeft} {timeLeft === 1 ? "second" : "seconds"}...
+                    {/* Countdown */}
+                    <Text className="text-xs font-medium text-[#8a93a8] mb-6">
+                        Redirecting in {timeLeft}{" "}
+                        {timeLeft === 1 ? "second" : "seconds"}...
                     </Text>
 
-                    <View style={styles.buttonRow}>
+                    {/* Buttons */}
+                    <View className="flex-row gap-3 w-full justify-center">
                         {type === "SESSION_INACTIVITY" && onCancel && (
                             <Pressable
-                                onPress={onCancel}
+                                onPress={handleContinue}
                                 accessibilityRole="button"
                                 accessibilityLabel="Continue session"
-                                style={({ pressed }) => [
-                                    styles.continueButton,
-                                    pressed && styles.buttonPressed,
-                                ]}
+                                className="flex-1 py-3 px-4 rounded-lg bg-[#f0f3f9] border border-[#d2d6de] items-center justify-center active:opacity-80"
                             >
-                                <Text style={styles.continueButtonText}>Continue</Text>
+                                <Text className="text-sm font-semibold text-[#0c1830]">
+                                    Continue
+                                </Text>
                             </Pressable>
                         )}
 
@@ -124,12 +154,11 @@ export default function DestroySessionComponent({
                             onPress={handleLogout}
                             accessibilityRole="button"
                             accessibilityLabel="Log out now"
-                            style={({ pressed }) => [
-                                styles.logoutButton,
-                                pressed && styles.buttonPressed,
-                            ]}
+                            className="flex-1 py-3 px-4 rounded-lg bg-[#b03333] items-center justify-center active:opacity-80"
                         >
-                            <Text style={styles.logoutButtonText}>Logout</Text>
+                            <Text className="text-sm font-semibold text-white">
+                                Logout
+                            </Text>
                         </Pressable>
                     </View>
                 </View>
@@ -137,108 +166,3 @@ export default function DestroySessionComponent({
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: "rgba(12, 24, 48, 0.72)",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 24,
-    },
-    card: {
-        width: "100%",
-        maxWidth: 380,
-        backgroundColor: "#ffffff",
-        borderRadius: 16,
-        padding: 24,
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: "#e6e8ee",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.18,
-        shadowRadius: 16,
-        elevation: 10,
-    },
-    iconContainer: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: "#f4f6fa",
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 16,
-    },
-    titleText: {
-        fontSize: 18,
-        fontWeight: "700",
-        color: "#0c1830",
-        textAlign: "center",
-        marginBottom: 8,
-    },
-    subtitleText: {
-        fontSize: 14,
-        color: "#4a5673",
-        textAlign: "center",
-        lineHeight: 20,
-        marginBottom: 20,
-    },
-    progressBarTrack: {
-        width: "100%",
-        height: 6,
-        backgroundColor: "#e6e8ee",
-        borderRadius: 3,
-        overflow: "hidden",
-        marginBottom: 12,
-    },
-    progressBarFill: {
-        height: "100%",
-        borderRadius: 3,
-    },
-    countdownText: {
-        fontSize: 12,
-        fontWeight: "500",
-        color: "#8a93a8",
-        marginBottom: 24,
-    },
-    buttonRow: {
-        flexDirection: "row",
-        gap: 12,
-        width: "100%",
-        justifyContent: "center",
-    },
-    continueButton: {
-        flex: 1,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        backgroundColor: "#f0f3f9",
-        borderWidth: 1,
-        borderColor: "#d2d6de",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    continueButtonText: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#0c1830",
-    },
-    logoutButton: {
-        flex: 1,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        backgroundColor: "#b03333",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    logoutButtonText: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#ffffff",
-    },
-    buttonPressed: {
-        opacity: 0.8,
-    },
-});

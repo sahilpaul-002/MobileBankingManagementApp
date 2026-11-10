@@ -2,26 +2,16 @@ import BannerComponent from "@/components/common/BannerComponent";
 import DestroySessionComponent from "@/components/common/DestroySessionComponent";
 import { useappDispatchType, useAppSelector } from "@/redux/hooks/reduxHooks";
 import { selectIsLoggingOut } from "@/redux/slice/appSession/appSessionSlice";
-import {
-    selectIsAuthenticated,
-    selectIsAuthorized,
-} from "@/redux/slice/user/userSlice";
-import {
-    clearBanner,
-    clearDestroySession,
-    selectDestroySessionParams,
-    selectMessageBanner,
-    selectShowDestroySession,
-    selectShowErrorBanner,
-    selectShowInfoBanner,
-} from "@/redux/slice/utility/utilitySlice";
+import { selectIsAuthenticated, selectIsAuthorized } from "@/redux/slice/user/userSlice";
+import { clearBanner, clearDestroySession, selectDestroySessionParams, selectMessageBanner, selectShowDestroySession, selectShowErrorBanner, selectShowInfoBanner } from "@/redux/slice/utility/utilitySlice";
 import { Slot } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, AppState, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // 15 minutes of inactivity before session expiry warning
-const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+// const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+const INACTIVITY_TIMEOUT_MS = 10 * 1000;
 
 export default function AppLayout() {
     const dispatch = useappDispatchType();
@@ -50,12 +40,7 @@ export default function AppLayout() {
             clearTimeout(inactivityTimerRef.current);
         }
 
-        if (
-            !isUserActiveSession ||
-            showDestroySession ||
-            showInactivityModal ||
-            isLoggingOut
-        ) {
+        if (!isUserActiveSession || showDestroySession || showInactivityModal || isLoggingOut) {
             return;
         }
 
@@ -64,6 +49,7 @@ export default function AppLayout() {
         }, INACTIVITY_TIMEOUT_MS);
     }, [isUserActiveSession, showDestroySession, showInactivityModal, isLoggingOut]);
 
+    // UseEffect to reset inactivity timer on mount and clean up on unmount
     useEffect(() => {
         resetInactivityTimer();
         return () => {
@@ -73,6 +59,25 @@ export default function AppLayout() {
         };
     }, [resetInactivityTimer]);
 
+    // Callback to handle user activity (touch events) and reset inactivity timer
+    const handleUserActivity = useCallback(() => {
+        if (!showInactivityModal && !showDestroySession && !isLoggingOut) {
+            resetInactivityTimer();
+        }
+    }, [showInactivityModal, showDestroySession, isLoggingOut, resetInactivityTimer]);
+
+    // UseEffect to listen for app state changes (foreground/background)
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", (nextState) => {
+            if (nextState === "active") {
+                resetInactivityTimer();
+            }
+        });
+
+        return () => subscription.remove();
+    }, [resetInactivityTimer]);
+
+    // Callback function to handle banner dismissal
     const handleDismissBanner = useCallback(() => {
         dispatch(clearBanner());
     }, [dispatch]);
@@ -93,12 +98,8 @@ export default function AppLayout() {
         <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
             <View
                 className="h-full w-full bg-[#f4f6fa]"
-                onStartShouldSetResponderCapture={() => {
-                    if (!showInactivityModal && !showDestroySession) {
-                        resetInactivityTimer();
-                    }
-                    return false;
-                }}
+                onTouchStart={handleUserActivity}
+                onTouchMove={handleUserActivity}
             >
                 {/* Main Screen Content */}
                 <Slot />

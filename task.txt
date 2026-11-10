@@ -3,3 +3,4 @@
 3. Apply authorization technique to protect from deep linking (react native docs -> security)
 4. Use Async Storage to store the dns base url , and user email, user id, cardholder id
 5. Install the APK once and connect through the same development network or USB.
+6. Use biometric expo secure to store the public key for 2fa and validate the code by decrypting in the backend

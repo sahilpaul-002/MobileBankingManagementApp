@@ -3,13 +3,7 @@ import ToastMessagesComponent from '@/components/common/ToastMessagesComponent';
 import { setAxiosDispatch, setAxiosReduxAccess } from '@/configs/axiosConfig';
 import AppLayout from '@/layouts/AppLayout';
 import { store, storeDispatch } from '@/redux/sotre';
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-  usePathname,
-  useSegments,
-} from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider, usePathname, useSegments, } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { Activity, useEffect, useState } from 'react';
 import { StatusBar, useColorScheme, View } from 'react-native';
