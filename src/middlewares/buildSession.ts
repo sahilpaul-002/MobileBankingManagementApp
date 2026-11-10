@@ -1,8 +1,8 @@
 
 import type { SessionConfigMap } from "../types/sessionTypes.js";
 
-// const SESSION_TTL = 60 * 12;
-const SESSION_TTL = 60;
+const SESSION_TTL = 60 * 12;
+// const SESSION_TTL = 60;
 
 const buildSession = (): SessionConfigMap => ({
     BUSINESS: {
