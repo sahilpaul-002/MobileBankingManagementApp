@@ -17,7 +17,7 @@ export async function authenticateDevice() {
 
         // Allow the native authentication API to determine whether device credential authentication is available.
         const result = await LocalAuthentication.authenticateAsync({
-            promptMessage: 'Unlock Banking Management',
+            promptMessage: 'Unlock App',
             cancelLabel: 'Cancel',
             disableDeviceFallback: false,
         });

@@ -5,8 +5,10 @@ import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
 import { selectApplicaitonHeaders, selectDnsConfigDetails, setAppliationHeaders, type applicationHeaderItemsType, type dnsConfigDataType } from '@/redux/slice/config/configSlice'
 import { setAuthenticated, setIsAdmin, setIsMasterAdmin } from '@/redux/slice/user/userSlice'
 import type { rootStateType } from '@/redux/sotre'
+import { saveAuthToken, saveRefreshToken } from '@/utils/expoSecureJwtTokenStorage'
 import { rsaEncryption } from '@/utils/rsaEncryption'
 import { createApi } from '@reduxjs/toolkit/query/react'
+import { AxiosResponseHeaders } from 'axios'
 import { configApis } from '../config/configApi'
 import executeBaseQuery from '../executeBaseQuery'
 import { helperApis } from '../helper/helperApis'
@@ -235,6 +237,16 @@ export const userApis = createApi({
                         throw new ApplicationServiceError("UserSignIn - Missing required dynamic api headers");
                     }
 
+                    // const result = await executeBaseQuery(baseQuery, {
+                    //     url: `${USER_URL}/login`,
+                    //     method: 'POST',
+                    //     headers,
+                    //     params: { domainName: dnsConfig?.domain_name },
+                    //     data: payload,
+                    // }) as {
+                    //     data?: apiResponseType<apiResponseDataType>
+                    //     error?: unknown
+                    // }
                     const result = await executeBaseQuery(baseQuery, {
                         url: `${USER_URL}/login`,
                         method: 'POST',
@@ -242,8 +254,31 @@ export const userApis = createApi({
                         params: { domainName: dnsConfig?.domain_name },
                         data: payload,
                     }) as {
-                        data?: apiResponseType<apiResponseDataType>
-                        error?: unknown
+                        data?: apiResponseType<apiResponseDataType>;
+                        error?: unknown;
+                        meta?: {
+                            headers?: AxiosResponseHeaders;
+                        };
+                    };
+
+                    // Store authentication tokens
+                    if (result.data?.status?.toUpperCase() === "SUCCESS") {
+                        const authToken = result.meta?.headers?.["x-auth-token"];
+                        const refreshToken = result.meta?.headers?.["x-refresh-token"];
+                        console.log("Auth Token:", authToken);
+                        console.log("Refresh Token:", refreshToken);
+
+                        if (
+                            typeof authToken !== "string" ||
+                            typeof refreshToken !== "string"
+                        ) {
+                            throw new ApplicationServiceError("SIGN-IN - Authentication tokens missing from response headers");
+                        }
+
+                        await Promise.all([
+                            saveAuthToken(authToken),
+                            saveRefreshToken(refreshToken),
+                        ]);
                     }
 
                     // Set the user details in slice

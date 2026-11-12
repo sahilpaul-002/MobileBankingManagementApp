@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-const SESSION_STORAGE_KEY = 'BMA_SESSION_ID';
+const SESSION_STORAGE_KEY = 'CMA_SESSION_ID';
 
 export const getSessionId = async (): Promise<string | null> => {
     return SecureStore.getItemAsync(SESSION_STORAGE_KEY);
