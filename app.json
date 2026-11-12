@@ -42,6 +42,10 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "jsEngine": "hermes",
+    "ios": {
+      "jsEngine": "jsc"
     }
   }
 }
