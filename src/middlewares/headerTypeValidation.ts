@@ -163,6 +163,12 @@ const headerTypeValidation = (req: Request, res: Response, next: NextFunction): 
         if (!authorizationHeader) {
             throw new InvalidHeaderError("'authorization' MISSING OR NOT STRING");
         }
+
+        // Validation Session header
+        const sessionId = checkStringHeader(req.headers, "x-session-id");
+        if (!sessionId) {
+            throw new InvalidHeaderError("'x-session-id' MISSING OR NOT STRING");
+        }
         // ---------------------------- XXXXXXXXXXXXXXXXXXXX ---------------------------- \\
 
         // Skip user existance check for selcted pathes
@@ -176,6 +182,18 @@ const headerTypeValidation = (req: Request, res: Response, next: NextFunction): 
             // if (!authorizationHeader) {
             //     throw new InvalidHeaderError("'authorization' MISSING OR NOT STRING")
             // }
+
+            // Validation Authentication Token header
+            const authToken = checkStringHeader(req.headers, "x-auth-token");
+            if (!authToken) {
+                throw new InvalidHeaderError("'x-auth-token' MISSING OR NOT STRING");
+            }
+
+            // Validation Refresh Token header
+            const refreshToken = checkStringHeader(req.headers, "x-refresh-token");
+            if (!refreshToken) {
+                throw new InvalidHeaderError("'x-refresh-token' MISSING OR NOT STRING");
+            }
 
             // Validate Agent Code header
             const agentCode: string | null = checkStringHeader(req.headers, "agent-code")

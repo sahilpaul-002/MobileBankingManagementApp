@@ -372,8 +372,8 @@ export const userLoginService = async (req: Request, res: Response, aesDecrypted
         const jwtRefreshToken = await generateJwtToken({ accessToken: accessToken, clientId: req?.session?.userConfiguration?.programId as string, businessId: req?.session?.userConfiguration?.businessId as string }, "30m", jwtSecretKey);
 
         // Set Authentication Tokens in Response Headers
-        res.setHeader("x-auth-token", jwtAuthToken);
-        res.setHeader("x-refresh-token", jwtRefreshToken);
+        res.setHeader("X-Auth-Token", jwtAuthToken);
+        res.setHeader("X-Refresh-Token", jwtRefreshToken);
 
         // Prevent authentication tokens from being cached
         res.setHeader("Cache-Control", "no-store");

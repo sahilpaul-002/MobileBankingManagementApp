@@ -12,6 +12,7 @@ import sanitizeApiError from "../utils/sanitizeApiError.js";
 const SESSION_ID_REGEX = /^[A-Za-z0-9_-]{43}$/;
 
 const isSessionBootstrapRoute = (req: Request): boolean => req.method === "GET" && req.path.endsWith("/getEncryptionKey");
+const isHelperRoutes = (req: Request): boolean => req.path.startsWith("/api/v1/helper/")
 
 const dynamicSession = (): RequestHandler => {
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -71,6 +72,7 @@ const dynamicSession = (): RequestHandler => {
 
                 // Check whether the current route is a bootstrap route.
                 const isBootstrapRoute = isSessionBootstrapRoute(req);
+                const isHelperRoute = isHelperRoutes(req);
 
                 sessionRedisKey = `${sessionConfig.prefix}:${sessionId}`;
 
@@ -78,7 +80,7 @@ const dynamicSession = (): RequestHandler => {
                 const storedSession = await redisClient.get(sessionRedisKey);
 
                 if (!storedSession) {
-                    if (!isBootstrapRoute) {
+                    if (!isBootstrapRoute && !isHelperRoute) {
                         throw new UnauthenticatedError("Session expired or not found");
                         // res.status(401).json({ status: "UNAUTHENTICATED", code: "SESSION_EXPIRED", message: "Session expired or not found" });
                         // return;
