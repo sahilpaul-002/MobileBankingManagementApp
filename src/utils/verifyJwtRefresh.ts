@@ -1,82 +1,90 @@
+
 import jwt, { type JwtPayload } from "jsonwebtoken";
 
-interface jwtRefreshDtaType extends JwtPayload {
-    accessToken: string
-    programId: string
-    businessId: string
+interface JwtRefreshDataType extends JwtPayload {
+    accessToken: string;
+    clientId: string;
+    businessId: string;
 }
 
-// 🔐 Define return types
-type verifyJwtRefreshResponse = {
-    status: "SUCCESS";
-    jwtAuthData: jwtRefreshDtaType;
-} |
-{
-    status: "EXPIRED";
-    message: string;
-    expiredAt: Date;
-    error: unknown;
-} |
-{
-    status: "INVALID";
-    message: string;
-    error: unknown;
-} |
-{
-    status: "SERVICE_ERROR";
-    error: unknown;
-} | 
-{
-    status: "UNAUTHORIZED";
-    message: string;
-};
+type VerifyJwtRefreshResponse =
+    | {
+        status: "SUCCESS";
+        jwtAuthData: JwtRefreshDataType;
+    }
+    | {
+        status: "EXPIRED";
+        message: string;
+        expiredAt: Date;
+        error: unknown;
+    }
+    | {
+        status: "INVALID";
+        message: string;
+        error: unknown;
+    }
+    | {
+        status: "SERVICE_ERROR";
+        error: unknown;
+    }
+    | {
+        status: "UNAUTHORIZED";
+        message: string;
+    };
 
-// 🔐 Function
 const verifyJwtRefresh = async (
     jwtRefreshToken: string,
-    jwtRefreshSecretKey?: string
-): Promise<verifyJwtRefreshResponse> => {
+    jwtRefreshSecretKey: string
+): Promise<VerifyJwtRefreshResponse> => {
+
     try {
         if (!jwtRefreshToken) {
-            return { status: "UNAUTHORIZED", message: "Missing auth token or refresh token" }
+            return {
+                status: "UNAUTHORIZED",
+                message: "Missing refresh token"
+            };
         }
 
-        const jwtSecretKey: string =
-            jwtRefreshSecretKey ||
-            process.env.JWT_SECRET_KEY ||
-            "e4b7c2a9d1f6e8c3b5a7d9f2c4e1a6b8d3f0c7a9e5b2d4"
+        if (!jwtRefreshSecretKey) {
+            return {
+                status: "SERVICE_ERROR",
+                error: new Error("JWT secret unavailable")
+            };
+        }
 
-        // Verify token
-        const authData = jwt.verify(jwtRefreshToken, jwtSecretKey) as jwtRefreshDtaType;
+        const authData = jwt.verify(
+            jwtRefreshToken,
+            jwtRefreshSecretKey
+        ) as JwtRefreshDataType;
 
         return {
             status: "SUCCESS",
-            jwtAuthData: authData,
+            jwtAuthData: authData
         };
+
     } catch (error: any) {
-        console.log({ status: "SERVICE_ERROR", error });
 
         if (error.name === "TokenExpiredError") {
             return {
                 status: "EXPIRED",
-                message: "JWT token has expired",
+                message: "Refresh token has expired",
                 expiredAt: error.expiredAt,
-                error,
+                error
             };
         }
-        else if (error.name === "JsonWebTokenError") {
+
+        if (error.name === "JsonWebTokenError") {
             return {
                 status: "INVALID",
-                message: "Invalid JWT token",
-                error,
+                message: "Invalid refresh token",
+                error
             };
         }
-        else {
-            return {
-                status: "SERVICE_ERROR",
-                error,
-            };
-        }
+
+        return {
+            status: "SERVICE_ERROR",
+            error
+        };
     }
 };
 

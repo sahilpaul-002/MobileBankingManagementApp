@@ -13,7 +13,6 @@ import type { sessionDataTypes } from "../types/sessionTypes.js";
 import type { failedResponseJson, successResponseJson } from "../types/responseJson.js";
 import extractJwtTokenValue from "../utils/extractJwtTokenValue.js";
 import generateJwtToken from "../utils/generateJwtToken.js";
-import setResponseCookie from "../utils/setResponseCookie.js";
 import checkStringBody from "../utils/checkStringBody.js";
 import { getDnsConfigService } from "./configServices.js";
 import type { ParsedQs } from "qs";
@@ -367,20 +366,17 @@ export const userLoginService = async (req: Request, res: Response, aesDecrypted
         const jwtSecretKey: string = process.env.JWT_SECRET_KEY || "e4b7c2a9d1f6e8c3b5a7d9f2c4e1a6b8d3f0c7a9e5b2d4"
 
         // Create Auth Token
-        const jwtAuthToken = await generateJwtToken({ accessToken: accessToken, userType: req.session.userType }, "12m", jwtSecretKey);
-        // Set Auth Token Cookie
-        const setResponseAuthCookieResult: successResponseJson = await setResponseCookie(res, "authToken", jwtAuthToken, 1000 * 60 * 20);
-        if (setResponseAuthCookieResult.status.toUpperCase() !== "SUCCESS") {
-            throw new ServiceError("Failed to set response auth-token cookie");
-        }
+        const jwtAuthToken = await generateJwtToken({ accessToken: accessToken, userType: req.session?.userType! }, "12m", jwtSecretKey);
 
-        // Create Auth Token
+        // Create Refresh Token
         const jwtRefreshToken = await generateJwtToken({ accessToken: accessToken, clientId: req?.session?.userConfiguration?.programId as string, businessId: req?.session?.userConfiguration?.businessId as string }, "30m", jwtSecretKey);
-        // Set Refresh Token Cookie
-        const setResponseRefreshCookieResult: successResponseJson = await setResponseCookie(res, "refreshToken", jwtRefreshToken, 1000 * 60 * 60);
-        if (setResponseRefreshCookieResult.status.toUpperCase() !== "SUCCESS") {
-            throw new ServiceError("Failed to set response refresh-token cookie");
-        }
+
+        // Set Authentication Tokens in Response Headers
+        res.setHeader("x-auth-token", jwtAuthToken);
+        res.setHeader("x-refresh-token", jwtRefreshToken);
+
+        // Prevent authentication tokens from being cached
+        res.setHeader("Cache-Control", "no-store");
 
         const frontendUserDetails = {
             userId: userDetails?._id,
