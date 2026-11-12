@@ -209,7 +209,7 @@ export const userApis = createApi({
 
                     let dnsConfig = selectDnsConfigDetails(state)
                     if (!dnsConfig || !isSessionValid) {
-                        const domainName = window.location.hostname;
+                        const domainName = process.env.EXPO_PUBLIC_DOMAIN_NAME as string;
                         const result = await dispatch(
                             configApis.endpoints.getDnsConfig.initiate(
                                 {
@@ -237,16 +237,6 @@ export const userApis = createApi({
                         throw new ApplicationServiceError("UserSignIn - Missing required dynamic api headers");
                     }
 
-                    // const result = await executeBaseQuery(baseQuery, {
-                    //     url: `${USER_URL}/login`,
-                    //     method: 'POST',
-                    //     headers,
-                    //     params: { domainName: dnsConfig?.domain_name },
-                    //     data: payload,
-                    // }) as {
-                    //     data?: apiResponseType<apiResponseDataType>
-                    //     error?: unknown
-                    // }
                     const result = await executeBaseQuery(baseQuery, {
                         url: `${USER_URL}/login`,
                         method: 'POST',
@@ -265,13 +255,8 @@ export const userApis = createApi({
                     if (result.data?.status?.toUpperCase() === "SUCCESS") {
                         const authToken = result.meta?.headers?.["x-auth-token"];
                         const refreshToken = result.meta?.headers?.["x-refresh-token"];
-                        console.log("Auth Token:", authToken);
-                        console.log("Refresh Token:", refreshToken);
 
-                        if (
-                            typeof authToken !== "string" ||
-                            typeof refreshToken !== "string"
-                        ) {
+                        if (typeof authToken !== "string" || typeof refreshToken !== "string") {
                             throw new ApplicationServiceError("SIGN-IN - Authentication tokens missing from response headers");
                         }
 
@@ -348,6 +333,7 @@ export const userApis = createApi({
                             ...sanitizedLoginData
                         } = loginData;
 
+                        NEED TO CHANGE FROM SESSION STORAGE TO EXPO SECURE STORAGE
                         // Store user email in session storage
                         const USER_SESSION_KEYS = [
                             "userEmail",

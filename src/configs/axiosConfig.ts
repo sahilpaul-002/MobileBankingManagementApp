@@ -542,7 +542,13 @@ export const axiosBaseQuery =
                     params,
                     ...(headers && { headers }),
                 });
-                return { data: result.data }
+
+                return {
+                    data: result.data,
+                    meta: {
+                        headers: result.headers,
+                    },
+                };
             } catch (err) {
                 const error = err as any;
 
