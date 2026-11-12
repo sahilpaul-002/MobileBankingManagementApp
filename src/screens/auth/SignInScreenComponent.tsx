@@ -60,30 +60,20 @@ export default function SignInScreenComponent() {
   const skeletonFinishedRef = useRef(false);
 
   // Form skeletal animation: starts 4s after mount if DNS data is not ready,
-  // runs for up to 4s or stops immediately once DNS data becomes available.
   useEffect(() => {
     if (isDnsAvailable || skeletonFinishedRef.current) {
       return;
     }
 
-    let maxDurationTimer: ReturnType<typeof setTimeout> | null = null;
+    setShowSkeleton(true);
 
-    const startDelayTimer = setTimeout(() => {
-      if (!skeletonFinishedRef.current) {
-        setShowSkeleton(true);
-
-        maxDurationTimer = setTimeout(() => {
-          setShowSkeleton(false);
-          skeletonFinishedRef.current = true;
-        }, 4000);
-      }
+    const maxDurationTimer = setTimeout(() => {
+      setShowSkeleton(false);
+      skeletonFinishedRef.current = true;
     }, 3000);
 
     return () => {
-      clearTimeout(startDelayTimer);
-      if (maxDurationTimer) {
-        clearTimeout(maxDurationTimer);
-      }
+      clearTimeout(maxDurationTimer);
     };
   }, [isDnsAvailable]);
 
@@ -231,8 +221,8 @@ export default function SignInScreenComponent() {
       const errorMessage = Array.isArray(err?.data?.message)
         ? err.data.message[0]
         : err?.data?.message ||
-          err?.message ||
-          'Sign in service is facing issue. Please try again later. If issue persist please contact support.';
+        err?.message ||
+        'Sign in service is facing issue. Please try again later. If issue persist please contact support.';
 
       const normalizedMessage = errorMessage.toLowerCase();
 
@@ -294,7 +284,7 @@ export default function SignInScreenComponent() {
         text1: 'Copied & Applied',
         text2: `${label} copied and filled in form`,
       });
-    } 
+    }
     catch {
       showToastMessage({
         type: 'error',

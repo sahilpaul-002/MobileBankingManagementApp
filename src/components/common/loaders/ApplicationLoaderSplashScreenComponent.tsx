@@ -21,6 +21,7 @@ const COLUMN_STAGGER = 60;
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ApplicationLoaderSplashScreenComponentProps {
+    isReady: boolean;
     onAnimationComplete: () => void;
 }
 
@@ -71,6 +72,7 @@ function AnimatedColumn({ index }: { index: number }) {
 }
 
 export default function ApplicationLoaderSplashScreenComponent({
+    isReady,
     onAnimationComplete,
 }: ApplicationLoaderSplashScreenComponentProps) {
     const opacity = useSharedValue(1);
@@ -86,29 +88,32 @@ export default function ApplicationLoaderSplashScreenComponent({
 
     const FADE_OUT_DURATION = 200;
 
+    // Hide native splash only when the custom loader is mounted.
     const handleLayout = useCallback(() => {
         if (hasStarted.current) return;
 
         hasStarted.current = true;
 
-        void SplashScreen.hideAsync().finally(() => {
-            opacity.value = withDelay(
-                DURATION - FADE_OUT_DURATION,
-                withTiming(
-                    0,
-                    {
-                        duration: FADE_OUT_DURATION,
-                        easing: Easing.out(Easing.cubic),
-                    },
-                    (finished) => {
-                        if (finished) {
-                            scheduleOnRN(completeAnimation);
-                        }
-                    },
-                ),
-            );
-        });
-    }, [completeAnimation, opacity]);
+        void SplashScreen.hideAsync();
+    }, []);
+
+    // Start fade-out only after application initialization succeeds.
+    useEffect(() => {
+        if (!isReady) return;
+
+        opacity.value = withTiming(
+            0,
+            {
+                duration: FADE_OUT_DURATION,
+                easing: Easing.out(Easing.cubic),
+            },
+            (finished) => {
+                if (finished) {
+                    scheduleOnRN(completeAnimation);
+                }
+            },
+        );
+    }, [isReady, opacity, completeAnimation]);
 
     return (
         <Animated.View
