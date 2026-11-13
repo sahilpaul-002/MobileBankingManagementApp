@@ -33,7 +33,7 @@ const CustomInputComponent = forwardRef<TextInput, CustomInputProps>(
         {label && (
           <Text
             className={cn(
-              "text-xs font-semibold text-[var(--color-ink-secondary)] tracking-wide",
+              "text-lg font-semibold text-[var(--color-ink-secondary)] tracking-wide",
               fieldLabelClassname,
             )}
           >
@@ -46,7 +46,7 @@ const CustomInputComponent = forwardRef<TextInput, CustomInputProps>(
           testID={id}
           placeholderTextColor={placeholderTextColor}
           className={cn(
-            "h-11 pl-3.5! pr-3.5! rounded-[var(--radius-control)] border bg-[var(--color-app-surface)] text-[var(--color-ink)] text-sm",
+            "h-12 pl-3.5! pr-3.5! rounded-[var(--radius-control)] border bg-[var(--color-app-surface)] text-[var(--color-ink)] text-md",
             error
               ? "border-[var(--color-status-danger)]"
               : "border-[var(--color-line-strong)] focus:border-[var(--color-gold)]",
@@ -57,7 +57,7 @@ const CustomInputComponent = forwardRef<TextInput, CustomInputProps>(
         />
 
         {error && (
-          <Text className="text-xs text-[var(--color-status-danger)] font-medium">
+          <Text className="text-sm text-[var(--color-status-danger)] font-medium">
             {error}
           </Text>
         )}

@@ -47,7 +47,7 @@ const signInFormValidationSchema = z.object({
 type SigninFormData = z.infer<typeof signInFormValidationSchema>;
 
 const DEMO_CREDENTIALS = [
-  { label: 'Email', value: 'bmatest02@yopmail.com' },
+  { label: 'Email', value: 'bmatest01@yopmail.com' },
   { label: 'Password', value: 'W@llet123' },
 ];
 
@@ -306,17 +306,17 @@ export default function SignInScreenComponent() {
       >
         <View className="w-full flex-col items-center gap-5 my-auto">
           {/* Logo / Brand Header */}
-          <View className="w-16 h-16 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
-            <Landmark size={30} color="#d49a4d" strokeWidth={1.8} />
+          <View className="w-30 h-30 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
+            <Landmark size={60} color="#d49a4d" strokeWidth={1.8} />
           </View>
 
           {/* Heading Text */}
           <View className="w-full items-center text-center gap-1.5">
-            <Text className="text-2xl font-bold tracking-tight text-[var(--color-gold)]">
+            <Text className="text-4xl font-bold tracking-tight text-[var(--color-gold)]">
               Sign in
             </Text>
-            <Text className="text-xs text-[var(--color-ink-muted)] text-center max-w-[280px]">
-              Welcome back. Access your crypto & fiat wallet.
+            <Text className="text-md text-[var(--color-ink-muted)] text-center max-w-[280px]">
+              Access & Manage Your Cards.
             </Text>
           </View>
 
@@ -351,7 +351,7 @@ export default function SignInScreenComponent() {
               />
 
               {/* Password Field + Forgot Password */}
-              <View className="w-full flex-col gap-1.5">
+              <View className="w-full flex-col gap-1.5 mt-3">
                 <Controller
                   control={control}
                   name="password"
@@ -379,7 +379,7 @@ export default function SignInScreenComponent() {
                     onPress={() => router.push('/reset-password/send-code')}
                     hitSlop={8}
                   >
-                    <Text className="text-xs font-semibold text-[var(--color-link)] active:opacity-70">
+                    <Text className="text-md font-semibold text-[var(--color-link)] active:opacity-70">
                       Forgot Password ?
                     </Text>
                   </Pressable>
@@ -392,7 +392,8 @@ export default function SignInScreenComponent() {
                   id="signPage-signinForm-button"
                   label="Sign In"
                   variant="navy"
-                  size="lg"
+                  buttonClassName="w-fit"
+                  labelClassName="text-lg font-semibold"
                   showButtonLoader={isLoading}
                   onPress={handleSubmit(onSigninFormSubmit)}
                 />
@@ -400,14 +401,14 @@ export default function SignInScreenComponent() {
 
               {/* Create Account Link */}
               <View className="w-full flex-row justify-center items-center gap-1.5 pt-2">
-                <Text className="text-xs text-[var(--color-ink-muted)]">
+                <Text className="text-sm text-[var(--color-ink-muted)]">
                   Create a new account -
                 </Text>
                 <Pressable
                   onPress={() => router.push('/signUp')}
                   hitSlop={8}
                 >
-                  <Text className="text-xs font-semibold text-[var(--color-link)] active:opacity-70">
+                  <Text className="text-sm font-semibold text-[var(--color-link)] active:opacity-70">
                     Sign Up
                   </Text>
                 </Pressable>

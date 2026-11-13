@@ -7,6 +7,7 @@ import { setAuthenticated, setIsAdmin, setIsMasterAdmin } from '@/redux/slice/us
 import type { rootStateType } from '@/redux/sotre'
 import { saveAuthToken, saveRefreshToken } from '@/utils/expoSecureJwtTokenStorage'
 import { rsaEncryption } from '@/utils/rsaEncryption'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { AxiosResponseHeaders } from 'axios'
 import { configApis } from '../config/configApi'
@@ -138,7 +139,7 @@ export const userApis = createApi({
 
                     let dnsConfig = selectDnsConfigDetails(state)
                     if (!dnsConfig || !isSessionValid) {
-                        const domainName = window.location.hostname;
+                        const domainName = process.env.EXPO_PUBLIC_DOMAIN_NAME as string;
                         const result = await dispatch(
                             configApis.endpoints.getDnsConfig.initiate(
                                 {
@@ -251,7 +252,7 @@ export const userApis = createApi({
                         };
                     };
 
-                    // Store authentication tokens
+                    // Store authentication/refresh tokens in expo secure store
                     if (result.data?.status?.toUpperCase() === "SUCCESS") {
                         const authToken = result.meta?.headers?.["x-auth-token"];
                         const refreshToken = result.meta?.headers?.["x-refresh-token"];
@@ -279,7 +280,7 @@ export const userApis = createApi({
 
                         // Encrypt Application Headers
                         // ----------------------------- Get RSA Encryption Key ----------------------------- \\
-                        let rsaHeaderEncryptionPublicKey = sessionStorage.getItem('headerPublicKey');
+                        let rsaHeaderEncryptionPublicKey = await AsyncStorage.getItem('headerPublicKey');
                         if (!rsaHeaderEncryptionPublicKey) {
                             const headerKeyResult = await dispatch(
                                 configApis.endpoints.getHeaderRsaEncryptionPublicKey.initiate(
@@ -333,23 +334,35 @@ export const userApis = createApi({
                             ...sanitizedLoginData
                         } = loginData;
 
-                        NEED TO CHANGE FROM SESSION STORAGE TO EXPO SECURE STORAGE
-                        // Store user email in session storage
+                        // Store user details in AsyncStorage
                         const USER_SESSION_KEYS = [
-                            "userEmail",
-                            "userId",
-                            "cardholderId",
-                            "userWalletId",
+                            'userEmail',
+                            'userId',
+                            'cardholderId',
+                            'userWalletId',
                         ] as const;
-                        const clearUserSessionStorage = () => {
-                            USER_SESSION_KEYS.forEach((key) => {
-                                sessionStorage.removeItem(key);
-                            });
-                        };
-                        clearUserSessionStorage();
-                        sessionStorage.setItem('userEmail', sanitizedLoginData.userEmail);
-                        sessionStorage.setItem("userId", sanitizedLoginData.userId)
-                        sessionStorage.setItem('cardholderId', sanitizedLoginData.cardholderId)
+
+                        // Remove previously stored user session details
+                        await AsyncStorage.multiRemove([...USER_SESSION_KEYS]);
+
+                        // Prepare user session details
+                        const userSessionData: [string, string][] = [];
+                        if (sanitizedLoginData.userEmail) {
+                            userSessionData.push(['userEmail', sanitizedLoginData.userEmail]);
+                        }
+                        if (sanitizedLoginData.userId) {
+                            userSessionData.push(['userId', sanitizedLoginData.userId]);
+                        }
+                        if (sanitizedLoginData.cardholderId) {
+                            userSessionData.push(['cardholderId', sanitizedLoginData.cardholderId]);
+                        }
+                        if (sanitizedLoginData.userWalletId) {
+                            userSessionData.push(['userWalletId', sanitizedLoginData.userWalletId]);
+                        }
+                        // Store user session details
+                        if (userSessionData.length > 0) {
+                            await AsyncStorage.multiSet(userSessionData);
+                        }
 
                         // Replace response data with sanitized data
                         result.data.data = sanitizedLoginData;
@@ -415,7 +428,7 @@ export const userApis = createApi({
 
                         // Encrypt Application Headers
                         // ----------------------------- Get RSA Encryption Key ----------------------------- \\
-                        let rsaHeaderEncryptionPublicKey = sessionStorage.getItem('headerPublicKey');
+                        let rsaHeaderEncryptionPublicKey = await AsyncStorage.getItem('headerPublicKey');
                         if (!rsaHeaderEncryptionPublicKey) {
                             const headerKeyResult = await dispatch(
                                 configApis.endpoints.getHeaderRsaEncryptionPublicKey.initiate(

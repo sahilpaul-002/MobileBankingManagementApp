@@ -11,7 +11,9 @@ import { twoFaApis } from '../features/twoFa/twoFaApis';
 import { userApis } from '../features/user/userApis';
 import { walletApis } from '../features/wallet/walletApis';
 
+import { clearAuthTokens } from '@/utils/expoSecureJwtTokenStorage';
 import { clearSessionId } from '@/utils/expoSecureSessionStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { finishLogout, startLogout } from '../slice/appSession/appSessionSlice';
 import { resetConfigStates } from '../slice/config/configSlice';
 import { resetUserState } from '../slice/user/userSlice';
@@ -39,7 +41,8 @@ export const logoutUser = createAsyncThunk(
                 await dispatch(
                     helperApis.endpoints.destroySession.initiate(),
                 ).unwrap();
-            } catch (error) {
+            } 
+            catch (error) {
                 logError('WARN', {
                     message: 'Failed to destroy server session during logout',
                     error,
@@ -50,11 +53,42 @@ export const logoutUser = createAsyncThunk(
             // Remove expo stored session ID.
             try {
                 await clearSessionId();
-            } catch (error) {
+            } 
+            catch (error) {
                 logError('ERROR', {
                     message: 'Failed to clear locally stored session ID',
                     error,
                     context: 'LogoutUser.clearSessionId',
+                });
+            }
+
+            // Clear authentication tokens from Expo SecureStore.
+            try {
+                await clearAuthTokens();
+            } 
+            catch (error) {
+                logError('ERROR', {
+                    message: 'Failed to clear authentication tokens',
+                    error,
+                    context: 'LogoutUser.clearAuthTokens',
+                });
+            }
+
+            // Clear user-specific details from AsyncStorage.
+            try {
+                await AsyncStorage.multiRemove([
+                    'userEmail',
+                    'userId',
+                    'cardholderId',
+                    'userWalletId',
+                    'dnsBaseUrl',
+                ]);
+            } 
+            catch (error) {
+                logError('ERROR', {
+                    message: 'Failed to clear user details from AsyncStorage',
+                    error,
+                    context: 'LogoutUser.clearUserSessionStorage',
                 });
             }
 

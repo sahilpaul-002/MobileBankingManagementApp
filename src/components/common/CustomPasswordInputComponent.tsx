@@ -50,7 +50,7 @@ const CustomPasswordInputComponent = forwardRef<
         {label && (
           <Text
             className={cn(
-              "text-xs font-semibold text-[var(--color-ink-secondary)] tracking-wide",
+              "text-lg font-semibold text-[var(--color-ink-secondary)] tracking-wide",
               fieldLabelClassname,
             )}
           >
@@ -65,7 +65,7 @@ const CustomPasswordInputComponent = forwardRef<
             secureTextEntry={!showPassword}
             placeholderTextColor={placeholderTextColor}
             className={cn(
-              "h-11 pl-3.5! pr-11! rounded-[var(--radius-control)] border bg-[var(--color-app-surface)] text-[var(--color-ink)] text-sm",
+              "h-12 pl-3.5! pr-11! rounded-[var(--radius-control)] border bg-[var(--color-app-surface)] text-[var(--color-ink)] text-md",
               error
                 ? "border-[var(--color-status-danger)]"
                 : "border-[var(--color-line-strong)] focus:border-[var(--color-gold)]",
@@ -93,7 +93,7 @@ const CustomPasswordInputComponent = forwardRef<
         </View>
 
         {error && (
-          <Text className="text-xs text-[var(--color-status-danger)] font-medium">
+          <Text className="text-sm text-[var(--color-status-danger)] font-medium">
             {error}
           </Text>
         )}
