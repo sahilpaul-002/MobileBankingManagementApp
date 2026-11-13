@@ -27,7 +27,10 @@ interface signupRequestType {
     dialCode: string
     countryCode: string
     phoneNumber: string
-    dateOfBirth: Date
+    dateOfBirth: Date;
+    businessName?: string;
+    businessType?: string;
+    programType?: string;
 }
 
 interface userOnboardingRequestType {
