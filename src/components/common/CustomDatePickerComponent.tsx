@@ -153,7 +153,11 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
 
     const handleNextMonth = () => {
       const nextMonthDate = new Date(viewYear, viewMonth + 1, 1);
-      if (nextMonthDate.getTime() > maxAllowedDate.getTime() && viewMonth >= maxAllowedDate.getMonth() && viewYear >= maxAllowedDate.getFullYear()) {
+      if (
+        nextMonthDate.getTime() > maxAllowedDate.getTime() &&
+        viewMonth >= maxAllowedDate.getMonth() &&
+        viewYear >= maxAllowedDate.getFullYear()
+      ) {
         return;
       }
       if (viewMonth === 11) {
@@ -213,7 +217,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
             "h-12 w-full flex-row items-center justify-between rounded-[var(--radius-control)] border bg-[var(--color-app-surface)] px-3.5",
             error
               ? "border-[var(--color-status-danger)]"
-              : "border-[var(--color-line-strong)] active:border-[var(--color-gold)]",
+              : "border-[var(--color-line-strong)] active:border-[var(--color-navy)]",
             disabled && "opacity-50",
             popoverTriggerButtonClassName,
           )}
@@ -230,7 +234,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
             {formattedDate ?? label ?? "Select date"}
           </Text>
 
-          <CalendarIcon size={18} color="#8a93a8" strokeWidth={2} />
+          <CalendarIcon size={18} color="#0c1830" strokeWidth={2} />
         </Pressable>
 
         {/* Error message with Activity */}
@@ -242,9 +246,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
 
         {/* Hint message with Activity */}
         <Activity mode={Boolean(hint && !error) ? "visible" : "hidden"}>
-          <Text className="text-xs text-[var(--color-ink-muted)]">
-            {hint}
-          </Text>
+          <Text className="text-xs text-[var(--color-ink-muted)]">{hint}</Text>
         </Activity>
 
         {/* Calendar Picker Modal */}
@@ -266,7 +268,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
             {/* Bottom Sheet Card */}
             <View
               className={cn(
-                "w-full rounded-t-3xl border-t border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 pb-8 shadow-2xl",
+                "h-[520px] w-full rounded-t-3xl border-t border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 pb-8 shadow-2xl",
                 Platform.OS === "ios" ? "max-h-[85%]" : "max-h-[80%]",
               )}
             >
@@ -275,7 +277,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
 
               {/* Modal Header */}
               <View className="mb-4 flex-row items-center justify-between">
-                <Text className="text-xl font-bold tracking-tight text-[var(--color-ink)]">
+                <Text className="text-xl font-bold tracking-tight text-[var(--color-navy)]">
                   {titleText}
                 </Text>
 
@@ -286,7 +288,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
                   accessibilityLabel="Close dialog"
                   className="rounded-full bg-[var(--color-app-subtle)] p-1.5 active:bg-[var(--color-app-hover)]"
                 >
-                  <X size={18} color="#8a93a8" />
+                  <X size={18} color="#0c1830" />
                 </Pressable>
               </View>
 
@@ -308,16 +310,18 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
                   onPress={() => setShowYearPicker((prev) => !prev)}
                   accessibilityRole="button"
                   accessibilityLabel="Toggle year list"
-                  className="flex-row items-center gap-1.5 rounded-lg px-3 py-1.5 active:bg-[var(--color-gold-soft)]/60"
+                  className="flex-row items-center gap-1.5 rounded-lg px-3 py-1.5 active:bg-[var(--color-navy)]/10"
                 >
-                  <Text className="text-base font-bold text-[var(--color-ink)]">
+                  <Text className="text-base font-bold text-[var(--color-navy)]">
                     {MONTH_NAMES[viewMonth]} {viewYear}
                   </Text>
                   <ChevronDown
                     size={16}
-                    color="#d49a4d"
+                    color="#0c1830"
                     style={{
-                      transform: [{ rotate: showYearPicker ? "180deg" : "0deg" }],
+                      transform: [
+                        { rotate: showYearPicker ? "180deg" : "0deg" },
+                      ],
                     }}
                   />
                 </Pressable>
@@ -342,7 +346,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
 
               {/* Year Selector View */}
               {showYearPicker ? (
-                <View className="h-64">
+                <View className="flex-1">
                   <Text className="mb-2 text-xs font-semibold text-[var(--color-ink-muted)]">
                     Select Year
                   </Text>
@@ -359,7 +363,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
                           className={cn(
                             "m-1 flex-1 items-center justify-center rounded-xl py-3 border",
                             isCurrentYear
-                              ? "border-[var(--color-gold)] bg-[var(--color-navy)]"
+                              ? "border-[var(--color-navy)] bg-[var(--color-navy)]"
                               : "border-[var(--color-line)] bg-[var(--color-app-subtle)] active:bg-[var(--color-app-hover)]",
                           )}
                         >
@@ -367,7 +371,7 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
                             className={cn(
                               "text-base font-semibold",
                               isCurrentYear
-                                ? "text-[var(--color-gold)] font-bold"
+                                ? "text-white font-bold"
                                 : "text-[var(--color-ink)]",
                             )}
                           >
@@ -380,11 +384,14 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
                 </View>
               ) : (
                 /* Month Calendar Grid View */
-                <View className="w-full">
+                <View className="w-full flex-1">
                   {/* Days of Week Header */}
                   <View className="mb-2 flex-row justify-between">
                     {WEEK_DAYS.map((wd) => (
-                      <View key={wd} className="w-10 items-center justify-center">
+                      <View
+                        key={wd}
+                        className="w-10 items-center justify-center"
+                      >
                         <Text className="text-xs font-bold text-[var(--color-ink-muted)]">
                           {wd}
                         </Text>
@@ -424,10 +431,10 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
                           className={cn(
                             "my-1 h-10 w-10 items-center justify-center rounded-full",
                             isSelected
-                              ? "bg-[var(--color-gold)] shadow-sm"
+                              ? "bg-[var(--color-navy)] shadow-sm"
                               : item.disabled
                                 ? "opacity-25"
-                                : "active:bg-[var(--color-gold-soft)]/60",
+                                : "active:bg-[var(--color-navy)]/10",
                           )}
                         >
                           <Text

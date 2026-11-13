@@ -11,11 +11,7 @@ import mobileCountryCodesLists from "@/utils/mobileCountryCodesList";
 import ShowInConsole from "@/utils/ShowInConsole";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Landmark,
-} from "lucide-react-native";
+import { Landmark } from "lucide-react-native";
 import {
   Activity,
   useEffect,
@@ -388,13 +384,13 @@ export default function SignUpScreenComponent() {
           className="my-auto w-full flex-col items-center gap-5"
         >
           {/* Logo / Brand Header */}
-          <View className="h-24 w-24 items-center justify-center rounded-2xl border border-[var(--color-gold)]/40 bg-[var(--color-navy)] shadow-sm shadow-black/10">
-            <Landmark size={48} color="#d49a4d" strokeWidth={1.8} />
+          <View className="h-24 w-24 items-center justify-center rounded-2xl bg-[var(--color-navy)] shadow-sm shadow-black/10">
+            <Landmark size={48} color="#ffffff" strokeWidth={1.8} />
           </View>
 
           {/* Heading Text */}
           <View className="w-full items-center gap-1.5 text-center">
-            <Text className="text-3xl font-bold tracking-tight text-[var(--color-gold)]">
+            <Text className="text-3xl font-bold tracking-tight text-[var(--color-navy)]">
               Create Account
             </Text>
             <View className="flex-row items-center justify-center gap-1.5 pt-1">
@@ -438,9 +434,9 @@ export default function SignUpScreenComponent() {
                     className={cn(
                       "h-1.5 w-full rounded-full mb-2",
                       isActive
-                        ? "bg-[var(--color-gold)]"
+                        ? "bg-[var(--color-navy)]"
                         : isPast
-                          ? "bg-[var(--color-navy)]"
+                          ? "bg-[var(--color-navy)]/40"
                           : "bg-[var(--color-line)]",
                     )}
                   />
@@ -448,7 +444,7 @@ export default function SignUpScreenComponent() {
                     className={cn(
                       "text-xs font-semibold",
                       isActive
-                        ? "text-[var(--color-gold)] font-bold"
+                        ? "text-[var(--color-navy)] font-bold"
                         : isPast
                           ? "text-[var(--color-ink)]"
                           : "text-[var(--color-ink-muted)]",
@@ -461,7 +457,7 @@ export default function SignUpScreenComponent() {
                     className={cn(
                       "text-[11px]",
                       isActive
-                        ? "text-[var(--color-ink)] font-medium"
+                        ? "text-[var(--color-navy)] font-semibold"
                         : "text-[var(--color-ink-muted)]",
                     )}
                   >
@@ -750,81 +746,54 @@ export default function SignUpScreenComponent() {
             </Activity>
           </View>
 
-          {/* ======================= SWIPE NAVIGATION GUIDANCE BAR ======================= */}
-          <View className="w-full rounded-2xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-3.5 shadow-sm shadow-black/5 mt-2">
-            <View className="flex-row items-center justify-between">
-              {/* Back Swipe / Button (available on Step 2 & 3) */}
-              {formStep > 1 ? (
-                <Pressable
-                  onPress={handleGoBack}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  accessibilityLabel="Swipe right or tap to go to previous step"
-                  className="flex-row items-center gap-1 rounded-xl bg-[var(--color-app-subtle)] px-3 py-2 active:bg-[var(--color-app-hover)]"
-                >
-                  <ChevronLeft size={16} color="#d49a4d" />
-                  <Text className="text-xs font-semibold text-[var(--color-ink)]">
-                    Swipe Right
-                  </Text>
-                </Pressable>
-              ) : (
-                <View className="flex-row items-center gap-1 px-1">
-                  <Text className="text-xs text-[var(--color-ink-muted)]">
-                    Step 1 of 3
-                  </Text>
-                </View>
+          {/* ======================= SIMPLE CENTERED SWIPE DIRECTION INDICATOR ======================= */}
+          <View className="w-full flex-row items-center justify-center py-4 my-1">
+            {/* Left Arrows (Swipe Right to go back) */}
+            <Pressable
+              onPress={handleGoBack}
+              disabled={formStep === 1}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Previous step"
+              className={cn(
+                "px-2 py-1 active:opacity-50",
+                formStep === 1 ? "opacity-20" : "opacity-75",
               )}
+            >
+              <Text className="text-base font-bold tracking-tighter text-[var(--color-navy)]">
+                {"<<<< "}
+              </Text>
+            </Pressable>
 
-              {/* Step indicator in middle */}
-              <View className="items-center">
-                <Text className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-gold)]">
-                  {formStep === 1
-                    ? "Credentials"
-                    : formStep === 2
-                      ? "Personal & Contact"
-                      : "Business Details"}
-                </Text>
-              </View>
-
-              {/* Next Swipe / Button (available on Step 1 & 2) */}
-              {formStep < 3 ? (
-                <Pressable
-                  onPress={() => {
-                    if (formStep === 1) {
-                      void handleValidateAndProceedToStep2();
-                    } else if (formStep === 2) {
-                      void handleValidateAndProceedToStep3();
-                    }
-                  }}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  accessibilityLabel="Swipe left or tap to advance to next step"
-                  className="flex-row items-center gap-1 rounded-xl bg-[var(--color-gold)] px-3 py-2 active:bg-[var(--color-gold-light)]"
-                >
-                  <Text className="text-xs font-bold text-white">
-                    Swipe Left
-                  </Text>
-                  <ChevronRight size={16} color="white" />
-                </Pressable>
-              ) : (
-                <View className="flex-row items-center gap-1 px-1">
-                  <Text className="text-xs font-semibold text-[var(--color-status-success)]">
-                    Final Step
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Hint text regarding swipe gestures */}
-            <View className="mt-2 items-center">
-              <Text className="text-[11px] text-[var(--color-ink-muted)] text-center">
-                {formStep === 1
-                  ? "👉 Swipe left anywhere on screen to advance to Step 2"
-                  : formStep === 2
-                    ? "👈 Swipe right to go back • Swipe left to advance 👉"
-                    : "👈 Swipe right to edit previous steps"}
+            {/* Center Swipe Text */}
+            <View className="px-2">
+              <Text className="text-sm font-semibold tracking-wider text-[var(--color-ink-muted)]">
+                Swipe
               </Text>
             </View>
+
+            {/* Right Arrows (Swipe Left to advance) */}
+            <Pressable
+              onPress={() => {
+                if (formStep === 1) {
+                  void handleValidateAndProceedToStep2();
+                } else if (formStep === 2) {
+                  void handleValidateAndProceedToStep3();
+                }
+              }}
+              disabled={formStep === 3}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Next step"
+              className={cn(
+                "px-2 py-1 active:opacity-50",
+                formStep === 3 ? "opacity-20" : "opacity-75",
+              )}
+            >
+              <Text className="text-base font-bold tracking-tighter text-[var(--color-navy)]">
+                {" >>>>"}
+              </Text>
+            </Pressable>
           </View>
         </View>
       </ScrollView>

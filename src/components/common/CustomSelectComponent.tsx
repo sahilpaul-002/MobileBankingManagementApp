@@ -4,6 +4,7 @@ import { Check, ChevronDown, Search, X } from "lucide-react-native";
 import { Activity, forwardRef, useMemo, useState } from "react";
 import {
   FlatList,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -71,7 +72,11 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
       if (selectedItem.value && selectedItem.value.startsWith("+")) {
         return `${selectedItem.label} (${selectedItem.value})`;
       }
-      if (selectedItem.label && selectedItem.value && selectedItem.label !== selectedItem.value) {
+      if (
+        selectedItem.label &&
+        selectedItem.value &&
+        selectedItem.label !== selectedItem.value
+      ) {
         return `${selectedItem.label} (${selectedItem.value})`;
       }
       return selectedItem.label || selectedItem.value;
@@ -125,7 +130,7 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
             "h-12 w-full flex-row items-center justify-between rounded-[var(--radius-control)] border bg-[var(--color-app-surface)] px-3.5",
             error
               ? "border-[var(--color-status-danger)]"
-              : "border-[var(--color-line-strong)] active:border-[var(--color-gold)]",
+              : "border-[var(--color-line-strong)] active:border-[var(--color-navy)]",
             disabled && "opacity-50",
             selectTriggerClassName,
           )}
@@ -142,7 +147,7 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
             {displayValue ?? placeholderText}
           </Text>
 
-          <ChevronDown size={18} color="#8a93a8" strokeWidth={2} />
+          <ChevronDown size={18} color="#0c1830" strokeWidth={2} />
         </Pressable>
 
         {/* Error message with Activity */}
@@ -154,9 +159,7 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
 
         {/* Hint message with Activity */}
         <Activity mode={Boolean(hint && !error) ? "visible" : "hidden"}>
-          <Text className="text-xs text-[var(--color-ink-muted)]">
-            {hint}
-          </Text>
+          <Text className="text-xs text-[var(--color-ink-muted)]">{hint}</Text>
         </Activity>
 
         {/* Modal Selection Dialog */}
@@ -166,7 +169,10 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
           animationType="fade"
           onRequestClose={() => setOpen(false)}
         >
-          <View className="flex-1 justify-end bg-black/50">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            className="flex-1 justify-end bg-black/50"
+          >
             {/* Backdrop Dismiss Area */}
             <Pressable
               className="flex-1"
@@ -175,19 +181,14 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
               accessibilityLabel="Close selection modal"
             />
 
-            {/* Bottom Sheet Card */}
-            <View
-              className={cn(
-                "w-full rounded-t-3xl border-t border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 pb-8 shadow-2xl",
-                Platform.OS === "ios" ? "max-h-[80%]" : "max-h-[75%]",
-              )}
-            >
+            {/* Bottom Sheet Card with fixed height so it does not collapse on short search results */}
+            <View className="h-[520px] w-full rounded-t-3xl border-t border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 pb-8 shadow-2xl">
               {/* Handle Bar */}
               <View className="mb-3 h-1.5 w-12 self-center rounded-full bg-[var(--color-line-strong)]" />
 
               {/* Modal Header */}
               <View className="mb-4 flex-row items-center justify-between">
-                <Text className="text-xl font-bold tracking-tight text-[var(--color-ink)]">
+                <Text className="text-xl font-bold tracking-tight text-[var(--color-navy)]">
                   {titleText}
                 </Text>
 
@@ -198,14 +199,14 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
                   accessibilityLabel="Close dialog"
                   className="rounded-full bg-[var(--color-app-subtle)] p-1.5 active:bg-[var(--color-app-hover)]"
                 >
-                  <X size={18} color="#8a93a8" />
+                  <X size={18} color="#0c1830" />
                 </Pressable>
               </View>
 
               {/* Search Bar (if list has more than 5 items) */}
               {labels && labels.length > 5 && (
                 <View className="mb-3 flex-row items-center rounded-xl border border-[var(--color-line)] bg-[var(--color-app)] px-3">
-                  <Search size={16} color="#8a93a8" />
+                  <Search size={16} color="#0c1830" />
                   <TextInput
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -222,7 +223,7 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
                       accessibilityRole="button"
                       accessibilityLabel="Clear search"
                     >
-                      <X size={14} color="#8a93a8" />
+                      <X size={14} color="#0c1830" />
                     </Pressable>
                   )}
                 </View>
@@ -231,6 +232,7 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
               {/* List of Options */}
               <FlatList
                 data={filteredLabels}
+                className="flex-1"
                 keyExtractor={(item, index) => {
                   if (typeof item === "string") return `${item}-${index}`;
                   return item.id || `${item.value}-${index}`;
@@ -262,7 +264,7 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
                       className={cn(
                         "my-0.5 flex-row items-center justify-between rounded-xl px-3.5 py-3 border-b border-[var(--color-line-faint)]",
                         isSelected
-                          ? "bg-[var(--color-gold-soft)]/50 border-[var(--color-gold)]/30"
+                          ? "bg-[var(--color-navy)]/10 border-[var(--color-navy)]/30"
                           : "active:bg-[var(--color-app-hover)]",
                       )}
                     >
@@ -272,7 +274,7 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
                           className={cn(
                             "flex-1 text-md",
                             isSelected
-                              ? "font-bold text-[var(--color-ink)]"
+                              ? "font-bold text-[var(--color-navy)]"
                               : "font-normal text-[var(--color-ink-secondary)]",
                           )}
                         >
@@ -280,12 +282,12 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
                         </Text>
 
                         {!isString && item.value && (
-                          <View className="ml-2 rounded-md bg-[var(--color-navy)]/5 px-2 py-0.5">
+                          <View className="ml-2 rounded-md bg-[var(--color-navy)]/10 px-2 py-0.5">
                             <Text
                               className={cn(
                                 "text-xs font-semibold",
                                 isSelected
-                                  ? "text-[var(--color-gold)] font-bold"
+                                  ? "text-[var(--color-navy)] font-bold"
                                   : "text-[var(--color-ink-soft)]",
                               )}
                             >
@@ -296,14 +298,14 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
                       </View>
 
                       {isSelected && (
-                        <Check size={18} color="#d49a4d" strokeWidth={2.5} />
+                        <Check size={18} color="#0c1830" strokeWidth={2.5} />
                       )}
                     </Pressable>
                   );
                 }}
               />
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       </View>
     );
