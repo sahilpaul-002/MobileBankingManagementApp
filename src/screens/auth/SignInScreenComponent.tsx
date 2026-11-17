@@ -307,13 +307,13 @@ export default function SignInScreenComponent() {
       >
         <View className="w-full flex-col items-center gap-5 my-auto">
           {/* Logo / Brand Header */}
-          <View className="w-30 h-30 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
-            <Landmark size={60} color="#d49a4d" strokeWidth={1.8} />
+          <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
+            <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
           </View>
 
           {/* Heading Text */}
           <View className="w-full items-center text-center gap-1.5">
-            <Text className="text-4xl font-bold tracking-tight text-[var(--color-gold)]">
+            <Text className="text-3xl font-bold tracking-tight text-[var(--color-navy)]">
               Sign in
             </Text>
             <Text className="text-md text-[var(--color-ink-muted)] text-center max-w-[280px]">
@@ -380,7 +380,7 @@ export default function SignInScreenComponent() {
                     onPress={() => router.push('/reset-password/send-code')}
                     hitSlop={8}
                   >
-                    <Text className="text-md font-semibold text-[var(--color-link)] active:opacity-70">
+                    <Text className="text-md font-semibold text-[var(--color-link)]">
                       Forgot Password ?
                     </Text>
                   </Pressable>
@@ -393,7 +393,7 @@ export default function SignInScreenComponent() {
                   id="signPage-signinForm-button"
                   label="Sign In"
                   variant="navy"
-                  buttonClassName="w-fit"
+                  buttonClassName="w-full"
                   labelClassName="text-lg font-semibold"
                   showButtonLoader={isLoading}
                   onPress={handleSubmit(onSigninFormSubmit)}
@@ -401,18 +401,21 @@ export default function SignInScreenComponent() {
               </View>
 
               {/* Create Account Link */}
-              <View className="w-full flex-row justify-center items-center gap-1.5 pt-2">
+              <View className="w-full flex-row justify-center items-center pt-2">
                 <Text className="text-sm text-[var(--color-ink-muted)]">
                   Create a new account -
                 </Text>
+
                 <Pressable
-                  onPress={() => {router.push(ROUTE_NAMES.SIGN_UP)}}
+                  onPress={() => router.push(ROUTE_NAMES.SIGN_UP)}
                   hitSlop={8}
+                  accessibilityRole="button"
                 >
-                  <Text className="text-sm font-semibold text-[var(--color-link)] active:opacity-70">
+                  <Text className="text-sm font-semibold text-[var(--color-link)]">
                     Sign Up
                   </Text>
                 </Pressable>
+
               </View>
             </View>
           )}
@@ -465,3 +468,14 @@ export default function SignInScreenComponent() {
     </KeyboardAvoidingView>
   );
 }
+
+// import { View } from 'react-native'
+// import GestureTestScreen from '../GestureTestScreen'
+
+// export default function SignInScreenComponent() {
+//   return (
+//     <View>
+//       <GestureTestScreen />
+//     </View>
+//   )
+// }

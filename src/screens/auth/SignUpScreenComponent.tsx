@@ -1,3 +1,5 @@
+// ACTIVITY IS AVOIDED BECAUSE ITS HIDDEN/VISIBLE LIFECYCLE WITH RNGH CAN TRIGGER A FABRIC/YOGA VIEW-TREE OWNERSHIP CRASH.
+
 import CustomButtonComponent from "@/components/common/CustomButtonComponent";
 import CustomDatePickerComponent from "@/components/common/CustomDatePickerComponent";
 import CustomInputComponent from "@/components/common/CustomInputComponent";
@@ -7,31 +9,16 @@ import { showToastMessage } from "@/components/common/ToastMessagesComponent";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 import { useSignUpMutation } from "@/redux/features/user/userApis";
+import { ROUTE_NAMES } from "@/routes/routeNames";
 import mobileCountryCodesLists from "@/utils/mobileCountryCodesList";
 import ShowInConsole from "@/utils/ShowInConsole";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
 import { Landmark } from "lucide-react-native";
-import {
-  Activity,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import {
-  Controller,
-  useForm,
-  type SubmitErrorHandler,
-  type SubmitHandler,
-} from "react-hook-form";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-  type GestureResponderEvent,
-} from "react-native";
+import { useEffect, useState } from "react";
+import { Controller, useForm, type SubmitErrorHandler, type SubmitHandler } from "react-hook-form";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { z } from "zod";
 
 // ------------------------------------- ZOD VALIDATION SCHEMA ------------------------------------- \\
@@ -83,6 +70,7 @@ const signupFormValidationSchema = z
             today.getMonth(),
             today.getDate(),
           );
+
           return date <= minDate;
         },
         {
@@ -97,13 +85,15 @@ const signupFormValidationSchema = z
       error: "Please select a program type",
     }),
   })
-  .refine((d) => d.password === d.confirmPassword, {
+  .refine((data) => data.password === data.confirmPassword, {
     message: "Password do not match",
     path: ["confirmPassword"],
   });
 
 type SignupFormData = z.infer<typeof signupFormValidationSchema>;
+// ------------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------- \\
 
+// ------------------------------------- FORM STEPS ------------------------------------- \\
 const FORM_STEPS = [
   { step: 1, title: "Account", description: "Credentials" },
   { step: 2, title: "Personal", description: "Contact & DOB" },
@@ -111,41 +101,39 @@ const FORM_STEPS = [
 ];
 
 export default function SignUpScreenComponent() {
-  // SignUp API Mutation
-  const [signUp, { isLoading }] = useSignUpMutation();
+  // Sign Up API Mutation
+  const [signUpMutation, { isLoading }] = useSignUpMutation();
 
-  // State to manage password visibility
+  // ------------------------------------- STATE ------------------------------------- \\
   const [showPassword, setShowPassword] = useState<boolean>(false);
-
-  // State to manage active form step (1, 2, 3)
   const [formStep, setFormStep] = useState<number>(1);
 
-  // State to manage mobile country codes lists
-  const [mobileDialCodes, setMobileDialCodes] = useState<
-    { id: string; label: string; value: string }[]
-  >([]);
-  const [mobileCountryCodes, setMobileCountryCodes] = useState<
-    { id: string; label: string; value: string }[]
-  >([]);
+  // --------------------------------- Mobile Dial Codes / Country Codes --------------------------------- \\
+  const [mobileDialCodes, setMobileDialCodes] = useState<{ id: string; label: string; value: string }[]>([]);
+  const [mobileCountryCodes, setMobileCountryCodes] = useState<{ id: string; label: string; value: string }[]>([]);
 
   useEffect(() => {
     const list = mobileCountryCodesLists();
-    const dialCodesList = list.map((item) => ({
-      id: `${item.country}-${item.code}`,
-      label: item.country,
-      value: item.code,
-    }));
-    setMobileDialCodes(dialCodesList);
 
-    const countryCodesList = list.map((item) => ({
-      id: `${item.country}-${item.name}`,
-      label: item.name,
-      value: item.country,
-    }));
-    setMobileCountryCodes(countryCodesList);
+    setMobileDialCodes(
+      list.map((item) => ({
+        id: `${item.country}-${item.code}`,
+        label: item.country,
+        value: item.code,
+      })),
+    );
+
+    setMobileCountryCodes(
+      list.map((item) => ({
+        id: `${item.country}-${item.name}`,
+        label: item.name,
+        value: item.country,
+      })),
+    );
   }, []);
+  // ----------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXX ----------------------------------- \\
 
-  // React Hook Form
+  // ------------------------------------- REACT HOOK FORM ------------------------------------- \\
   const {
     control,
     handleSubmit,
@@ -170,8 +158,9 @@ export default function SignUpScreenComponent() {
   });
 
   const passwordValue = watch("password");
+  // ------------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------ \\
 
-  // Step 1 navigation validation
+  // ------------------------------------- STEP VALIDATION ------------------------------------- \\
   const handleValidateAndProceedToStep2 = async () => {
     const isStep1Valid = await trigger([
       "fullName",
@@ -180,12 +169,12 @@ export default function SignUpScreenComponent() {
       "confirmPassword",
       "gender",
     ]);
+
     if (isStep1Valid) {
       setFormStep(2);
     }
   };
 
-  // Step 2 navigation validation
   const handleValidateAndProceedToStep3 = async () => {
     const isStep2Valid = await trigger([
       "dialCode",
@@ -193,51 +182,42 @@ export default function SignUpScreenComponent() {
       "dateOfBirth",
       "phoneNumber",
     ]);
+
     if (isStep2Valid) {
       setFormStep(3);
     }
   };
 
-  // Backwards navigation
   const handleGoBack = () => {
     if (formStep > 1) {
-      setFormStep((prev) => prev - 1);
+      setFormStep((previous) => previous - 1);
     }
   };
+  // ----------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXX ----------------------------------- \\
 
-  // Horizontal Swipe Gesture Handling
-  const touchStartXRef = useRef<number>(0);
-  const touchStartYRef = useRef<number>(0);
-
-  const handleTouchStart = (event: GestureResponderEvent) => {
-    touchStartXRef.current = event.nativeEvent.pageX;
-    touchStartYRef.current = event.nativeEvent.pageY;
-  };
-
-  const handleTouchEnd = (event: GestureResponderEvent) => {
-    const deltaX = event.nativeEvent.pageX - touchStartXRef.current;
-    const deltaY = event.nativeEvent.pageY - touchStartYRef.current;
-
-    // Detect horizontal swipe if deltaX exceeds 45px and is predominantly horizontal
-    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
-      if (deltaX < 0) {
-        // Swipe Left: advance to next step
+  // ------------------------------------- SWIPE GESTURE ------------------------------------- \\
+  const swipeGesture = Gesture.Pan()
+    .activeOffsetX([-45, 45])
+    .failOffsetY([-15, 15])
+    .runOnJS(true)
+    .onEnd((event) => {
+      if (event.translationX < 0) {
         if (formStep === 1) {
           void handleValidateAndProceedToStep2();
         } else if (formStep === 2) {
           void handleValidateAndProceedToStep3();
         }
-      } else if (deltaX > 0) {
-        // Swipe Right: go back to previous step
+      } else if (event.translationX > 0) {
         handleGoBack();
       }
-    }
-  };
+    });
+  // --------------------------------- XXXXXXXXXXXXXXXX --------------------------------- \\
 
-  // Form Submit Handler
+  // Form Submission Handler
   const onValid: SubmitHandler<SignupFormData> = async (formData) => {
     try {
-      const result = await signUp(formData).unwrap();
+      const result = await signUpMutation(formData).unwrap();
+
       ShowInConsole("Sign up success", result?.data);
 
       if (result?.status?.toUpperCase() !== "SUCCESS") {
@@ -247,6 +227,7 @@ export default function SignUpScreenComponent() {
           text2:
             "Sign up service is facing issue. Please try again later. If issue persist please contact support.",
         });
+
         return;
       }
 
@@ -265,8 +246,8 @@ export default function SignUpScreenComponent() {
       const errorMessage = Array.isArray(err?.data?.message)
         ? err.data.message[0]
         : err?.data?.message ||
-          err?.message ||
-          "Sign up service is facing issue. Please try again later. If issue persist please contact support.";
+        err?.message ||
+        "Sign up service is facing issue. Please try again later. If issue persist please contact support.";
 
       const normalizedMessage = errorMessage.toLowerCase();
 
@@ -279,7 +260,9 @@ export default function SignUpScreenComponent() {
           });
           break;
 
-        case normalizedMessage.includes("business name already exist, use 'existing' type"):
+        case normalizedMessage.includes(
+          "business name already exist, use 'existing' type",
+        ):
           showToastMessage({
             type: "error",
             text1: "Business Conflict",
@@ -299,7 +282,9 @@ export default function SignUpScreenComponent() {
           break;
 
         case normalizedMessage.includes("is registerd for") ||
-          normalizedMessage.includes("register with different business name"):
+          normalizedMessage.includes(
+            "register with different business name",
+          ):
           showToastMessage({
             type: "error",
             text1: "Registration Error",
@@ -327,6 +312,7 @@ export default function SignUpScreenComponent() {
     }
   };
 
+  // ---------------------------------- Form Submission Error Handler ---------------------------------- \\
   const onError: SubmitErrorHandler<SignupFormData> = (formErrors) => {
     const step1Fields = [
       "fullName",
@@ -363,6 +349,7 @@ export default function SignUpScreenComponent() {
       setFormStep(3);
     }
   };
+  // ------------------------------------- XXXXXXXXXXXXXXXXXXXX ------------------------------------- \\
 
   return (
     <KeyboardAvoidingView
@@ -378,424 +365,425 @@ export default function SignUpScreenComponent() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          className="my-auto w-full flex-col items-center gap-5"
-        >
-          {/* Logo / Brand Header */}
-          <View className="h-24 w-24 items-center justify-center rounded-2xl bg-[var(--color-navy)] shadow-sm shadow-black/10">
-            <Landmark size={48} color="#ffffff" strokeWidth={1.8} />
-          </View>
+        <GestureDetector gesture={swipeGesture}>
+          <View className="my-auto w-full h-full flex-col items-center gap-5">
+            {/* Logo / Brand Header */}
 
-          {/* Heading Text */}
-          <View className="w-full items-center gap-1.5 text-center">
-            <Text className="text-3xl font-bold tracking-tight text-[var(--color-navy)]">
-              Create Account
-            </Text>
-            <View className="flex-row items-center justify-center gap-1.5 pt-1">
-              <Text className="text-sm text-[var(--color-ink-muted)]">
-                Already have an account -
+            <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
+              <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
+            </View>
+
+            {/* Heading */}
+
+            <View className="w-full items-center gap-1.5 text-center">
+              <Text className="text-3xl font-bold tracking-tight text-[var(--color-navy)]">
+                Create Account
               </Text>
+
+              <View className="w-full flex-row items-center justify-center pt-2">
+                <Text className="text-sm text-[var(--color-ink-muted)]">
+                  Already have an account -
+                </Text>
+
+                <Pressable
+                  onPress={() => router.push(ROUTE_NAMES.SIGN_IN)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Go to sign in"
+                >
+                  <Text className="text-sm font-semibold text-[var(--color-link)]">
+                    Sign In
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Step Progress Indicators */}
+
+            <View className="w-full flex-row items-center justify-between px-1 pt-1">
+              {FORM_STEPS.map((stepItem) => {
+                const isActive = formStep === stepItem.step;
+                const isPast = formStep > stepItem.step;
+
+                return (
+                  <Pressable
+                    key={stepItem.step}
+                    onPress={() => {
+                      if (stepItem.step < formStep) {
+                        setFormStep(stepItem.step);
+                      } else if (
+                        stepItem.step === 2 &&
+                        formStep === 1
+                      ) {
+                        void handleValidateAndProceedToStep2();
+                      } else if (
+                        stepItem.step === 3 &&
+                        formStep === 2
+                      ) {
+                        void handleValidateAndProceedToStep3();
+                      }
+                    }}
+                    className="flex-1 items-center px-1"
+                  >
+                    <View
+                      className={cn(
+                        "mb-2 h-1.5 w-full rounded-full",
+                        isActive
+                          ? "bg-[var(--color-navy)]"
+                          : isPast
+                            ? "bg-[var(--color-navy)]/40"
+                            : "bg-[var(--color-line)]",
+                      )}
+                    />
+
+                    <Text
+                      className={cn(
+                        "text-xs font-semibold",
+                        isActive
+                          ? "font-bold text-[var(--color-navy)]"
+                          : isPast
+                            ? "text-[var(--color-ink)]"
+                            : "text-[var(--color-ink-muted)]",
+                      )}
+                    >
+                      Step {stepItem.step}
+                    </Text>
+
+                    <Text
+                      numberOfLines={1}
+                      className={cn(
+                        "text-[11px]",
+                        isActive
+                          ? "font-semibold text-[var(--color-navy)]"
+                          : "text-[var(--color-ink-muted)]",
+                      )}
+                    >
+                      {stepItem.title}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* ================================= FORM STEPS ================================= */}
+
+            <View className="w-full">
+
+              {/* TEST A: Step 1 - Conditional Rendering */}
+
+              {formStep === 1 && (
+                <View className="w-full space-y-3.5">
+                  <Controller
+                    control={control}
+                    name="fullName"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <CustomInputComponent
+                        id="signupForm1-input-fullName"
+                        label="Full Name"
+                        placeholder="Enter full name"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors?.fullName?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <CustomInputComponent
+                        id="signupForm1-input-email"
+                        label="Email"
+                        placeholder="Enter Email"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors?.email?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="password"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <CustomPasswordInputComponent
+                        id="signupForm1-input-password"
+                        label="Password"
+                        placeholder="••••••••"
+                        autoCapitalize="none"
+                        autoComplete="new-password"
+                        value={value}
+                        password={passwordValue}
+                        showPassword={showPassword}
+                        setShowPassword={setShowPassword}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors?.password?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="confirmPassword"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <CustomPasswordInputComponent
+                        id="signupForm1-input-confirmPassword"
+                        label="Confirm Password"
+                        placeholder="••••••••"
+                        autoCapitalize="none"
+                        autoComplete="new-password"
+                        value={value}
+                        showPassword={showPassword}
+                        setShowPassword={setShowPassword}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors?.confirmPassword?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="gender"
+                    render={({ field: { onChange, value } }) => (
+                      <CustomSelectComponent
+                        id="signupForm1-input-select-gender"
+                        fieldLabel="Gender"
+                        label="Select Gender"
+                        labels={["Male", "Female", "Other"]}
+                        value={value}
+                        onChange={onChange}
+                        error={errors?.gender?.message}
+                      />
+                    )}
+                  />
+                </View>
+              )}
+
+              {/* TEST A: Step 2 - Conditional Rendering */}
+
+              {formStep === 2 && (
+                <View className="w-full space-y-3.5">
+                  <Controller
+                    control={control}
+                    name="dialCode"
+                    render={({ field: { onChange, value } }) => (
+                      <CustomSelectComponent
+                        id="signupForm2-input-select-dialCode"
+                        fieldLabel="Phone Dial Code"
+                        label="Select Dial Code"
+                        labels={mobileDialCodes}
+                        value={value}
+                        onChange={onChange}
+                        error={errors?.dialCode?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="countryCode"
+                    render={({ field: { onChange, value } }) => (
+                      <CustomSelectComponent
+                        id="signupForm2-input-select-countryCode"
+                        fieldLabel="Country Code"
+                        label="Select Country Code"
+                        labels={mobileCountryCodes}
+                        value={value}
+                        onChange={onChange}
+                        error={errors?.countryCode?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="dateOfBirth"
+                    render={({ field: { onChange, value } }) => (
+                      <CustomDatePickerComponent
+                        id="signupForm2-input-select-dateOfBirth"
+                        fieldLabel="Date of Birth"
+                        label="Select Date of Birth"
+                        date={value}
+                        setDate={onChange}
+                        restrictTo18Years={true}
+                        hint="* Date of birth must be above 18 years"
+                        error={errors?.dateOfBirth?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="phoneNumber"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <CustomInputComponent
+                        id="signupForm2-input-phoneNumber"
+                        label="Phone Number"
+                        placeholder="Enter phone number"
+                        keyboardType="phone-pad"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        hint="* Enter number without country code"
+                        error={errors?.phoneNumber?.message}
+                      />
+                    )}
+                  />
+                </View>
+              )}
+
+              {/* TEST A: Step 3 - Conditional Rendering */}
+
+              {formStep === 3 && (
+                <View className="w-full space-y-3.5">
+                  <Controller
+                    control={control}
+                    name="businessName"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <CustomInputComponent
+                        id="signupForm3-input-businessName"
+                        label="Business Name"
+                        placeholder="Enter business name"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        error={errors?.businessName?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="businessType"
+                    render={({ field: { onChange, value } }) => (
+                      <CustomSelectComponent
+                        id="signupForm3-input-select-businessType"
+                        fieldLabel="Business Type"
+                        label="Select Business Type"
+                        labels={["New", "Existing"]}
+                        value={
+                          value === "NEW"
+                            ? "New"
+                            : value === "EXISTING"
+                              ? "Existing"
+                              : ""
+                        }
+                        onChange={(selected) => {
+                          onChange(
+                            selected === "New"
+                              ? "NEW"
+                              : selected === "Existing"
+                                ? "EXISTING"
+                                : selected,
+                          );
+                        }}
+                        error={errors?.businessType?.message}
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="programType"
+                    render={({ field: { onChange, value } }) => (
+                      <CustomSelectComponent
+                        id="signupForm3-input-select-programType"
+                        fieldLabel="Program Type"
+                        label="Select Program Type"
+                        labels={["Master", "Visa"]}
+                        value={
+                          value === "MASTER"
+                            ? "Master"
+                            : value === "VISA"
+                              ? "Visa"
+                              : ""
+                        }
+                        onChange={(selected) => {
+                          onChange(
+                            selected === "Master"
+                              ? "MASTER"
+                              : selected === "Visa"
+                                ? "VISA"
+                                : selected,
+                          );
+                        }}
+                        error={errors?.programType?.message}
+                      />
+                    )}
+                  />
+
+                  <View className="w-full items-center pt-3">
+                    <CustomButtonComponent
+                      id="signupForm-submit-button"
+                      label="Sign Up"
+                      variant="navy"
+                      buttonClassName="w-full"
+                      labelClassName="text-lg font-semibold"
+                      showButtonLoader={isLoading}
+                      onPress={handleSubmit(onValid, onError)}
+                    />
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Swipe Direction Indicator */}
+
+            <View className="my-1 w-full flex-row items-center justify-center py-4">
               <Pressable
-                onPress={() => router.push("/(auth)")}
-                hitSlop={8}
+                onPress={handleGoBack}
+                disabled={formStep === 1}
+                hitSlop={12}
                 accessibilityRole="button"
-                accessibilityLabel="Go to sign in"
+                accessibilityLabel="Previous step"
+                className={cn(
+                  "px-2 py-1 active:opacity-50",
+                  formStep === 1 ? "opacity-20" : "opacity-75",
+                )}
               >
-                <Text className="text-sm font-semibold text-[var(--color-link)] active:opacity-70">
-                  Sign In
+                <Text className="text-base font-bold tracking-tighter text-[var(--color-navy)]">
+                  {"<<<< "}
+                </Text>
+              </Pressable>
+
+              <View className="px-2">
+                <Text className="text-md font-semibold tracking-wider text-[var(--color-ink-muted)]">
+                  Swipe
+                </Text>
+              </View>
+
+              <Pressable
+                onPress={() => {
+                  if (formStep === 1) {
+                    void handleValidateAndProceedToStep2();
+                  } else if (formStep === 2) {
+                    void handleValidateAndProceedToStep3();
+                  }
+                }}
+                disabled={formStep === 3}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="Next step"
+                className={cn(
+                  "px-2 py-1 active:opacity-50",
+                  formStep === 3 ? "opacity-20" : "opacity-75",
+                )}
+              >
+                <Text className="text-base font-bold tracking-tighter text-[var(--color-navy)]">
+                  {" >>>>"}
                 </Text>
               </Pressable>
             </View>
           </View>
-
-          {/* Step Progress Indicators */}
-          <View className="w-full flex-row items-center justify-between px-1 pt-1">
-            {FORM_STEPS.map((stepItem) => {
-              const isActive = formStep === stepItem.step;
-              const isPast = formStep > stepItem.step;
-
-              return (
-                <Pressable
-                  key={stepItem.step}
-                  onPress={() => {
-                    if (stepItem.step < formStep) {
-                      setFormStep(stepItem.step);
-                    } else if (stepItem.step === 2 && formStep === 1) {
-                      void handleValidateAndProceedToStep2();
-                    } else if (stepItem.step === 3 && formStep === 2) {
-                      void handleValidateAndProceedToStep3();
-                    }
-                  }}
-                  className="flex-1 items-center px-1"
-                >
-                  <View
-                    className={cn(
-                      "h-1.5 w-full rounded-full mb-2",
-                      isActive
-                        ? "bg-[var(--color-navy)]"
-                        : isPast
-                          ? "bg-[var(--color-navy)]/40"
-                          : "bg-[var(--color-line)]",
-                    )}
-                  />
-                  <Text
-                    className={cn(
-                      "text-xs font-semibold",
-                      isActive
-                        ? "text-[var(--color-navy)] font-bold"
-                        : isPast
-                          ? "text-[var(--color-ink)]"
-                          : "text-[var(--color-ink-muted)]",
-                    )}
-                  >
-                    Step {stepItem.step}
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    className={cn(
-                      "text-[11px]",
-                      isActive
-                        ? "text-[var(--color-navy)] font-semibold"
-                        : "text-[var(--color-ink-muted)]",
-                    )}
-                  >
-                    {stepItem.title}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* ================================= FORM STEPS ================================= */}
-          <View className="w-full">
-            {/* Step 1: Account Credentials & Gender */}
-            <Activity mode={formStep === 1 ? "visible" : "hidden"}>
-              <View className="w-full space-y-3.5">
-                {/* Full Name */}
-                <Controller
-                  control={control}
-                  name="fullName"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <CustomInputComponent
-                      id="signupForm1-input-fullName"
-                      label="Full Name"
-                      placeholder="Enter full name"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={errors?.fullName?.message}
-                    />
-                  )}
-                />
-
-                {/* Email */}
-                <Controller
-                  control={control}
-                  name="email"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <CustomInputComponent
-                      id="signupForm1-input-email"
-                      label="Email"
-                      placeholder="Enter Email"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoComplete="email"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={errors?.email?.message}
-                    />
-                  )}
-                />
-
-                {/* Password */}
-                <Controller
-                  control={control}
-                  name="password"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <CustomPasswordInputComponent
-                      id="signupForm1-input-password"
-                      label="Password"
-                      placeholder="••••••••"
-                      autoCapitalize="none"
-                      autoComplete="new-password"
-                      value={value}
-                      password={passwordValue}
-                      showPassword={showPassword}
-                      setShowPassword={setShowPassword}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={errors?.password?.message}
-                    />
-                  )}
-                />
-
-                {/* Confirm Password */}
-                <Controller
-                  control={control}
-                  name="confirmPassword"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <CustomPasswordInputComponent
-                      id="signupForm1-input-confirmPassword"
-                      label="Confirm Password"
-                      placeholder="••••••••"
-                      autoCapitalize="none"
-                      autoComplete="new-password"
-                      value={value}
-                      showPassword={showPassword}
-                      setShowPassword={setShowPassword}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={errors?.confirmPassword?.message}
-                    />
-                  )}
-                />
-
-                {/* Gender */}
-                <Controller
-                  control={control}
-                  name="gender"
-                  render={({ field: { onChange, value } }) => (
-                    <CustomSelectComponent
-                      id="signupForm1-input-select-gender"
-                      fieldLabel="Gender"
-                      label="Select Gender"
-                      labels={["Male", "Female", "Other"]}
-                      value={value}
-                      onChange={onChange}
-                      error={errors?.gender?.message}
-                    />
-                  )}
-                />
-              </View>
-            </Activity>
-
-            {/* Step 2: Dial Code, Country, DOB, Phone */}
-            <Activity mode={formStep === 2 ? "visible" : "hidden"}>
-              <View className="w-full space-y-3.5">
-                {/* Phone Dial Code */}
-                <Controller
-                  control={control}
-                  name="dialCode"
-                  render={({ field: { onChange, value } }) => (
-                    <CustomSelectComponent
-                      id="signupForm2-input-select-dialCode"
-                      fieldLabel="Phone Dial Code"
-                      label="Select Dial Code"
-                      labels={mobileDialCodes}
-                      value={value}
-                      onChange={onChange}
-                      error={errors?.dialCode?.message}
-                    />
-                  )}
-                />
-
-                {/* Country Code */}
-                <Controller
-                  control={control}
-                  name="countryCode"
-                  render={({ field: { onChange, value } }) => (
-                    <CustomSelectComponent
-                      id="signupForm2-input-select-countryCode"
-                      fieldLabel="Country Code"
-                      label="Select Country Code"
-                      labels={mobileCountryCodes}
-                      value={value}
-                      onChange={onChange}
-                      error={errors?.countryCode?.message}
-                    />
-                  )}
-                />
-
-                {/* Date of Birth */}
-                <Controller
-                  control={control}
-                  name="dateOfBirth"
-                  render={({ field: { onChange, value } }) => (
-                    <CustomDatePickerComponent
-                      id="signupForm2-input-select-dateOfBirth"
-                      fieldLabel="Date of Birth"
-                      label="Select Date of Birth"
-                      date={value}
-                      setDate={onChange}
-                      restrictTo18Years={true}
-                      hint="* Date of birth must be above 18 years"
-                      error={errors?.dateOfBirth?.message}
-                    />
-                  )}
-                />
-
-                {/* Phone Number */}
-                <Controller
-                  control={control}
-                  name="phoneNumber"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <CustomInputComponent
-                      id="signupForm2-input-phoneNumber"
-                      label="Phone Number"
-                      placeholder="Enter phone number"
-                      keyboardType="phone-pad"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      hint="* Enter number without country code"
-                      error={errors?.phoneNumber?.message}
-                    />
-                  )}
-                />
-              </View>
-            </Activity>
-
-            {/* Step 3: Business Information & Submission */}
-            <Activity mode={formStep === 3 ? "visible" : "hidden"}>
-              <View className="w-full space-y-3.5">
-                {/* Business Name */}
-                <Controller
-                  control={control}
-                  name="businessName"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <CustomInputComponent
-                      id="signupForm3-input-businessName"
-                      label="Business Name"
-                      placeholder="Enter business name"
-                      value={value}
-                      onChangeText={onChange}
-                      onBlur={onBlur}
-                      error={errors?.businessName?.message}
-                    />
-                  )}
-                />
-
-                {/* Business Type */}
-                <Controller
-                  control={control}
-                  name="businessType"
-                  render={({ field: { onChange, value } }) => (
-                    <CustomSelectComponent
-                      id="signupForm3-input-select-businessType"
-                      fieldLabel="Business Type"
-                      label="Select Business Type"
-                      labels={["New", "Existing"]}
-                      value={
-                        value === "NEW"
-                          ? "New"
-                          : value === "EXISTING"
-                            ? "Existing"
-                            : ""
-                      }
-                      onChange={(selected) => {
-                        onChange(
-                          selected === "New"
-                            ? "NEW"
-                            : selected === "Existing"
-                              ? "EXISTING"
-                              : selected,
-                        );
-                      }}
-                      error={errors?.businessType?.message}
-                    />
-                  )}
-                />
-
-                {/* Program Type */}
-                <Controller
-                  control={control}
-                  name="programType"
-                  render={({ field: { onChange, value } }) => (
-                    <CustomSelectComponent
-                      id="signupForm3-input-select-programType"
-                      fieldLabel="Program Type"
-                      label="Select Program Type"
-                      labels={["Master", "Visa"]}
-                      value={
-                        value === "MASTER"
-                          ? "Master"
-                          : value === "VISA"
-                            ? "Visa"
-                            : ""
-                      }
-                      onChange={(selected) => {
-                        onChange(
-                          selected === "Master"
-                            ? "MASTER"
-                            : selected === "Visa"
-                              ? "VISA"
-                              : selected,
-                        );
-                      }}
-                      error={errors?.programType?.message}
-                    />
-                  )}
-                />
-
-                {/* Sign Up Submit Button */}
-                <View className="w-full items-center pt-3">
-                  <CustomButtonComponent
-                    id="signupForm-submit-button"
-                    label="Sign Up"
-                    variant="navy"
-                    buttonClassName="w-full"
-                    labelClassName="text-lg font-semibold"
-                    showButtonLoader={isLoading}
-                    onPress={handleSubmit(onValid, onError)}
-                  />
-                </View>
-              </View>
-            </Activity>
-          </View>
-
-          {/* ======================= SIMPLE CENTERED SWIPE DIRECTION INDICATOR ======================= */}
-          <View className="w-full flex-row items-center justify-center py-4 my-1">
-            {/* Left Arrows (Swipe Right to go back) */}
-            <Pressable
-              onPress={handleGoBack}
-              disabled={formStep === 1}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Previous step"
-              className={cn(
-                "px-2 py-1 active:opacity-50",
-                formStep === 1 ? "opacity-20" : "opacity-75",
-              )}
-            >
-              <Text className="text-base font-bold tracking-tighter text-[var(--color-navy)]">
-                {"<<<< "}
-              </Text>
-            </Pressable>
-
-            {/* Center Swipe Text */}
-            <View className="px-2">
-              <Text className="text-sm font-semibold tracking-wider text-[var(--color-ink-muted)]">
-                Swipe
-              </Text>
-            </View>
-
-            {/* Right Arrows (Swipe Left to advance) */}
-            <Pressable
-              onPress={() => {
-                if (formStep === 1) {
-                  void handleValidateAndProceedToStep2();
-                } else if (formStep === 2) {
-                  void handleValidateAndProceedToStep3();
-                }
-              }}
-              disabled={formStep === 3}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel="Next step"
-              className={cn(
-                "px-2 py-1 active:opacity-50",
-                formStep === 3 ? "opacity-20" : "opacity-75",
-              )}
-            >
-              <Text className="text-base font-bold tracking-tighter text-[var(--color-navy)]">
-                {" >>>>"}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
+        </GestureDetector>
       </ScrollView>
     </KeyboardAvoidingView>
   );
