@@ -98,7 +98,7 @@ export default function AppRootLayout() {
           <ThemeProvider
             value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
           >
-            <View className="w-full flex-1 bg-[var(--color-app)]">
+            <View className="w-full flex-1 bg-[var(--color-app)] pb-20">
               <StatusBar
                 barStyle={
                   colorScheme === 'dark'

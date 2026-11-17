@@ -366,7 +366,7 @@ export default function SignUpScreenComponent() {
         keyboardShouldPersistTaps="handled"
       >
         <GestureDetector gesture={swipeGesture}>
-          <View className="my-auto w-full h-full flex-col items-center gap-5">
+          <View className="my-auto w-full h-full flex-col items-center gap-5 bg-amber-300">
             {/* Logo / Brand Header */}
 
             <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
