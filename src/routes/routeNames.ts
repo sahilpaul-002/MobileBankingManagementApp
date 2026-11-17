@@ -8,22 +8,23 @@ export const ROUTE_NAMES = {
   AUTH: "/(auth)",
   SIGN_IN: "/",
   SIGN_UP: "/signUp",
+  // SIGN_UP: "/(auth)/signUp",
 
-  SELECT_2FA_METHOD: "/select2FaMethod",
+  SELECT_2FA_METHOD: "/(auth)/select2FaMethod",
 
   EMAIL_VERIFICATION: {
-    SEND_CODE: "/email-verification/send-code",
-    VERIFY_CODE: "/email-verification/verify-code",
+    SEND_CODE: "/(auth)/email-verification/send-code",
+    VERIFY_CODE: "/(auth)/email-verification/verify-code",
   },
 
   RESET_PASSWORD: {
-    SEND_CODE: "/reset-password/send-code",
-    VERIFY_CODE: "/reset-password/Verify-code",
+    SEND_CODE: "/(auth)/reset-password/send-code",
+    VERIFY_CODE: "/(auth)/reset-password/verify-code",
   },
 
   TWO_FA: {
-    SEND_CODE: "/two-fa/send-code/[twoFatype]",
-    VERIFY_CODE: "/two-fa/verify-code/[twoFatype]",
+    SEND_CODE: "/(auth)/two-fa/send-code/[twoFatype]",
+    VERIFY_CODE: "/(auth)/two-fa/verify-code/[twoFatype]",
   },
 
   // Dashboard

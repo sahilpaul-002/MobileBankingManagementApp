@@ -23,6 +23,7 @@ import { useSignInMutation } from '@/redux/features/user/userApis';
 import { useappDispatchType, useAppSelector } from '@/redux/hooks/reduxHooks';
 import { selectDnsConfigDetails } from '@/redux/slice/config/configSlice';
 import { setIsEmail } from '@/redux/slice/user/userSlice';
+import { ROUTE_NAMES } from '@/routes/routeNames';
 import ShowInConsole from '@/utils/ShowInConsole';
 
 // ------------------------------------- ZOD VALIDATION SCHEMA ------------------------------------- \\
@@ -405,7 +406,7 @@ export default function SignInScreenComponent() {
                   Create a new account -
                 </Text>
                 <Pressable
-                  onPress={() => router.push('/signUp')}
+                  onPress={() => {router.push(ROUTE_NAMES.SIGN_UP)}}
                   hitSlop={8}
                 >
                   <Text className="text-sm font-semibold text-[var(--color-link)] active:opacity-70">
