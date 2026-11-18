@@ -34,7 +34,7 @@ export default function SendTwoFaCodeScreenComponent() {
   const router = useRouter();
   const dispatch = useappDispatchType();
   const storedEmail = useAppSelector(selectEmail);
-  const params = useLocalSearchParams<{twoFaType?: string}>();
+  const params = useLocalSearchParams<{ twoFaType?: string }>();
 
   const rawTwoFaType = params.twoFaType || "emailOtp";
   const normalizedType = rawTwoFaType.toLowerCase().includes("totp") ? "totp" : rawTwoFaType.toLowerCase().includes("sms") ? "smsOtp" : "emailOtp";
@@ -117,28 +117,34 @@ export default function SendTwoFaCodeScreenComponent() {
 
       setTimeout(() => {
         if (normalizedType === "emailOtp") {
-          router.push("/two-fa/verify-code/emailOtp" as any);
+          router.push({
+            pathname: ROUTE_NAMES.TWO_FA.VERIFY_CODE,
+            params: { twoFaType: "emailOtp" },
+          });
         } else if (normalizedType === "totp") {
           router.push({
-            pathname: "/two-fa/verify-code/[twoFatype]",
+            pathname: ROUTE_NAMES.TWO_FA.VERIFY_CODE,
             params: {
-              twoFatype: "totp",
+              twoFaType: "totp",
               secretKey: result?.data?.secretKey || "",
               qrCodeUrl: result?.data?.qrCodeUrl || "",
             },
           });
         } else {
-          router.push("/two-fa/verify-code/smsOtp" as any);
+          router.push({
+            pathname: ROUTE_NAMES.TWO_FA.VERIFY_CODE,
+            params: { twoFaType: "smsOtp" },
+          });
         }
       }, 500);
-    } 
+    }
     catch (err: any) {
       ShowInConsole("Get 2fa code error:", err);
       const errorMessage = Array.isArray(err?.data?.message)
         ? err.data.message[0]
         : err?.data?.message ||
-          err?.message ||
-          "Get 2-factor-authentication code service is facing issue. Please try again later.";
+        err?.message ||
+        "Get 2-factor-authentication code service is facing issue. Please try again later.";
 
       const normalizedMessage = errorMessage.toLowerCase();
 
@@ -150,7 +156,7 @@ export default function SendTwoFaCodeScreenComponent() {
             "User email not verified for receiving 2-factor authentication code. Please verify the email.",
         });
         setTimeout(() => {
-          router.push("/email-verification/send-code");
+          router.push(ROUTE_NAMES.EMAIL_VERIFICATION.SEND_CODE);
         }, 1000);
         return;
       }
@@ -167,8 +173,8 @@ export default function SendTwoFaCodeScreenComponent() {
     normalizedType === "emailOtp"
       ? "Get a 6 digit code on email. Use this code to verify 2-factor-authentication."
       : normalizedType === "totp"
-      ? "Get a 6 digit code on authenticator app. Use this code to verify 2-factor-authentication."
-      : "Get a 6 digit code on SMS. Use this code to verify 2-factor-authentication.";
+        ? "Get a 6 digit code on authenticator app. Use this code to verify 2-factor-authentication."
+        : "Get a 6 digit code on SMS. Use this code to verify 2-factor-authentication.";
 
   return (
     <KeyboardAvoidingView

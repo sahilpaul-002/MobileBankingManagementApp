@@ -2,41 +2,32 @@ import CustomButtonComponent from "@/components/common/CustomButtonComponent";
 import CustomOtpInputComponent from "@/components/common/CustomOtpInputComponent";
 import { showToastMessage } from "@/components/common/ToastMessagesComponent";
 import { Text } from "@/components/ui/text";
-import {
-    useSendEmailVerificationCodeMutation,
-    useVerifyEmailCodeMutation,
-} from "@/redux/features/twoFa/twoFaApis";
+import { useSendEmailVerificationCodeMutation, useVerifyEmailCodeMutation } from "@/redux/features/twoFa/twoFaApis";
 import { useAppSelector } from "@/redux/hooks/reduxHooks";
 import { selectEmail } from "@/redux/slice/user/userSlice";
 import { ROUTE_NAMES } from "@/routes/routeNames";
 import ShowInConsole from "@/utils/ShowInConsole";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Landmark } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 
 export default function VerifyEmailCodeScreenComponent() {
   const router = useRouter();
   const storedEmail = useAppSelector(selectEmail);
-  const params = useLocalSearchParams<{ email?: string }>();
-
-  const email = params.email || storedEmail || "";
+  const email = storedEmail || "";
 
   useEffect(() => {
     if (!email) {
-      router.replace("/email-verification/send-code");
+      router.replace(ROUTE_NAMES.EMAIL_VERIFICATION.SEND_CODE);
     }
   }, [email, router]);
 
+  // States for OTP
   const [otpValue, setOtpValue] = useState<string>("");
   const [otpError, setOtpError] = useState<string>("");
 
+  // Function to handle OTP change
   const handleOtpChange = (value: string): void => {
     if (!/^\d*$/.test(value)) return;
     const formatted = value.slice(0, 6);
@@ -46,10 +37,11 @@ export default function VerifyEmailCodeScreenComponent() {
     }
   };
 
-  // Timer
+  // Timer States
   const [timeRemaining, setTimeRemaining] = useState<number>(60);
   const isResendDisabled = timeRemaining > 0;
 
+  // useEffect to manage the timer
   useEffect(() => {
     if (timeRemaining <= 0) return;
 
@@ -65,12 +57,11 @@ export default function VerifyEmailCodeScreenComponent() {
     return () => clearInterval(interval);
   }, [timeRemaining]);
 
-  // Mutations
-  const [verifyEmailCode, { isLoading: isVerifyingCode }] =
-    useVerifyEmailCodeMutation();
-  const [sendEmailVerificationCode, { isLoading: isSendingCode }] =
-    useSendEmailVerificationCodeMutation();
+  // Verify Email Code / Send Email Verification Code Api Mutations
+  const [verifyEmailCodeMutation, { isLoading: isVerifyingCode }] = useVerifyEmailCodeMutation();
+  const [sendEmailVerificationCodeMutation, { isLoading: isSendingCode }] = useSendEmailVerificationCodeMutation();
 
+  // Function to handle verify email code form submission
   const handleVerifySubmit = async () => {
     setOtpError("");
 
@@ -89,14 +80,11 @@ export default function VerifyEmailCodeScreenComponent() {
 
     try {
       if (!email) {
-        router.replace("/email-verification/send-code");
+        router.replace(ROUTE_NAMES.EMAIL_VERIFICATION.SEND_CODE);
         return;
       }
 
-      const result = await verifyEmailCode({
-        email,
-        code: otpValue,
-      }).unwrap();
+      const result = await verifyEmailCodeMutation({ email, code: otpValue }).unwrap();
 
       ShowInConsole("Verify email verification code response:", result);
 
@@ -117,7 +105,7 @@ export default function VerifyEmailCodeScreenComponent() {
       });
 
       setTimeout(() => {
-        router.push("/selectTwoFaMethod");
+        router.push(ROUTE_NAMES.SELECT_2FA_METHOD);
       }, 500);
     } catch (err: any) {
       ShowInConsole("Verify email verification code service error:", err);
@@ -153,11 +141,11 @@ export default function VerifyEmailCodeScreenComponent() {
     setOtpError("");
     try {
       if (!email) {
-        router.replace("/email-verification/send-code");
+        router.replace(ROUTE_NAMES.EMAIL_VERIFICATION.SEND_CODE);
         return;
       }
 
-      const result = await sendEmailVerificationCode({ email }).unwrap();
+      const result = await sendEmailVerificationCodeMutation({ email }).unwrap();
       ShowInConsole("Send email verification code response:", result);
 
       if (result?.status?.toUpperCase() !== "SUCCESS") {
@@ -200,7 +188,7 @@ export default function VerifyEmailCodeScreenComponent() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="w-full h-full flex-col items-center gap-5 my-auto">
+        <View className="w-full h-full flex flex-col justify-center items-center gap-5 my-auto">
           {/* Logo */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
@@ -222,7 +210,7 @@ export default function VerifyEmailCodeScreenComponent() {
           </View>
 
           {/* OTP Input Form */}
-          <View className="w-full space-y-4 pt-2">
+          <View className="w-full flex flex-col justify-start items-center gap-5 pt-2">
             <CustomOtpInputComponent
               id="authForm-otp-input"
               label="Enter 6-Digit Code"
@@ -232,52 +220,54 @@ export default function VerifyEmailCodeScreenComponent() {
               otpLength={6}
             />
 
-            {/* Verify Button */}
-            <View className="w-full pt-2 items-center">
-              <CustomButtonComponent
-                id="verifyEmail-verifyEmailForm-button"
-                label="Verify Otp"
-                variant="navy"
-                buttonClassName="w-full"
-                labelClassName="text-lg font-semibold"
-                showButtonLoader={isVerifyingCode}
-                onPress={handleVerifySubmit}
-              />
-            </View>
+            <View className="w-full flex flex-col justify-center items-center gap-2 pt-2">
+              {/* Verify Button */}
+              <View className="w-full">
+                <CustomButtonComponent
+                  id="verifyEmail-verifyEmailForm-button"
+                  label="Verify Otp"
+                  variant="navy"
+                  buttonClassName="w-full"
+                  labelClassName="text-lg font-semibold"
+                  showButtonLoader={isVerifyingCode}
+                  onPress={handleVerifySubmit}
+                />
+              </View>
 
-            {/* Resend Code Button */}
-            <View className="w-full items-center pt-2">
-              <CustomButtonComponent
-                id="verifyEmail-verifyEmailForm-resendCode-button"
-                label={
-                  isSendingCode
-                    ? "Resending..."
-                    : isResendDisabled
-                      ? `Resend Code [ ${timeRemaining}s ]`
-                      : "Resend Code"
-                }
-                variant="authResend"
-                buttonClassName="w-full"
-                labelClassName="text-sm font-semibold text-[var(--color-ink-secondary)]"
-                disabled={isResendDisabled || isSendingCode}
-                onPress={handleResendCode}
-              />
-            </View>
+              {/* Resend Code Button */}
+              <View className="w-full">
+                <CustomButtonComponent
+                  id="verifyEmail-verifyEmailForm-resendCode-button"
+                  label={
+                    isSendingCode
+                      ? "Resending..."
+                      : isResendDisabled
+                        ? `Resend Code [ ${timeRemaining}s ]`
+                        : "Resend Code"
+                  }
+                  variant="authResend"
+                  buttonClassName="w-full"
+                  labelClassName="text-sm font-semibold text-[var(--color-ink-secondary)]"
+                  disabled={isResendDisabled || isSendingCode}
+                  onPress={handleResendCode}
+                />
+              </View>
 
-            {/* Back To Sign In */}
-            <View className="w-full flex-row justify-center items-center pt-3 gap-1">
-              <Text className="text-sm text-[var(--color-ink-muted)]">
-                Back To -
-              </Text>
-              <Pressable
-                onPress={() => router.push(ROUTE_NAMES.SIGN_IN)}
-                hitSlop={8}
-                accessibilityRole="button"
-              >
-                <Text className="text-sm font-semibold text-[var(--color-link)]">
-                  Sign In
+              {/* Back To Sign In */}
+              <View className="w-full flex-row justify-center items-center pt-3 gap-1">
+                <Text className="text-sm text-[var(--color-ink-muted)]">
+                  Back To -
                 </Text>
-              </Pressable>
+                <Pressable
+                  onPress={() => router.push(ROUTE_NAMES.SIGN_IN)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                >
+                  <Text className="text-sm font-semibold text-[var(--color-link)]">
+                    Sign In
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         </View>

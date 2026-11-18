@@ -238,7 +238,7 @@ export default function SignUpScreenComponent() {
       });
 
       setTimeout(() => {
-        router.replace("/(auth)");
+        router.replace(ROUTE_NAMES.SIGN_IN);
       }, 1000);
     } catch (err: any) {
       ShowInConsole("Sign up error:", err);
@@ -366,7 +366,7 @@ export default function SignUpScreenComponent() {
         keyboardShouldPersistTaps="handled"
       >
         <GestureDetector gesture={swipeGesture}>
-          <View className="my-auto w-full h-full flex-col items-center gap-5">
+          <View className="my-auto w-full h-full flex-col justify-start items-center gap-5">
             {/* Logo / Brand Header */}
 
             <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
@@ -469,7 +469,7 @@ export default function SignUpScreenComponent() {
 
               {/* Form Step 1 */}
               {formStep === 1 && (
-                <View className="w-full space-y-3.5">
+                <View className="w-full flex flex-col justify-start items-center gap-5">
                   <Controller
                     control={control}
                     name="fullName"
@@ -566,7 +566,7 @@ export default function SignUpScreenComponent() {
 
               {/* Form Step 2 */}
               {formStep === 2 && (
-                <View className="w-full space-y-3.5">
+                <View className="w-full flex flex-col justify-start items-center gap-5">
                   <Controller
                     control={control}
                     name="dialCode"
@@ -639,7 +639,7 @@ export default function SignUpScreenComponent() {
               {/* Form Step 3 */}
 
               {formStep === 3 && (
-                <View className="w-full space-y-3.5">
+                <View className="w-full flex flex-col justify-start items-center gap-5">
                   <Controller
                     control={control}
                     name="businessName"
@@ -716,7 +716,7 @@ export default function SignUpScreenComponent() {
                     )}
                   />
 
-                  <View className="w-full items-center pt-3">
+                  <View className="w-full items-center">
                     <CustomButtonComponent
                       id="signupForm-submit-button"
                       label="Sign Up"

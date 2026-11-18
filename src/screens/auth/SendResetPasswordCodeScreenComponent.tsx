@@ -64,7 +64,7 @@ export default function SendResetPasswordCodeScreenComponent() {
   // Send Reset Password Code Submission Handler
   const onSendResetPasswordCodeFormSubmit: SubmitHandler<SendResetPasswordCodeFormData> = async (formData) => {
     try {
-      const result = await sendResetPasswordCodeMutation({email: formData.email}).unwrap();
+      const result = await sendResetPasswordCodeMutation({ email: formData.email }).unwrap();
 
       ShowInConsole("Send reset password code response:", result);
 
@@ -108,7 +108,7 @@ export default function SendResetPasswordCodeScreenComponent() {
           text2:
             "Get reset password code service failed due to non-existing email. Please try with correct email.",
         });
-      } 
+      }
       else {
         showToastMessage({
           type: "error",

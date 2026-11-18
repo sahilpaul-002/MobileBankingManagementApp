@@ -9,9 +9,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, AppState, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// 15 minutes of inactivity before session expiry warning
-// const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
-const INACTIVITY_TIMEOUT_MS = 10 * 1000;
+// 5 minutes of inactivity before session expiry warning
+const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
 
 export default function AppLayout() {
     const dispatch = useappDispatchType();

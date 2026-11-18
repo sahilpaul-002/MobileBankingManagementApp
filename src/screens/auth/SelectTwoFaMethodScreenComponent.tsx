@@ -6,7 +6,7 @@ import { selectEmail } from "@/redux/slice/user/userSlice";
 import { ROUTE_NAMES } from "@/routes/routeNames";
 import { useRouter } from "expo-router";
 import { Landmark } from "lucide-react-native";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -43,14 +43,12 @@ export default function SelectTwoFaMethodScreenComponent() {
 
     setMethodError("");
 
-    if (twoFaMethodType === "TOTP") {
-      router.push("/two-fa/send-code/totp");
-      return;
-    }
-
-    if (twoFaMethodType === "EMAIL-OTP") {
-      router.push("/two-fa/send-code/emailOtp");
-    }
+    router.push({
+      pathname: ROUTE_NAMES.TWO_FA.SEND_CODE,
+      params: {
+        twoFaType: twoFaMethodType === "TOTP" ? "totp" : "emailOtp",
+      },
+    });
   };
 
   return (
@@ -66,7 +64,7 @@ export default function SelectTwoFaMethodScreenComponent() {
         }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="w-full h-full flex-col items-center gap-5 my-auto">
+        <View className="w-full h-full flex flex-col justify-center items-center gap-5 my-auto">
           {/* Logo */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
@@ -88,7 +86,7 @@ export default function SelectTwoFaMethodScreenComponent() {
           </View>
 
           {/* Method Selection */}
-          <View className="w-full space-y-4 pt-2">
+          <View className="w-full flex flex-col justify-start items-center gap-5">
             <CustonRadioGroupChoiceCardComponent
               id="authForm-radioGroupChoiceCards"
               label="Select Type"
@@ -103,7 +101,7 @@ export default function SelectTwoFaMethodScreenComponent() {
             />
 
             {/* Submit Button */}
-            <View className="w-full pt-3 items-center">
+            <View className="w-full items-center">
               <CustomButtonComponent
                 id="select2FaMethod-select2FaMethodForm-button"
                 label="Select Method"
@@ -115,7 +113,7 @@ export default function SelectTwoFaMethodScreenComponent() {
             </View>
 
             {/* Back To Sign In */}
-            <View className="w-full flex-row justify-center items-center pt-3 gap-1">
+            <View className="w-full flex-row justify-center items-center gap-1">
               <Text className="text-sm text-[var(--color-ink-muted)]">
                 Back To -
               </Text>

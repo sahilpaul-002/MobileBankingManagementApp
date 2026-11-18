@@ -8,17 +8,11 @@ import { selectEmail, setIsEmail } from "@/redux/slice/user/userSlice";
 import { ROUTE_NAMES } from "@/routes/routeNames";
 import ShowInConsole from "@/utils/ShowInConsole";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Landmark } from "lucide-react-native";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { z } from "zod";
 
 // ------------------------------------- ZOD VALIDATION SCHEMA ------------------------------------- \\
@@ -33,17 +27,15 @@ const sendEmailVerificationCodeFormValidationSchema = z.object({
     ),
 });
 
-type SendEmailVerificationCodeFormData = z.infer<
-  typeof sendEmailVerificationCodeFormValidationSchema
->;
+type SendEmailVerificationCodeFormData = z.infer<typeof sendEmailVerificationCodeFormValidationSchema>;
+// ------------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------- \\
 
 export default function SendEmailVerificationCodeScreenComponent() {
   const router = useRouter();
   const dispatch = useappDispatchType();
   const storedEmail = useAppSelector(selectEmail);
-  const params = useLocalSearchParams<{ email?: string }>();
 
-  const activeEmail = params.email || storedEmail || "";
+  const activeEmail = storedEmail || "";
 
   const {
     control,
@@ -65,16 +57,13 @@ export default function SendEmailVerificationCodeScreenComponent() {
     }
   }, [activeEmail, setValue]);
 
-  const [sendVerificationCode, { isLoading }] =
-    useSendEmailVerificationCodeMutation();
+  // Send Email Verification Code Api Mutation
+  const [sendVerificationCodeMutation, { isLoading }] = useSendEmailVerificationCodeMutation();
 
-  const onSendEmailVerificationCodeFormSubmit: SubmitHandler<
-    SendEmailVerificationCodeFormData
-  > = async (formData) => {
+  // Send EmailVerification Code Form Submission Handler
+  const onSendEmailVerificationCodeFormSubmit: SubmitHandler<SendEmailVerificationCodeFormData> = async (formData) => {
     try {
-      const result = await sendVerificationCode({
-        email: formData.email,
-      }).unwrap();
+      const result = await sendVerificationCodeMutation({email: formData.email}).unwrap();
 
       ShowInConsole("Send email verification code response:", result);
 
@@ -97,7 +86,7 @@ export default function SendEmailVerificationCodeScreenComponent() {
       dispatch(setIsEmail(formData.email));
 
       setTimeout(() => {
-        router.push("/email-verification/verify-code");
+        router.push(ROUTE_NAMES.EMAIL_VERIFICATION.VERIFY_CODE);
       }, 500);
     } catch (err: any) {
       ShowInConsole("Send email verification code error:", err);
@@ -128,7 +117,7 @@ export default function SendEmailVerificationCodeScreenComponent() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="w-full h-full flex-col items-center gap-5 my-auto">
+        <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
           {/* Logo */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
@@ -146,7 +135,7 @@ export default function SendEmailVerificationCodeScreenComponent() {
           </View>
 
           {/* Form */}
-          <View className="w-full space-y-3.5">
+          <View className="w-full flex-col justify-start items-center gap-5">
             <Controller
               control={control}
               name="email"
@@ -167,7 +156,7 @@ export default function SendEmailVerificationCodeScreenComponent() {
             />
 
             {/* Send Code Button */}
-            <View className="w-full pt-3 items-center">
+            <View className="w-full items-center">
               <CustomButtonComponent
                 id="signPage-sendEmailVerificationCodeForm-button"
                 label="Send Code"
@@ -180,7 +169,7 @@ export default function SendEmailVerificationCodeScreenComponent() {
             </View>
 
             {/* Back To Sign In */}
-            <View className="w-full flex-row justify-center items-center pt-3 gap-1">
+            <View className="w-full flex-row justify-center items-center gap-1">
               <Text className="text-sm text-[var(--color-ink-muted)]">
                 Back To -
               </Text>

@@ -32,7 +32,10 @@ export default function VerifyTwoFaCodeScreenComponent() {
 
   useEffect(() => {
     if (!email) {
-      router.replace(`/two-fa/send-code/${normalizedType}`);
+      router.replace({
+        pathname: ROUTE_NAMES.TWO_FA.SEND_CODE,
+        params: { twoFaType: normalizedType },
+      });
     }
   }, [email, normalizedType, router]);
 
@@ -159,7 +162,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
               "2-factor-authentication service failed due to incorrect account email state. Please restart the verification process.",
           });
           setTimeout(() => {
-            router.replace("/selectTwoFaMethod");
+            router.replace(ROUTE_NAMES.SELECT_2FA_METHOD);
           }, 500);
           break;
 
