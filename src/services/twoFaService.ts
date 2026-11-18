@@ -45,7 +45,7 @@ export const sendVerificationEmailService = async (req: Request, res: Response, 
         const userDetails = await user_details.findOne({ email: userMail }).select("_id full_name").lean();
         // Check user exist in DB
         if (!userDetails) {
-            const destroySessionResponse = await destroySession(req.session, res);
+            const destroySessionResponse = await destroySession(req);
             throw new ForbiddenError("User does not exist")
         }
 
@@ -63,7 +63,7 @@ export const sendVerificationEmailService = async (req: Request, res: Response, 
 
         // Generate email template
         const userName = userDetails?.full_name || "User"
-        const dashboardName = req.session.sessiondata?.dashboardName || "BMA"
+        const dashboardName = req.session?.sessiondata?.dashboardName || "BMA"
         const emailTemplate = generateEmailTemplate(
             "EMAIL_VERIFICATION_CODE",
             {
@@ -626,7 +626,7 @@ export const sendResetPasswordCodeService = async (requestSession: Request["sess
 
         // Generate email template
         const userName = requestSession?.userName || "User"
-        const dashboardName = requestSession.sessiondata?.dashboardName || "BMA"
+        const dashboardName = requestSession?.sessiondata?.dashboardName || "BMA"
         const emailTemplate = generateEmailTemplate(
             "FORGET_PASSWORD_CODE",
             {
