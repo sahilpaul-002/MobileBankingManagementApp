@@ -2,7 +2,7 @@ import { Button, type ButtonProps } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
-import { ActivityIndicator } from 'react-native';
+import BeatLoaderComponent from "./loaders/BeatLoaderComponent";
 
 interface CustomButtonProps extends ButtonProps {
   // Accessible identifier
@@ -51,7 +51,8 @@ export default function CustomButtonComponent({
       buttonClassName={buttonClassName ?? ''}
     >
       {showButtonLoader ? (
-        <ActivityIndicator size="small" color="white" />
+        // <ActivityIndicator size="small" color="white" />
+        <BeatLoaderComponent color="white" />
       ) : (
         buttonContent
       )}

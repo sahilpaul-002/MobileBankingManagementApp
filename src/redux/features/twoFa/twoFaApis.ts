@@ -157,7 +157,7 @@ export const twoFaApis = createApi({
         // =======================================================
         // SEND TWO FA CODE
         // =======================================================
-        sendTwoFaCode: build.mutation<apiResponseType<apiResponseDataType>, { email: string }>({
+        sendTwoFaCode: build.mutation<apiResponseType<apiResponseDataType>, { email: string, code_type?: string }>({
             async queryFn(payload, { getState, dispatch }, _extraOptions, baseQuery) {
                 try {
                     let state = getState() as rootStateType;
@@ -209,7 +209,7 @@ export const twoFaApis = createApi({
         // =======================================================
         // VERIFY TWO FA CODE
         // =======================================================
-        verifyTwoFaCode: build.mutation<apiResponseType<apiResponseDataType>, { email: string, code: string }>({
+        verifyTwoFaCode: build.mutation<apiResponseType<apiResponseDataType>, { email: string, code: string, code_type?: string }>({
             async queryFn(payload, { getState, dispatch }, _extraOptions, baseQuery) {
                 try {
                     let state = getState() as rootStateType;
@@ -302,8 +302,10 @@ export const twoFaApis = createApi({
                         error?: unknown
                     }
 
-                    // Store email in sessionStorage for verification page
-                    sessionStorage.setItem('userEmail', payload.email);
+                    // Store email in sessionStorage for verification page if available
+                    if (typeof sessionStorage !== 'undefined') {
+                        sessionStorage.setItem('userEmail', payload.email);
+                    }
 
                     return {
                         data: result.data as apiResponseType<apiResponseDataType>,
