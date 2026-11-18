@@ -95,7 +95,7 @@ export default function AppLayout() {
     }, [resetInactivityTimer]);
 
     return (
-        <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom", "left", "right"]}>
+        <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
             <View
                 // className="h-full w-full bg-[#f4f6fa]"
                 className="h-full w-full bg-[var(--color-app)]"

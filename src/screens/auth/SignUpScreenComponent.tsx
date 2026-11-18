@@ -366,7 +366,7 @@ export default function SignUpScreenComponent() {
         keyboardShouldPersistTaps="handled"
       >
         <GestureDetector gesture={swipeGesture}>
-          <View className="my-auto w-full h-full flex-col items-center gap-5 bg-amber-300">
+          <View className="my-auto w-full h-full flex-col items-center gap-5">
             {/* Logo / Brand Header */}
 
             <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
@@ -374,7 +374,6 @@ export default function SignUpScreenComponent() {
             </View>
 
             {/* Heading */}
-
             <View className="w-full items-center gap-1.5 text-center">
               <Text className="text-3xl font-bold tracking-tight text-[var(--color-navy)]">
                 Create Account
@@ -438,7 +437,7 @@ export default function SignUpScreenComponent() {
 
                     <Text
                       className={cn(
-                        "text-xs font-semibold",
+                        "text-sm font-semibold",
                         isActive
                           ? "font-bold text-[var(--color-navy)]"
                           : isPast
@@ -452,7 +451,7 @@ export default function SignUpScreenComponent() {
                     <Text
                       numberOfLines={1}
                       className={cn(
-                        "text-[11px]",
+                        "text-sm",
                         isActive
                           ? "font-semibold text-[var(--color-navy)]"
                           : "text-[var(--color-ink-muted)]",
@@ -466,11 +465,9 @@ export default function SignUpScreenComponent() {
             </View>
 
             {/* ================================= FORM STEPS ================================= */}
-
             <View className="w-full">
 
-              {/* TEST A: Step 1 - Conditional Rendering */}
-
+              {/* Form Step 1 */}
               {formStep === 1 && (
                 <View className="w-full space-y-3.5">
                   <Controller
@@ -567,8 +564,7 @@ export default function SignUpScreenComponent() {
                 </View>
               )}
 
-              {/* TEST A: Step 2 - Conditional Rendering */}
-
+              {/* Form Step 2 */}
               {formStep === 2 && (
                 <View className="w-full space-y-3.5">
                   <Controller
@@ -640,7 +636,7 @@ export default function SignUpScreenComponent() {
                 </View>
               )}
 
-              {/* TEST A: Step 3 - Conditional Rendering */}
+              {/* Form Step 3 */}
 
               {formStep === 3 && (
                 <View className="w-full space-y-3.5">
@@ -736,7 +732,6 @@ export default function SignUpScreenComponent() {
             </View>
 
             {/* Swipe Direction Indicator */}
-
             <View className="my-1 w-full flex-row items-center justify-center py-4">
               <Pressable
                 onPress={handleGoBack}

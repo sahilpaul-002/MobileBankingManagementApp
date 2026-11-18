@@ -305,7 +305,7 @@ export default function SignInScreenComponent() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="w-full h-full flex-col items-center gap-5 my-auto bg-amber-300">
+        <View className="w-full h-full flex-col items-center gap-5 my-auto">
           {/* Logo / Brand Header */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
