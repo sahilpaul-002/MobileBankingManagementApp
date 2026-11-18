@@ -10,15 +10,9 @@ import ShowInConsole from "@/utils/ShowInConsole";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Landmark } from "lucide-react-native";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { z } from "zod";
 
 // ------------------------------------- ZOD VALIDATION SCHEMA ------------------------------------- \\
@@ -34,25 +28,18 @@ const sendTwoFaCodeFormValidationSchema = z.object({
 });
 
 type SendTwoFaCodeFormData = z.infer<typeof sendTwoFaCodeFormValidationSchema>;
+// -------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXX -------------------------------- \\
 
 export default function SendTwoFaCodeScreenComponent() {
   const router = useRouter();
   const dispatch = useappDispatchType();
   const storedEmail = useAppSelector(selectEmail);
-  const params = useLocalSearchParams<{
-    twoFatype?: string;
-    twoFaType?: string;
-    email?: string;
-  }>();
+  const params = useLocalSearchParams<{twoFaType?: string}>();
 
-  const rawTwoFaType = params.twoFatype || params.twoFaType || "emailOtp";
-  const normalizedType = rawTwoFaType.toLowerCase().includes("totp")
-    ? "totp"
-    : rawTwoFaType.toLowerCase().includes("sms")
-    ? "smsOtp"
-    : "emailOtp";
+  const rawTwoFaType = params.twoFaType || "emailOtp";
+  const normalizedType = rawTwoFaType.toLowerCase().includes("totp") ? "totp" : rawTwoFaType.toLowerCase().includes("sms") ? "smsOtp" : "emailOtp";
 
-  const activeEmail = params.email || storedEmail || "";
+  const activeEmail = storedEmail || "";
 
   const {
     control,
@@ -76,9 +63,8 @@ export default function SendTwoFaCodeScreenComponent() {
 
   const [send2FaCode, { isLoading }] = useSendTwoFaCodeMutation();
 
-  const onSendTwoFaCodeFormSubmit: SubmitHandler<
-    SendTwoFaCodeFormData
-  > = async (formData) => {
+  // Send Two Fa Code Form Submission Handler
+  const onSendTwoFaCodeFormSubmit: SubmitHandler<SendTwoFaCodeFormData> = async (formData) => {
     try {
       let codeType: string;
       if (normalizedType === "emailOtp") {
@@ -145,7 +131,8 @@ export default function SendTwoFaCodeScreenComponent() {
           router.push("/two-fa/verify-code/smsOtp" as any);
         }
       }, 500);
-    } catch (err: any) {
+    } 
+    catch (err: any) {
       ShowInConsole("Get 2fa code error:", err);
       const errorMessage = Array.isArray(err?.data?.message)
         ? err.data.message[0]
@@ -197,14 +184,14 @@ export default function SendTwoFaCodeScreenComponent() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="w-full h-full flex-col items-center gap-5 my-auto">
+        <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
           {/* Logo */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
           </View>
 
           {/* Heading Text */}
-          <View className="w-full items-center text-center gap-1.5">
+          <View className="w-full items-center text-center gap-5">
             <Text className="text-3xl font-bold tracking-tight text-[var(--color-navy)]">
               2-Factor Authentication
             </Text>
@@ -214,7 +201,7 @@ export default function SendTwoFaCodeScreenComponent() {
           </View>
 
           {/* Form */}
-          <View className="w-full space-y-3.5">
+          <View className="w-full flex flex-col justify-start items-center gap-5">
             <Controller
               control={control}
               name="email"
@@ -249,7 +236,7 @@ export default function SendTwoFaCodeScreenComponent() {
             </View>
 
             {/* Back To Sign In */}
-            <View className="w-full flex-row justify-center items-center pt-3 gap-1">
+            <View className="w-full flex-row justify-center items-center gap-1">
               <Text className="text-sm text-[var(--color-ink-muted)]">
                 Back To -
               </Text>

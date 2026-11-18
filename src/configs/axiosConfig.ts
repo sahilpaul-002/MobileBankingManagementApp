@@ -7,6 +7,7 @@ import { getAesEncryptionKey, getRsaHeaderPublicKey, getRsaPublicKey } from '@/s
 import { aesDecryption } from '@/utils/aesDecryption';
 import { aesEncryption, aesEncryptMultipartFile } from '@/utils/aesEncryption';
 import { getEncryptionKey, saveEncryptionKey } from '@/utils/expoSecureEncryptionKeysStorage';
+import { getAuthToken, getRefreshToken } from '@/utils/expoSecureJwtTokenStorage';
 import { clearSessionId, getSessionId, saveSessionId } from '@/utils/expoSecureSessionStorage';
 import GetDeviceId from '@/utils/GetDeviceId';
 import { rsaEncryption } from '@/utils/rsaEncryption';
@@ -46,9 +47,9 @@ export const setAxiosDispatch = (dispatch: any) => {
 // Store ivHex value in WeakMap for in request cycle use
 const ivStore = new WeakMap<object, string>();
 
-// ==============================
+// ====================================
 // SETUP INTERCEPTORS ON AXIOS INSTANCE
-// ==============================
+// ====================================
 const setupInterceptors = (instance: AxiosInstance) => {
 
     // ==========================
@@ -89,6 +90,34 @@ const setupInterceptors = (instance: AxiosInstance) => {
                 req.url?.includes('/getHeaderPublicKey')
             ) {
                 return req;
+            }
+
+            // TOKEN HEADERS
+            const excludedAuthPaths: string[] = [
+                '/login',
+                '/signUp',
+                '/applicationHeaders',
+                '/sendResetPasswordCode',
+                '/verifyResetPasswordCode',
+                '/getDnsConfig',
+                '/getEncryptionKey',
+                '/getPublicKey',
+                '/getHeaderPublicKey',
+            ];
+            const shouldExcludeAuth = excludedAuthPaths.some(
+                path => req.url?.includes(path)
+            );
+            if (!shouldExcludeAuth) {
+                const [authToken, refreshToken] = await Promise.all([
+                    getAuthToken(),
+                    getRefreshToken(),
+                ]);
+                if (authToken) {
+                    req.headers['x-auth-token'] = authToken;
+                }
+                if (refreshToken) {
+                    req.headers['x-refresh-token'] = refreshToken;
+                }
             }
 
             try {

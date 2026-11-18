@@ -48,7 +48,10 @@ export default function CustomButtonComponent({
       testID={id}
       variant={variant}
       disabled={disabled || showButtonLoader}
-      buttonClassName={buttonClassName ?? ''}
+      // buttonClassName={buttonClassName ?? ''}
+      buttonClassName={
+        cn("customButton-container w-full cursor-pointer py-2 px-4", buttonClassName
+        )}
     >
       {showButtonLoader ? (
         // <ActivityIndicator size="small" color="white" />

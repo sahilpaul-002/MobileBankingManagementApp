@@ -8,17 +8,11 @@ import { selectEmail, setIsEmail } from "@/redux/slice/user/userSlice";
 import { ROUTE_NAMES } from "@/routes/routeNames";
 import ShowInConsole from "@/utils/ShowInConsole";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { Landmark } from "lucide-react-native";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 import { z } from "zod";
 
 // ------------------------------------- ZOD VALIDATION SCHEMA ------------------------------------- \\
@@ -33,17 +27,15 @@ const sendResetPasswordCodeFormValidationSchema = z.object({
     ),
 });
 
-type SendResetPasswordCodeFormData = z.infer<
-  typeof sendResetPasswordCodeFormValidationSchema
->;
+type SendResetPasswordCodeFormData = z.infer<typeof sendResetPasswordCodeFormValidationSchema>;
+// ------------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------- \\
 
 export default function SendResetPasswordCodeScreenComponent() {
   const router = useRouter();
   const dispatch = useappDispatchType();
   const storedEmail = useAppSelector(selectEmail);
-  const params = useLocalSearchParams<{ email?: string }>();
 
-  const activeEmail = params.email || storedEmail || "";
+  const activeEmail = storedEmail || "";
 
   const {
     control,
@@ -59,22 +51,20 @@ export default function SendResetPasswordCodeScreenComponent() {
     },
   });
 
+  // UseEffect to set email from redux
   useEffect(() => {
     if (activeEmail) {
       setValue("email", activeEmail, { shouldValidate: true });
     }
   }, [activeEmail, setValue]);
 
-  const [sendResetPasswordCode, { isLoading }] =
-    useSendResetPasswordCodeMutation();
+  // Send Reset Password Code Api Mutation
+  const [sendResetPasswordCodeMutation, { isLoading }] = useSendResetPasswordCodeMutation();
 
-  const onSendResetPasswordCodeFormSubmit: SubmitHandler<
-    SendResetPasswordCodeFormData
-  > = async (formData) => {
+  // Send Reset Password Code Submission Handler
+  const onSendResetPasswordCodeFormSubmit: SubmitHandler<SendResetPasswordCodeFormData> = async (formData) => {
     try {
-      const result = await sendResetPasswordCode({
-        email: formData.email,
-      }).unwrap();
+      const result = await sendResetPasswordCodeMutation({email: formData.email}).unwrap();
 
       ShowInConsole("Send reset password code response:", result);
 
@@ -98,11 +88,12 @@ export default function SendResetPasswordCodeScreenComponent() {
 
       setTimeout(() => {
         router.push({
-          pathname: "/reset-password/verify-code",
+          pathname: ROUTE_NAMES.RESET_PASSWORD.VERIFY_CODE,
           params: { email: formData.email },
         });
       }, 500);
-    } catch (err: any) {
+    }
+    catch (err: any) {
       ShowInConsole("Send reset password code error:", err);
       const errorMessage =
         err?.data?.message ||
@@ -110,16 +101,15 @@ export default function SendResetPasswordCodeScreenComponent() {
         "Get reset password verification code service is facing issue. Please try again later.";
       const normalizedMessage = errorMessage.toLowerCase();
 
-      if (
-        normalizedMessage.includes("user with the provided email does not exist")
-      ) {
+      if (normalizedMessage.includes("user with the provided email does not exist")) {
         showToastMessage({
           type: "error",
           text1: "Account Not Found",
           text2:
             "Get reset password code service failed due to non-existing email. Please try with correct email.",
         });
-      } else {
+      } 
+      else {
         showToastMessage({
           type: "error",
           text1: "Error",
@@ -143,7 +133,7 @@ export default function SendResetPasswordCodeScreenComponent() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="w-full h-full flex-col items-center gap-5 my-auto">
+        <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
           {/* Logo */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
@@ -161,7 +151,7 @@ export default function SendResetPasswordCodeScreenComponent() {
           </View>
 
           {/* Form */}
-          <View className="w-full space-y-3.5">
+          <View className="w-full flex flex-col justify-start items-center gap-5">
             <Controller
               control={control}
               name="email"
@@ -182,7 +172,7 @@ export default function SendResetPasswordCodeScreenComponent() {
             />
 
             {/* Send Code Button */}
-            <View className="w-full pt-3 items-center">
+            <View className="w-full items-center">
               <CustomButtonComponent
                 id="signPage-sendResetPasswordCodeForm-button"
                 label="Send Code"
@@ -195,7 +185,7 @@ export default function SendResetPasswordCodeScreenComponent() {
             </View>
 
             {/* Back To Sign In */}
-            <View className="w-full flex-row justify-center items-center pt-3 gap-1">
+            <View className="w-full flex-row justify-center items-center gap-1">
               <Text className="text-sm text-[var(--color-ink-muted)]">
                 Back To -
               </Text>

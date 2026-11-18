@@ -305,7 +305,7 @@ export default function SignInScreenComponent() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="w-full h-full flex-col items-center gap-5 my-auto">
+        <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
           {/* Logo / Brand Header */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
@@ -330,7 +330,7 @@ export default function SignInScreenComponent() {
               showFooter={true}
             />
           ) : (
-            <View className="w-full space-y-3.5">
+            <View className="w-full flex flex-col justify-start items-center gap-5">
               {/* Email Field */}
               <Controller
                 control={control}
@@ -352,7 +352,7 @@ export default function SignInScreenComponent() {
               />
 
               {/* Password Field + Forgot Password */}
-              <View className="w-full flex-col gap-1.5 mt-3">
+              <View className="w-full flex-col gap-2">
                 <Controller
                   control={control}
                   name="password"
@@ -401,7 +401,7 @@ export default function SignInScreenComponent() {
               </View>
 
               {/* Create Account Link */}
-              <View className="w-full flex-row justify-center items-center pt-2">
+              <View className="w-full flex-row justify-center items-center">
                 <Text className="text-sm text-[var(--color-ink-muted)]">
                   Create a new account -
                 </Text>

@@ -2,10 +2,7 @@ import CustomButtonComponent from "@/components/common/CustomButtonComponent";
 import CustomOtpInputComponent from "@/components/common/CustomOtpInputComponent";
 import { showToastMessage } from "@/components/common/ToastMessagesComponent";
 import { Text } from "@/components/ui/text";
-import {
-  useSendTwoFaCodeMutation,
-  useVerifyTwoFaCodeMutation,
-} from "@/redux/features/twoFa/twoFaApis";
+import { useSendTwoFaCodeMutation, useVerifyTwoFaCodeMutation } from "@/redux/features/twoFa/twoFaApis";
 import { useAppSelector } from "@/redux/hooks/reduxHooks";
 import { selectEmail } from "@/redux/slice/user/userSlice";
 import { ROUTE_NAMES } from "@/routes/routeNames";
@@ -14,34 +11,22 @@ import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Copy, Landmark } from "lucide-react-native";
-import React, { Activity, useEffect, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { Activity, useEffect, useState } from "react";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
 
 export default function VerifyTwoFaCodeScreenComponent() {
   const router = useRouter();
   const storedEmail = useAppSelector(selectEmail);
   const params = useLocalSearchParams<{
-    twoFatype?: string;
     twoFaType?: string;
     secretKey?: string;
     qrCodeUrl?: string;
-    email?: string;
   }>();
 
-  const rawTwoFaType = params.twoFatype || params.twoFaType || "emailOtp";
-  const normalizedType = rawTwoFaType.toLowerCase().includes("totp")
-    ? "totp"
-    : rawTwoFaType.toLowerCase().includes("sms")
-    ? "smsOtp"
-    : "emailOtp";
+  const rawTwoFaType = params.twoFaType || "emailOtp";
+  const normalizedType = rawTwoFaType.toLowerCase().includes("totp") ? "totp" : rawTwoFaType.toLowerCase().includes("sms") ? "smsOtp" : "emailOtp";
 
-  const email = params.email || storedEmail || "";
+  const email = storedEmail || "";
   const secretKey = params.secretKey;
   const qrCodeUrl = params.qrCodeUrl;
 
@@ -51,9 +36,11 @@ export default function VerifyTwoFaCodeScreenComponent() {
     }
   }, [email, normalizedType, router]);
 
+  // State for OTP
   const [otpValue, setOtpValue] = useState<string>("");
   const [otpError, setOtpError] = useState<string>("");
 
+  // Function to handle OTP change
   const handleOtpChange = (value: string): void => {
     if (!/^\d*$/.test(value)) return;
     const formatted = value.slice(0, 6);
@@ -67,6 +54,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
   const [timeRemaining, setTimeRemaining] = useState<number>(60);
   const isResendDisabled = timeRemaining > 0;
 
+  // UseEffect to manage resent otp timer
   useEffect(() => {
     if (normalizedType !== "emailOtp" || timeRemaining <= 0) return;
 
@@ -82,12 +70,11 @@ export default function VerifyTwoFaCodeScreenComponent() {
     return () => clearInterval(interval);
   }, [timeRemaining, normalizedType]);
 
-  // Mutations
-  const [verify2FaCode, { isLoading: isVerifying2FaCode }] =
-    useVerifyTwoFaCodeMutation();
-  const [send2FaCode, { isLoading: isSendingCode }] =
-    useSendTwoFaCodeMutation();
+  // Verify 2FA Code / Send 2FA Code Api Mutation
+  const [verify2FaCodeMutation, { isLoading: isVerifying2FaCode }] = useVerifyTwoFaCodeMutation();
+  const [send2FaCodeMutation, { isLoading: isSendingCode }] = useSendTwoFaCodeMutation();
 
+  // Function to handle verify 2FA code submission
   const handleVerifySubmit = async () => {
     setOtpError("");
 
@@ -125,7 +112,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
         code: otpValue,
       };
 
-      const result = await verify2FaCode(payload).unwrap();
+      const result = await verify2FaCodeMutation(payload).unwrap();
       ShowInConsole("2fa verification code response:", result);
 
       if (result?.status?.toUpperCase() !== "SUCCESS") {
@@ -203,6 +190,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
     }
   };
 
+  // Function to handle resend 2FA code
   const handleResendCode = async () => {
     setOtpError("");
     try {
@@ -216,7 +204,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
         code_type: "EMAIL-OTP",
       };
 
-      const result = await send2FaCode(payload).unwrap();
+      const result = await send2FaCodeMutation(payload).unwrap();
       ShowInConsole("Send 2fa code response:", result);
 
       if (result?.status?.toUpperCase() !== "SUCCESS") {
@@ -247,6 +235,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
     }
   };
 
+  // Function to copy authenticator secret key
   const handleCopySecretKey = async () => {
     if (!secretKey) return;
     try {
@@ -269,8 +258,8 @@ export default function VerifyTwoFaCodeScreenComponent() {
     normalizedType === "emailOtp"
       ? "A 6 digit authentication code is sent to your email."
       : normalizedType === "totp"
-      ? "Enter the 6 digit code from your authenticator app."
-      : "A 6 digit authentication code is sent to SMS.";
+        ? "Enter the 6 digit code from your authenticator app."
+        : "A 6 digit authentication code is sent to SMS.";
 
   return (
     <KeyboardAvoidingView
@@ -286,7 +275,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="w-full h-full flex-col items-center gap-5 my-auto">
+        <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
           {/* Logo */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
@@ -358,7 +347,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
           </Activity>
 
           {/* OTP Input Form */}
-          <View className="w-full space-y-4 pt-2">
+          <View className="w-full flex flex-col justify-start items-center gap-5 pt-2">
             <CustomOtpInputComponent
               id="authForm-otp-input"
               label="Enter 6-Digit Code"
@@ -369,7 +358,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
             />
 
             {/* Verify Button */}
-            <View className="w-full pt-2 items-center">
+            <View className="w-full flex flex-col justify-start items-center gap-5">
               <CustomButtonComponent
                 id="verify2FaCode-verify2FaCodeForm-button"
                 label="Verify Otp"
@@ -379,43 +368,43 @@ export default function VerifyTwoFaCodeScreenComponent() {
                 showButtonLoader={isVerifying2FaCode}
                 onPress={handleVerifySubmit}
               />
-            </View>
 
-            {/* Resend Code Button (Email OTP only) */}
-            <Activity mode={normalizedType === "emailOtp" ? "visible" : "hidden"}>
-              <View className="w-full items-center pt-2">
-                <CustomButtonComponent
-                  id="verify2FaCode-verify2FaCodeForm-resendCode-button"
-                  label={
-                    isSendingCode
-                      ? "Resending..."
-                      : isResendDisabled
-                      ? `Resend Code [ ${timeRemaining}s ]`
-                      : "Resend Code"
-                  }
-                  variant="authResend"
-                  buttonClassName="w-full"
-                  labelClassName="text-sm font-semibold text-[var(--color-ink-secondary)]"
-                  disabled={isResendDisabled || isSendingCode}
-                  onPress={handleResendCode}
-                />
-              </View>
-            </Activity>
+              {/* Resend Code Button (Email OTP only) */}
+              <Activity mode={normalizedType === "emailOtp" ? "visible" : "hidden"}>
+                <View className="w-full items-center pt-2">
+                  <CustomButtonComponent
+                    id="verify2FaCode-verify2FaCodeForm-resendCode-button"
+                    label={
+                      isSendingCode
+                        ? "Resending..."
+                        : isResendDisabled
+                          ? `Resend Code [ ${timeRemaining}s ]`
+                          : "Resend Code"
+                    }
+                    variant="authResend"
+                    buttonClassName="w-full"
+                    labelClassName="text-sm font-semibold text-[var(--color-ink-secondary)]"
+                    disabled={isResendDisabled || isSendingCode}
+                    onPress={handleResendCode}
+                  />
+                </View>
+              </Activity>
 
-            {/* Back To Sign In */}
-            <View className="w-full flex-row justify-center items-center pt-3 gap-1">
-              <Text className="text-sm text-[var(--color-ink-muted)]">
-                Back To -
-              </Text>
-              <Pressable
-                onPress={() => router.push(ROUTE_NAMES.SIGN_IN)}
-                hitSlop={8}
-                accessibilityRole="button"
-              >
-                <Text className="text-sm font-semibold text-[var(--color-link)]">
-                  Sign In
+              {/* Back To Sign In */}
+              <View className="w-full flex-row justify-center items-center gap-1">
+                <Text className="text-sm text-[var(--color-ink-muted)]">
+                  Back To -
                 </Text>
-              </Pressable>
+                <Pressable
+                  onPress={() => router.push(ROUTE_NAMES.SIGN_IN)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                >
+                  <Text className="text-sm font-semibold text-[var(--color-link)]">
+                    Sign In
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         </View>

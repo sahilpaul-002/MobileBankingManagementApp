@@ -1,28 +1,99 @@
-import clsx from 'clsx';
-import React, { type CSSProperties } from 'react'
-import { BeatLoader, PropagateLoader } from "react-spinners"
 
-interface PropagateLoaderPropsType {
-    size?: number | string;
+import { useEffect } from 'react';
+import { View } from 'react-native';
+import Animated, {
+    cancelAnimation,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withRepeat,
+    withSequence,
+    withTiming,
+} from 'react-native-reanimated';
+
+interface BeatLoaderPropsType {
+    size?: number;
     color?: string;
     loading?: boolean;
-    cssOverride?: CSSProperties;
-    speedMultiplier?: number;
-    wrapperClassName?: string;
 }
 
-export default function BeatLoaderComponent(props: PropagateLoaderPropsType) {
-    const { size, color, loading, cssOverride, speedMultiplier, wrapperClassName } = props;
+interface BeatDotPropsType {
+    index: number;
+    size: number;
+    color: string;
+    loading: boolean;
+}
+
+function BeatDot({ index, size, color, loading }: BeatDotPropsType) {
+    const scale = useSharedValue(1);
+
+    useEffect(() => {
+        if (!loading) {
+            cancelAnimation(scale);
+            scale.value = 1;
+            return;
+        }
+
+        scale.value = withDelay(
+            index * 150,
+            withRepeat(
+                withSequence(
+                    withTiming(1.5, {
+                        duration: 400,
+                    }),
+                    withTiming(1, {
+                        duration: 400,
+                    }),
+                ),
+                -1,
+                false,
+            ),
+        );
+
+        return () => {
+            cancelAnimation(scale);
+        };
+    }, [loading, index, scale]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
+    }));
+
+    if (!loading) return null;
 
     return (
-        <div className={clsx("propogateLoader-container w-full h-full bg-transparent flex justify-center items-center", wrapperClassName)}>
-            <BeatLoader
-                size={size ?? 15}
-                color={color ?? "#000000"}
-                loading={loading ?? true}
-                cssOverride={cssOverride ?? {}}
-                speedMultiplier={speedMultiplier ?? 1}
-            />
-        </div>
-    )
+        <Animated.View
+            style={[
+                {
+                    width: size,
+                    height: size,
+                    borderRadius: size / 2,
+                    backgroundColor: color,
+                },
+                animatedStyle,
+            ]}
+        />
+    );
+}
+
+export default function BeatLoaderComponent({
+    size = 12,
+    color = '#000000',
+    loading = true,
+}: BeatLoaderPropsType) {
+    if (!loading) return null;
+
+    return (
+        <View className="w-full h-full flex-row items-center justify-center gap-2 py-2 px-4">
+            {Array.from({ length: 3 }, (_, index) => (
+                <BeatDot
+                    key={index}
+                    index={index}
+                    size={size}
+                    color={color}
+                    loading={loading}
+                />
+            ))}
+        </View>
+    );
 }

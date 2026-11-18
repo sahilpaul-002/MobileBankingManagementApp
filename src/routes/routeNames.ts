@@ -23,8 +23,8 @@ export const ROUTE_NAMES = {
   },
 
   TWO_FA: {
-    SEND_CODE: "/(auth)/two-fa/send-code/[twoFatype]",
-    VERIFY_CODE: "/(auth)/two-fa/verify-code/[twoFatype]",
+    SEND_CODE: "/(auth)/two-fa/send-code/[twoFaType]",
+    VERIFY_CODE: "/(auth)/two-fa/verify-code/[twoFaType]",
   },
 
   // Dashboard
