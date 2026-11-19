@@ -218,8 +218,8 @@ export default function ServiceUnavailableScreenComponent() {
           id="serviceUnavailable-tryAgain-button"
           label="Try Again"
           variant="navy"
-          size="lg"
-          className="px-10!"
+          buttonClassName="w-full"
+          labelClassName="text-lg font-semibold"
           onPress={() => router.replace(ROUTE_NAMES.SIGN_IN)}
         />
 
