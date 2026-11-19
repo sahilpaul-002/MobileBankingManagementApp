@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChartNoAxesCombined, Info } from 'lucide-react-native';
 import { Activity, useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
+import ExpenditureAreaChartComponent from './ExpenditureAreaChartComponent';
 import ExpenditureBarChartComponent, {
   type ExpenditureChartDataPoint,
 } from './ExpenditureBarChartComponent';
@@ -268,11 +269,12 @@ export default function ExpenditureChartSection({
               </View>
             ) : (
               <View className="mt-4 w-full flex-col">
-                {/* Bar Chart */}
-                <ExpenditureBarChartComponent
-                  data={chartData}
-                  showPayouts={canAccessPayoutsExpenditures}
-                />
+                {/* Chart: Admin sees Stacked Bar Chart, Non-Admin sees Smooth Area Chart */}
+                {canAccessPayoutsExpenditures ? (
+                  <ExpenditureBarChartComponent data={chartData} />
+                ) : (
+                  <ExpenditureAreaChartComponent data={chartData} />
+                )}
 
                 {/* Legend: Admin shows both Payouts & Card spend, Non-admin shows only Card spend */}
                 <View className="mt-4 flex-row items-center gap-4">
