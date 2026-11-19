@@ -1,7 +1,7 @@
 import CustomButtonComponent from '@/components/common/CustomButtonComponent';
 import { ROUTE_NAMES } from '@/routes/routeNames';
 import { useRouter } from 'expo-router';
-import { ArrowLeftRight, Send } from 'lucide-react-native';
+import { ArrowLeftRight /*, Send */ } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 
@@ -60,6 +60,7 @@ export default function DashboardHeaderComponent({
             </CustomButtonComponent>
           </View>
 
+          {/* Send money button commented out
           <View className="flex-1">
             <CustomButtonComponent
               id="dashboard-send-money-button"
@@ -71,6 +72,7 @@ export default function DashboardHeaderComponent({
               <Text className="text-xs font-semibold text-white">Send money</Text>
             </CustomButtonComponent>
           </View>
+          */}
         </View>
       )}
     </View>

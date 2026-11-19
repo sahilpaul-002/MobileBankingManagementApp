@@ -50,7 +50,10 @@ export default function CustomButtonComponent({
       disabled={disabled || showButtonLoader}
       // buttonClassName={buttonClassName ?? ''}
       buttonClassName={
-        cn("customButton-container w-full cursor-pointer py-2 px-4", buttonClassName
+        cn(
+          "customButton-container cursor-pointer",
+          variant === 'link' || variant === 'authLink' ? 'w-auto' : 'w-full py-2 px-4',
+          buttonClassName
         )}
     >
       {showButtonLoader ? (

@@ -367,10 +367,11 @@ export default function DashboardScreenComponent() {
                   cardsListNotFound={isTopSpendingCardsNotFound}
                 />
 
-                {/* Expenditure Graph (Card spend only) */}
+                {/* Expenditure Graph */}
                 <ExpenditureChartSection
                   userEmail={userEmail}
                   userCardholderId={userCardholderId}
+                  userId={userSession.userId}
                 />
 
                 {/* Recent Transactions Section */}

@@ -56,7 +56,7 @@ export default function TopCardsSection({
             <CustomButtonComponent
               id="top-cards-empty-all-cards"
               variant="link"
-              buttonClassName="flex-row items-center gap-0.5 px-0 py-0"
+              buttonClassName="w-auto shrink-0 flex-row items-center gap-0.5 px-0 py-0"
               onPress={handleNavigateAllCards}
             >
               <Text className="text-xs font-semibold text-[var(--color-link)]">
@@ -94,7 +94,7 @@ export default function TopCardsSection({
             <CustomButtonComponent
               id="top-cards-all-cards"
               variant="link"
-              buttonClassName="flex-row items-center gap-0.5 px-0 py-0"
+              buttonClassName="w-auto shrink-0 flex-row items-center gap-0.5 px-0 py-0"
               onPress={handleNavigateAllCards}
             >
               <Text className="text-xs font-semibold text-[var(--color-link)]">
