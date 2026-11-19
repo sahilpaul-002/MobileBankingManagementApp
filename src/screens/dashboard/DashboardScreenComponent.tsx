@@ -1,4 +1,5 @@
 import DashboardLoaderComponent from '@/components/common/loaders/DashboardLoaderComponent';
+import LogoutConfirmationModalComponent from '@/components/common/LogoutConfirmationModalComponent';
 import RefreshPageFallbackComponent from '@/components/common/RefreshPageFallbackComponent';
 import ExpenditureChartSection from '@/components/dashboard/expenditure/ExpenditureChartSection';
 import DashboardHeaderComponent from '@/components/dashboard/header/DashboardHeaderComponent';
@@ -23,9 +24,9 @@ import { isKybApproved } from '@/utils/kybHelper';
 import { isKycApproved } from '@/utils/kycHelper';
 import ShowInConsole from '@/utils/ShowInConsole';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Activity, useCallback, useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, View } from 'react-native';
+import { BackHandler, RefreshControl, ScrollView, View } from 'react-native';
 
 export default function DashboardScreenComponent() {
   const router = useRouter();
@@ -35,6 +36,26 @@ export default function DashboardScreenComponent() {
   const isMasterAdmin = useAppSelector(selectIsMasterAdmin);
   const canAccessAdminFeatures = isAdmin || isMasterAdmin;
   const reduxEmail = useAppSelector(selectEmail);
+
+  // ------------------------------- LOGOUT CONFIRMATION MODAL & BACK HANDLER ---------------------------------- \\
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Intercept hardware/mobile back button on Dashboard to prompt logout confirmation
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        setShowLogoutModal(true);
+        return true; // Prevents default hardware back navigation
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+
+      return () => subscription.remove();
+    }, []),
+  );
 
   // ------------------------------- GET CREDENTIALS FROM ASYNC STORAGE ---------------------------------- \\
   const [userSession, setUserSession] = useState<{
@@ -384,6 +405,12 @@ export default function DashboardScreenComponent() {
           </ScrollView>
         </View>
       </Activity>
+
+      {/* Logout Confirmation Modal (triggered by mobile hardware back button) */}
+      <LogoutConfirmationModalComponent
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+      />
     </View>
   );
 }
