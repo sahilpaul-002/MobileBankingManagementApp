@@ -43,13 +43,7 @@ export default function TopCardsSection({
     <View className="w-full">
       {/* Empty State */}
       <Activity mode={!hasCards ? 'visible' : 'hidden'}>
-        <View
-          className={
-            !hasCards
-              ? 'w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm'
-              : 'hidden'
-          }
-        >
+        <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Header */}
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-1.5">
@@ -87,13 +81,7 @@ export default function TopCardsSection({
 
       {/* Cards List Found State */}
       <Activity mode={hasCards ? 'visible' : 'hidden'}>
-        <View
-          className={
-            hasCards
-              ? 'w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm'
-              : 'hidden'
-          }
-        >
+        <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Header */}
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-1.5">

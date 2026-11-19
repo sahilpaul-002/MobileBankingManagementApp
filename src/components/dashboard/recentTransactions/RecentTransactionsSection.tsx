@@ -40,13 +40,7 @@ export default function RecentTransactionsSection({
     <View className="w-full">
       {/* Empty State */}
       <Activity mode={!hasWalletTransactions ? 'visible' : 'hidden'}>
-        <View
-          className={
-            !hasWalletTransactions
-              ? 'w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm'
-              : 'hidden'
-          }
-        >
+        <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Header */}
           <View className="flex-row items-center justify-between">
             <Text className="text-xs font-semibold tracking-wider uppercase text-[var(--color-ink-soft)]">
@@ -81,13 +75,7 @@ export default function RecentTransactionsSection({
 
       {/* Found State */}
       <Activity mode={hasWalletTransactions ? 'visible' : 'hidden'}>
-        <View
-          className={
-            hasWalletTransactions
-              ? 'w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm'
-              : 'hidden'
-          }
-        >
+        <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Header */}
           <View className="flex-row items-center justify-between">
             <Text className="text-xs font-semibold tracking-wider uppercase text-[var(--color-ink-soft)]">

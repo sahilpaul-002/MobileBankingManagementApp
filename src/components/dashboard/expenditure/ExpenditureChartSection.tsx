@@ -108,13 +108,7 @@ export default function ExpenditureChartSection({
     <View className="w-full">
       {/* Loading State */}
       <Activity mode={isExpenditureLoading ? 'visible' : 'hidden'}>
-        <View
-          className={
-            isExpenditureLoading
-              ? 'w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm'
-              : 'hidden'
-          }
-        >
+        <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           <View className="flex-row items-center gap-1.5">
             <Text className="text-xs font-semibold text-[var(--color-gold)]">—</Text>
             <Text className="text-xs font-semibold tracking-wider uppercase text-[var(--color-ink-soft)]">
@@ -136,13 +130,7 @@ export default function ExpenditureChartSection({
 
       {/* Loaded State */}
       <Activity mode={!isExpenditureLoading ? 'visible' : 'hidden'}>
-        <View
-          className={
-            !isExpenditureLoading
-              ? 'w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm'
-              : 'hidden'
-          }
-        >
+        <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Header */}
           <View className="flex-row items-start justify-between">
             <View className="flex-1">

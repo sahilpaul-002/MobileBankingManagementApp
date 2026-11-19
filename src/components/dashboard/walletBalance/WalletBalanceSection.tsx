@@ -66,13 +66,7 @@ export default function WalletBalanceSection({
     <View className="w-full">
       {/* Wallets Balances Not Found / Empty State */}
       <Activity mode={!hasWalletBalances ? 'visible' : 'hidden'}>
-        <View
-          className={
-            !hasWalletBalances
-              ? 'w-full items-center justify-center rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-6 shadow-sm'
-              : 'hidden'
-          }
-        >
+        <View className="w-full items-center justify-center rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-6 shadow-sm">
           {/* Section label */}
           <View className="mb-4 flex-row items-center gap-1.5 self-start">
             <Text className="text-xs font-semibold text-[var(--color-gold)]">—</Text>
@@ -96,13 +90,7 @@ export default function WalletBalanceSection({
 
       {/* Wallets Balances Found State */}
       <Activity mode={hasWalletBalances ? 'visible' : 'hidden'}>
-        <View
-          className={
-            hasWalletBalances
-              ? 'w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm'
-              : 'hidden'
-          }
-        >
+        <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Treasury Total Section */}
           <View className="w-full flex-col items-start gap-2">
             <View className="flex-row items-center gap-1.5">

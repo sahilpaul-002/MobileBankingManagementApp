@@ -10,10 +10,7 @@ import { useGetTopSpendingCardsQuery } from '@/redux/features/card/cardApi';
 import { useLazyGetDnsConfigQuery } from '@/redux/features/config/configApi';
 import { useGetKycDetailsQuery } from '@/redux/features/kyc/kycApis';
 import { useGetUserOnboardingDetailsQuery } from '@/redux/features/user/userApis';
-import {
-  useGetAllWalletBalancesQuery,
-  useGetWalletTransactionsQuery,
-} from '@/redux/features/wallet/walletApis';
+import { useGetAllWalletBalancesQuery, useGetWalletTransactionsQuery } from '@/redux/features/wallet/walletApis';
 import { useappDispatchType, useAppSelector } from '@/redux/hooks/reduxHooks';
 import { selectDnsConfigDetails } from '@/redux/slice/config/configSlice';
 import { selectEmail, selectIsAdmin, selectIsMasterAdmin } from '@/redux/slice/user/userSlice';
@@ -123,6 +120,7 @@ export default function DashboardScreenComponent() {
   // ----------------------------------- KYC / KYB Verification Status ----------------------------------- \\
   // Get KYC Details API
   const { data: getKycData, isLoading: getKycDetailsIsLoading, isError: getKycDetailsIsError, error: getKycDetailsError, isSuccess: getKycDetailsIsSuccess, refetch: refetchGetKycDetails } = useGetKycDetailsQuery({ email: userEmail! }, { skip: !userEmail });
+
   const userKycDetails = getKycData?.data as Record<string, any> | undefined;
   const isKycNotFound =
     getKycDetailsIsError &&
@@ -131,7 +129,8 @@ export default function DashboardScreenComponent() {
     getKycDetailsError.status === 404;
 
   // Get KYB Details API
-  const {data: getOnboardingData, isLoading: getOnboardingDetailsLoading, isError: getOnboardingDetailsIsError, error: getOnboardingDetailsError, isSuccess: getOnboardingDetailsIsSuccess, refetch: refetchGetOnboardingDetails} = useGetUserOnboardingDetailsQuery({ email: userEmail! }, { skip: !userEmail });
+  const { data: getOnboardingData, isLoading: getOnboardingDetailsLoading, isError: getOnboardingDetailsIsError, error: getOnboardingDetailsError, isSuccess: getOnboardingDetailsIsSuccess, refetch: refetchGetOnboardingDetails } = useGetUserOnboardingDetailsQuery({ email: userEmail! }, { skip: !userEmail });
+
   const userOnboardingDetails = getOnboardingData?.data as Record<string, any> | undefined;
   const isOnboardingNotFound =
     getOnboardingDetailsIsError &&
@@ -163,26 +162,12 @@ export default function DashboardScreenComponent() {
   // -------------------------------- XXXXXXXXXXXXXXXXX -------------------------------- \\
 
   // -------------------------------- All Wallets Balances -------------------------------- \\
-  const {
-    data: getAllWalletsBalancesData,
-    isError: getAllWalletsBalancesIsError,
-    error: getAllWalletsBalancesError,
-    isSuccess: getAllWalletsBalancesIsSuccess,
-    refetch: refetchGetAllWalletsBalances,
-  } = useGetAllWalletBalancesQuery(
-    { email: userEmail ?? '', cardholderId: userCardholderId ?? '' },
-    {
-      skip: !userEmail || !userCardholderId || !shouldFetchDependentApis,
-      refetchOnMountOrArgChange: true,
-    }
-  );
+  const { data: getAllWalletsBalancesData, isError: getAllWalletsBalancesIsError, error: getAllWalletsBalancesError, isSuccess: getAllWalletsBalancesIsSuccess, refetch: refetchGetAllWalletsBalances } = useGetAllWalletBalancesQuery({ email: userEmail!, cardholderId: userCardholderId! }, { skip: !userEmail || !userCardholderId || !shouldFetchDependentApis, refetchOnMountOrArgChange: true });
 
-  const userAllWalletsBalances =
-    (getAllWalletsBalancesData?.data as AllWalletBalancesResponseDataType | undefined) ?? [];
-  const fetchedWalletId = (
-    getAllWalletsBalancesData?.data as AllWalletBalancesResponseDataType | undefined
-  )?.walletId;
+  const userAllWalletsBalances = (getAllWalletsBalancesData?.data as AllWalletBalancesResponseDataType | undefined) ?? [];
+  const fetchedWalletId = (getAllWalletsBalancesData?.data as AllWalletBalancesResponseDataType | undefined)?.walletId;
 
+  // Set user wallet id in expo secure store
   useEffect(() => {
     if (getAllWalletsBalancesIsSuccess && fetchedWalletId) {
       AsyncStorage.setItem('userWalletId', fetchedWalletId);
@@ -194,84 +179,44 @@ export default function DashboardScreenComponent() {
     getAllWalletsBalancesError != null &&
     'status' in getAllWalletsBalancesError &&
     getAllWalletsBalancesError.status === 404;
+  // --------------------------------- XXXXXXXXXXXXXXXXXXXXXX --------------------------------- \\
 
   // -------------------------------- Cards List -------------------------------- \\
-  const shouldFetchTopSpendingCardsList =
-    shouldFetchDependentApis && getAllWalletsBalancesIsSuccess && !!userCardholderId;
+  const shouldFetchTopSpendingCardsList = shouldFetchDependentApis && getAllWalletsBalancesIsSuccess && !!userCardholderId;
 
-  const {
-    data: getTopSpendingCardsData,
-    isError: getTopSpendingCardsIsError,
-    error: getTopSpendingCardsError,
-    refetch: refetchTopSpendingCards,
-  } = useGetTopSpendingCardsQuery(
-    { email: userEmail ?? '', cardholderId: userCardholderId ?? '' },
-    {
-      skip: !userEmail || !userCardholderId || !shouldFetchTopSpendingCardsList,
-      refetchOnMountOrArgChange: true,
-    }
-  );
+  const { data: getTopSpendingCardsData, isError: getTopSpendingCardsIsError, error: getTopSpendingCardsError, refetch: refetchTopSpendingCards } = useGetTopSpendingCardsQuery({ email: userEmail!, cardholderId: userCardholderId! }, { skip: !userEmail || !userCardholderId || !shouldFetchTopSpendingCardsList, refetchOnMountOrArgChange: true });
 
-  const topSpendingCardsResponseData =
-    getTopSpendingCardsData?.data as TopSpendingCardsResponseDataType | undefined;
-  const topSpendingCardsList =
-    topSpendingCardsResponseData?.cards ?? [];
+  const topSpendingCardsResponseData = getTopSpendingCardsData?.data as TopSpendingCardsResponseDataType | undefined;
+  const topSpendingCardsList = topSpendingCardsResponseData?.cards ?? [];
 
   const isTopSpendingCardsNotFound =
     getTopSpendingCardsIsError &&
     getTopSpendingCardsError != null &&
     'status' in getTopSpendingCardsError &&
     getTopSpendingCardsError.status === 404;
+  // ------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------- \\
 
   // -------------------------------- Wallet Transactions -------------------------------- \\
   const activeWalletId = fetchedWalletId || userSession.walletId;
-  const shouldFetchWalletTransactions =
-    shouldFetchDependentApis && getAllWalletsBalancesIsSuccess && !!activeWalletId;
+  const shouldFetchWalletTransactions = shouldFetchDependentApis && getAllWalletsBalancesIsSuccess && !!activeWalletId;
 
-  const {
-    data: getWalletTransactionsData,
-    isError: getWalletTransactionsIsError,
-    error: getWalletTransactionsError,
-    refetch: refetchWalletTransactions,
-  } = useGetWalletTransactionsQuery(
-    {
-      email: userEmail ?? '',
-      cardholderId: userCardholderId ?? '',
-      walletId: activeWalletId ?? '',
-      pageNumber: 1,
-      pageSize: 7,
-    },
-    {
-      skip:
-        !userEmail ||
-        !userCardholderId ||
-        !activeWalletId ||
-        !shouldFetchWalletTransactions,
-      refetchOnMountOrArgChange: true,
-    }
-  );
+  const { data: getWalletTransactionsData, isError: getWalletTransactionsIsError, error: getWalletTransactionsError, refetch: refetchWalletTransactions } = useGetWalletTransactionsQuery({ email: userEmail!, cardholderId: userCardholderId!, walletId: activeWalletId!, pageNumber: 1, pageSize: 7 }, { skip: !userEmail || !userCardholderId || !activeWalletId || !shouldFetchWalletTransactions, refetchOnMountOrArgChange: true });
 
-  const userWalletTransactions =
-    (getWalletTransactionsData?.data as
-      | WalletTransactionsListResponseDataType
-      | undefined) ?? [];
+  const userWalletTransactions = (getWalletTransactionsData?.data as WalletTransactionsListResponseDataType | undefined) ?? [];
 
   const isWalletTransactionsNotFound =
     getWalletTransactionsIsError &&
     getWalletTransactionsError != null &&
     'status' in getWalletTransactionsError &&
     getWalletTransactionsError.status === 404;
+  // ------------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------ \\
 
   // -------------------------------- Failure & Loading Handling -------------------------------- \\
-  const isInitialPageLoading =
-    !isSessionLoaded || getKycDetailsIsLoading || getOnboardingDetailsLoading;
+  const isInitialPageLoading = !isSessionLoaded || getKycDetailsIsLoading || getOnboardingDetailsLoading;
 
-  const hasBlockingApiFailure =
-    (getKycDetailsIsError && !isKycNotFound) ||
-    (getOnboardingDetailsIsError && !isOnboardingNotFound);
+  const hasBlockingApiFailure = (getKycDetailsIsError && !isKycNotFound) || (getOnboardingDetailsIsError && !isOnboardingNotFound);
 
-  const hasDashboardUiApiFailure =
-    getAllWalletsBalancesIsError || getWalletTransactionsIsError;
+  const hasDashboardUiApiFailure = getAllWalletsBalancesIsError || getWalletTransactionsIsError;
 
   const canRenderDashboard = !isInitialPageLoading && !hasBlockingApiFailure;
   const canAccessDashboard = kycApproved && kybApproved;
@@ -410,25 +355,25 @@ export default function DashboardScreenComponent() {
             {/* Dashboard Main Content Sections */}
             <Activity mode={canAccessDashboard ? 'visible' : 'hidden'}>
               <View className={canAccessDashboard ? 'w-full flex-col gap-5' : 'hidden'}>
-                {/* a. Wallet Balance Section (with crypto balances) */}
+                {/* Wallet Balance Section (with crypto balances) */}
                 <WalletBalanceSection
                   walletsBalances={userAllWalletsBalances}
                   walletsBalancesNotFound={isAllWalletsBalancesNotFound}
                 />
 
-                {/* b. Top 3 Spending Cards Section */}
+                {/* Top 3 Spending Cards Section */}
                 <TopCardsSection
                   cardsList={topSpendingCardsList}
                   cardsListNotFound={isTopSpendingCardsNotFound}
                 />
 
-                {/* c. Expenditure Graph (Card spend only) */}
+                {/* Expenditure Graph (Card spend only) */}
                 <ExpenditureChartSection
                   userEmail={userEmail}
                   userCardholderId={userCardholderId}
                 />
 
-                {/* e. Recent Transactions Section */}
+                {/* Recent Transactions Section */}
                 <RecentTransactionsSection
                   walletTransactions={userWalletTransactions}
                   walletTransactionsNotFound={isWalletTransactionsNotFound}
