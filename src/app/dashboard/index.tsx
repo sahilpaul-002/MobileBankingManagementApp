@@ -1,10 +1,5 @@
-import DashboardScreenComponent from '@/screens/dashboard/DashboardScreenComponent'
-import { View } from 'react-native'
+import DashboardScreenComponent from '@/screens/dashboard/DashboardScreenComponent';
 
 export default function DashboardIndex() {
-  return (
-    <View>
-      <DashboardScreenComponent/>
-    </View>
-  )
+  return <DashboardScreenComponent />;
 }

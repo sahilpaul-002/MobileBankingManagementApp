@@ -1,10 +1,5 @@
-import DashboardLayout from '@/layouts/DashboardLayout'
-import { View } from 'react-native'
+import DashboardLayout from '@/layouts/DashboardLayout';
 
 export default function DashBoardRootLayout() {
-  return (
-    <View className='w-full h-full'>
-      <DashboardLayout />
-    </View>
-  )
+  return <DashboardLayout />;
 }

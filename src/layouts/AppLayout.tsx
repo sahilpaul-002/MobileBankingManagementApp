@@ -96,8 +96,7 @@ export default function AppLayout() {
     return (
         <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
             <View
-                // className="h-full w-full bg-[#f4f6fa]"
-                className="h-full w-full bg-[var(--color-app)]"
+                className="flex-1 w-full bg-[var(--color-app)]"
                 onTouchStart={handleUserActivity}
                 onTouchMove={handleUserActivity}
             >

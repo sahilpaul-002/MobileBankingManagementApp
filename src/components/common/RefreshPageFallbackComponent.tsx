@@ -41,7 +41,7 @@ export default function RefreshPageFallbackComponent({
                             onPress={onRetry}
                             disabled={isLoading}
                             showButtonLoader={isLoading}
-                            className="w-full flex-row items-center justify-center gap-2 border-[var(--color-line-strong)]"
+                            buttonClassName="w-full flex-row items-center justify-center gap-2 border-[var(--color-line-strong)]"
                         >
                             {!isLoading && (
                                 <View style={styles.buttonContent}>
