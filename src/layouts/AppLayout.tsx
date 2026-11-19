@@ -94,7 +94,7 @@ export default function AppLayout() {
     }, [resetInactivityTimer]);
 
     return (
-        <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#0c1830' }} edges={["top", "bottom", "left", "right"]}>
             <View
                 className="flex-1 w-full bg-[var(--color-app)]"
                 onTouchStart={handleUserActivity}

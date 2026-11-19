@@ -1,11 +1,5 @@
 import { Tabs } from 'expo-router';
-import {
-  CreditCard,
-  LayoutDashboard,
-  UserRound,
-  Wallet,
-} from 'lucide-react-native';
-import { Platform } from 'react-native';
+import { CreditCard, LayoutDashboard, UserRound, Wallet } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Design tokens corresponding to CSS variables in src/global.css
@@ -19,12 +13,7 @@ const GLOBAL_VARS = {
 
 export default function DashboardLayout() {
   const insets = useSafeAreaInsets();
-  // Guarantee clearance above the mobile navigation bar on Android (48dp standard bar) and iOS (insets.bottom)
-  const bottomInset = Math.max(
-    insets.bottom,
-    Platform.OS === 'android' ? 48 : 8
-  );
-  const tabHeight = 56 + bottomInset;
+  const tabHeight = 20 + insets.bottom;
 
   return (
     <Tabs
@@ -37,7 +26,7 @@ export default function DashboardLayout() {
           borderTopColor: GLOBAL_VARS['--color-navy-active'],
           borderTopWidth: 1,
           height: tabHeight,
-          paddingBottom: bottomInset,
+          paddingBottom: 6,
           paddingTop: 6,
         },
         tabBarLabelStyle: {

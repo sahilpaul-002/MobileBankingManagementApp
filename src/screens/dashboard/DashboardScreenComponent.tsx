@@ -16,17 +16,11 @@ import {
 } from '@/redux/features/wallet/walletApis';
 import { useappDispatchType, useAppSelector } from '@/redux/hooks/reduxHooks';
 import { selectDnsConfigDetails } from '@/redux/slice/config/configSlice';
-import {
-  selectEmail,
-  selectIsAdmin,
-  selectIsMasterAdmin,
-} from '@/redux/slice/user/userSlice';
+import { selectEmail, selectIsAdmin, selectIsMasterAdmin } from '@/redux/slice/user/userSlice';
 import { setShowInfoBanner } from '@/redux/slice/utility/utilitySlice';
 import { ROUTE_NAMES } from '@/routes/routeNames';
 import type { AllWalletBalancesResponseDataType } from '@/types/dashboard/allWalletsBalancesSectionTypes';
-import type {
-  TopSpendingCardsResponseDataType,
-} from '@/types/dashboard/topSpendingCardsTypes';
+import type { TopSpendingCardsResponseDataType } from '@/types/dashboard/topSpendingCardsTypes';
 import type { WalletTransactionsListResponseDataType } from '@/types/dashboard/walletTransactionsSectionTypes';
 import { isKybApproved } from '@/utils/kybHelper';
 import { isKycApproved } from '@/utils/kycHelper';
@@ -112,6 +106,7 @@ export default function DashboardScreenComponent() {
 
   const userEmail = userSession.email;
   const userCardholderId = userSession.cardholderId;
+  // ------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------- \\
 
   // ---------------------------------- Get DNS Data ---------------------------------- \\
   const dnsData = useAppSelector(selectDnsConfigDetails);
@@ -123,42 +118,21 @@ export default function DashboardScreenComponent() {
       triggerDnsConfig({ domainName });
     }
   }, [dnsData, isDnsFetching, triggerDnsConfig, domainName]);
+  // -------------------------------- XXXXXXXXXXXXXXXXXXXXXXXX -------------------------------- \\
 
   // ----------------------------------- KYC / KYB Verification Status ----------------------------------- \\
-  const {
-    data: getKycData,
-    isLoading: getKycDetailsIsLoading,
-    isError: getKycDetailsIsError,
-    error: getKycDetailsError,
-    isSuccess: getKycDetailsIsSuccess,
-    refetch: refetchGetKycDetails,
-  } = useGetKycDetailsQuery(
-    { email: userEmail ?? '' },
-    { skip: !userEmail }
-  );
-
+  // Get KYC Details API
+  const { data: getKycData, isLoading: getKycDetailsIsLoading, isError: getKycDetailsIsError, error: getKycDetailsError, isSuccess: getKycDetailsIsSuccess, refetch: refetchGetKycDetails } = useGetKycDetailsQuery({ email: userEmail! }, { skip: !userEmail });
   const userKycDetails = getKycData?.data as Record<string, any> | undefined;
-
   const isKycNotFound =
     getKycDetailsIsError &&
     getKycDetailsError &&
     'status' in getKycDetailsError &&
     getKycDetailsError.status === 404;
 
-  const {
-    data: getOnboardingData,
-    isLoading: getOnboardingDetailsLoading,
-    isError: getOnboardingDetailsIsError,
-    error: getOnboardingDetailsError,
-    isSuccess: getOnboardingDetailsIsSuccess,
-    refetch: refetchGetOnboardingDetails,
-  } = useGetUserOnboardingDetailsQuery(
-    { email: userEmail ?? '' },
-    { skip: !userEmail }
-  );
-
+  // Get KYB Details API
+  const {data: getOnboardingData, isLoading: getOnboardingDetailsLoading, isError: getOnboardingDetailsIsError, error: getOnboardingDetailsError, isSuccess: getOnboardingDetailsIsSuccess, refetch: refetchGetOnboardingDetails} = useGetUserOnboardingDetailsQuery({ email: userEmail! }, { skip: !userEmail });
   const userOnboardingDetails = getOnboardingData?.data as Record<string, any> | undefined;
-
   const isOnboardingNotFound =
     getOnboardingDetailsIsError &&
     getOnboardingDetailsError &&
@@ -186,6 +160,7 @@ export default function DashboardScreenComponent() {
   useEffect(() => {
     ShowInConsole('User onboarding details', userOnboardingDetails);
   }, [userOnboardingDetails]);
+  // -------------------------------- XXXXXXXXXXXXXXXXX -------------------------------- \\
 
   // -------------------------------- All Wallets Balances -------------------------------- \\
   const {
