@@ -2,4 +2,4 @@
 2. Use Secure storage to store the cryptographic keys
 3. Apply authorization technique to protect from deep linking (react native docs -> security)
 4. Use Async Storage to store the dns base url , and user email, user id, cardholder id
-5. Check sign up, verify email, and set 2fa
+5. Check logout out and refresh on dashboard
