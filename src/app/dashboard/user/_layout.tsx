@@ -1,5 +1,5 @@
-import { Slot } from 'expo-router';
+import UserLayout from '@/layouts/UserLayout';
 
-export default function UserLayout() {
-  return <Slot />;
+export default function UserRootLayout() {
+  return <UserLayout />;
 }

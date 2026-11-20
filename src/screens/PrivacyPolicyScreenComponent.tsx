@@ -1,9 +1,9 @@
-import CustomButtonComponent from '@/components/common/CustomButtonComponent';
-import { router } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import CustomButtonComponent from "@/components/common/CustomButtonComponent";
+import { router } from "expo-router";
+import { ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const LAST_UPDATED = 'October 14, 2026';
+const LAST_UPDATED = "October 14, 2026";
 
 type SectionProps = {
   title: string;
@@ -110,8 +110,8 @@ export default function PrivacyPolicyScreenComponent() {
 
           <Section title="3. How we use information">
             <Paragraph>
-              Information may be used to create and manage demo accounts, operate
-              application features, perform verification workflows, send
+              Information may be used to create and manage demo accounts,
+              operate application features, perform verification workflows, send
               authentication and service emails, maintain security, troubleshoot
               errors, and improve the demonstration.
             </Paragraph>
@@ -125,21 +125,21 @@ export default function PrivacyPolicyScreenComponent() {
               address associated with the requested action.
             </Paragraph>
             <Paragraph>
-              For this purpose, the application uses the authorization granted by
-              the configured Gmail account to send messages. The application does
-              not need to read the sender's inbox to perform this email-sending
-              function.
+              For this purpose, the application uses the authorization granted
+              by the configured Gmail account to send messages. The application
+              does not need to read the sender's inbox to perform this
+              email-sending function.
             </Paragraph>
             <Paragraph>
-              Google API data is used only for the disclosed functionality and is
-              not sold. Access tokens and refresh tokens should be stored
+              Google API data is used only for the disclosed functionality and
+              is not sold. Access tokens and refresh tokens should be stored
               securely in server-side environment variables and must not be
               exposed to frontend code or other users.
             </Paragraph>
             <Paragraph>
-              The app's use and transfer to any other app of information received
-              from Google APIs will adhere to the Google API Services User Data
-              Policy, including the Limited Use requirements.
+              The app's use and transfer to any other app of information
+              received from Google APIs will adhere to the Google API Services
+              User Data Policy, including the Limited Use requirements.
             </Paragraph>
           </Section>
 
@@ -213,8 +213,7 @@ export default function PrivacyPolicyScreenComponent() {
             id="privacyPolicy-return-button"
             label="Return to the application"
             variant="authLink"
-            size="sm"
-            className="self-start mb-4!"
+            buttonClassName="self-start mb-4!"
             onPress={() => router.back()}
           />
         </View>

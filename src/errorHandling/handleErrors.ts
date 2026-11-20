@@ -2,7 +2,6 @@
 
 import axios, { AxiosError } from 'axios';
 import { AppErrorClass } from './appError';
-import { toast } from 'react-toastify';
 import { setShowErrorBanner, setShowInfoBanner, triggerDestroySession } from '@/redux/slice/utility/utilitySlice';
 
 export interface backendErrorType {

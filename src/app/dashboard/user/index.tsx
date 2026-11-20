@@ -1,5 +1,5 @@
-import UserScreenComponent from '@/screens/user/UserScreenComponent';
+import UserDetailsScreen from './details';
 
 export default function UserIndexScreen() {
-  return <UserScreenComponent />;
+  return <UserDetailsScreen />;
 }

@@ -1,5 +1,9 @@
+import CommonAppHeaderComponent from '@/components/common/CommonAppHeaderComponent';
+import LogoutConfirmationModalComponent from '@/components/common/LogoutConfirmationModalComponent';
 import { Tabs } from 'expo-router';
 import { CreditCard, LayoutDashboard, UserRound, Wallet } from 'lucide-react-native';
+import { useState } from 'react';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Design tokens corresponding to CSS variables in src/global.css
@@ -13,70 +17,85 @@ const GLOBAL_VARS = {
 
 export default function DashboardLayout() {
   const insets = useSafeAreaInsets();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const tabHeight = 20 + insets.bottom;
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: GLOBAL_VARS['--color-gold'],
-        tabBarInactiveTintColor: GLOBAL_VARS['--color-nav-muted'],
-        tabBarStyle: {
-          backgroundColor: GLOBAL_VARS['--color-navy'],
-          borderTopColor: GLOBAL_VARS['--color-navy-active'],
-          borderTopWidth: 1,
-          height: tabHeight,
-          paddingBottom: 6,
-          paddingTop: 6,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
-        sceneStyle: {
-          backgroundColor: GLOBAL_VARS['--color-app'],
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <LayoutDashboard color={color} size={size} />
-          ),
-        }}
+    <View className="flex-1 w-full bg-[var(--color-app)]">
+      {/* Universal Application Header across all post-auth dashboard screens */}
+      <CommonAppHeaderComponent
+        onPowerPress={() => setShowLogoutModal(true)}
       />
 
-      <Tabs.Screen
-        name="wallets"
-        options={{
-          title: 'Wallets',
-          tabBarIcon: ({ color, size }) => (
-            <Wallet color={color} size={size} />
-          ),
+      {/* Main Tabs Navigator */}
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: GLOBAL_VARS['--color-gold'],
+          tabBarInactiveTintColor: GLOBAL_VARS['--color-nav-muted'],
+          tabBarStyle: {
+            backgroundColor: GLOBAL_VARS['--color-navy'],
+            borderTopColor: GLOBAL_VARS['--color-navy-active'],
+            borderTopWidth: 1,
+            height: tabHeight,
+            paddingBottom: 6,
+            paddingTop: 6,
+          },
+          tabBarLabelStyle: {
+            fontSize: 11,
+            fontWeight: '600',
+          },
+          sceneStyle: {
+            backgroundColor: GLOBAL_VARS['--color-app'],
+          },
         }}
-      />
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Dashboard',
+            tabBarIcon: ({ color, size }) => (
+              <LayoutDashboard color={color} size={size} />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="cards"
-        options={{
-          title: 'Cards',
-          tabBarIcon: ({ color, size }) => (
-            <CreditCard color={color} size={size} />
-          ),
-        }}
-      />
+        <Tabs.Screen
+          name="wallets"
+          options={{
+            title: 'Wallets',
+            tabBarIcon: ({ color, size }) => (
+              <Wallet color={color} size={size} />
+            ),
+          }}
+        />
 
-      <Tabs.Screen
-        name="user"
-        options={{
-          title: 'User',
-          tabBarIcon: ({ color, size }) => (
-            <UserRound color={color} size={size} />
-          ),
-        }}
+        <Tabs.Screen
+          name="cards"
+          options={{
+            title: 'Cards',
+            tabBarIcon: ({ color, size }) => (
+              <CreditCard color={color} size={size} />
+            ),
+          }}
+        />
+
+        <Tabs.Screen
+          name="user"
+          options={{
+            title: 'User',
+            tabBarIcon: ({ color, size }) => (
+              <UserRound color={color} size={size} />
+            ),
+          }}
+        />
+      </Tabs>
+
+      {/* Universal Logout Confirmation Modal */}
+      <LogoutConfirmationModalComponent
+        visible={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
       />
-    </Tabs>
+    </View>
   );
 }

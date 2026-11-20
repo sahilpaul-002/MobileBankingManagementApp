@@ -107,7 +107,7 @@ export const kycApis = createApi({
         // =======================================================
         // UPLOAD KYC DETAILS
         // =======================================================
-        uploadKycDetails: build.mutation<apiResponseType<apiResponseDataType>, { email: string, poi_number: string, poa_number: string, poi_document: File, poa_document: File }>({
+        uploadKycDetails: build.mutation<apiResponseType<apiResponseDataType>, { email: string, poi_number: string, poa_number: string, poi_document: any, poa_document: any }>({
             async queryFn(payload, { getState, dispatch }, _extraOptions, baseQuery) {
                 try {
                     let state = getState() as rootStateType;

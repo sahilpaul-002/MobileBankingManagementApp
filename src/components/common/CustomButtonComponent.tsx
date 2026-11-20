@@ -34,7 +34,7 @@ export default function CustomButtonComponent({
 }: CustomButtonProps) {
   const buttonContent = children ?? (
     typeof label === 'string' ? (
-      <Text className={cn('font-semibold', labelClassName)}>
+      <Text className={cn('font-semibold text-center', labelClassName)}>
         {label}
       </Text>
     ) : (

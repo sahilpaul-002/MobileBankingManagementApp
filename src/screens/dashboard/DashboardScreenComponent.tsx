@@ -301,7 +301,7 @@ export default function DashboardScreenComponent() {
     <View className="flex-1 w-full bg-[var(--color-app)]">
       {/* Initial Page Loading Skeleton */}
       <Activity mode={isInitialPageLoading ? 'visible' : 'hidden'}>
-        <View className={isInitialPageLoading ? 'flex-1 w-full' : 'hidden'}>
+        <View className="flex-1 w-full">
           <DashboardLoaderComponent />
         </View>
       </Activity>
@@ -310,13 +310,7 @@ export default function DashboardScreenComponent() {
       <Activity
         mode={!isInitialPageLoading && hasBlockingApiFailure ? 'visible' : 'hidden'}
       >
-        <View
-          className={
-            !isInitialPageLoading && hasBlockingApiFailure
-              ? 'flex-1 w-full'
-              : 'hidden'
-          }
-        >
+        <View className="flex-1 w-full">
           <RefreshPageFallbackComponent
             visible={!isInitialPageLoading && hasBlockingApiFailure}
             onRetry={handleRetryFailedRequests}
@@ -327,7 +321,7 @@ export default function DashboardScreenComponent() {
 
       {/* Main Dashboard Screen View */}
       <Activity mode={canRenderDashboard ? 'visible' : 'hidden'}>
-        <View className={canRenderDashboard ? 'flex-1 w-full' : 'hidden'}>
+        <View className="flex-1 w-full">
           <ScrollView
             className="flex-1 w-full px-4 py-4"
             contentContainerStyle={{ paddingBottom: 40 }}
@@ -348,9 +342,9 @@ export default function DashboardScreenComponent() {
 
             {/* Verification Banners (if verification incomplete) */}
             <Activity mode={!canAccessDashboard ? 'visible' : 'hidden'}>
-              <View className={!canAccessDashboard ? 'w-full' : 'hidden'}>
+              <View className="w-full">
                 <Activity mode={!kycApproved ? 'visible' : 'hidden'}>
-                  <View className={!kycApproved ? 'w-full' : 'hidden'}>
+                  <View className="w-full">
                     <VerificationRequiredBannerComponent
                       title="User Details Verification Required"
                       description="Your user details verification is incomplete. Please complete your verification to access financial features such as Accounts, Stablecoins, Payables, Cards, and Transfers."
@@ -361,7 +355,7 @@ export default function DashboardScreenComponent() {
                 </Activity>
 
                 <Activity mode={!kybApproved ? 'visible' : 'hidden'}>
-                  <View className={!kybApproved ? 'w-full' : 'hidden'}>
+                  <View className="w-full">
                     <VerificationRequiredBannerComponent
                       title="User Bank Details Verification Required"
                       description="Your bank details verification is incomplete. Please complete your bank details verification to access financial features such as Accounts, Stablecoins, Payables, Cards, and Transfers."
@@ -375,7 +369,7 @@ export default function DashboardScreenComponent() {
 
             {/* Dashboard Main Content Sections */}
             <Activity mode={canAccessDashboard ? 'visible' : 'hidden'}>
-              <View className={canAccessDashboard ? 'w-full flex-col gap-5' : 'hidden'}>
+              <View className="w-full flex-col gap-5">
                 {/* Wallet Balance Section (with crypto balances) */}
                 <WalletBalanceSection
                   walletsBalances={userAllWalletsBalances}

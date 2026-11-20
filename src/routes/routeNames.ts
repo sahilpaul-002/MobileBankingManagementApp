@@ -47,5 +47,6 @@ export const ROUTE_NAMES = {
     INDEX: "/dashboard/user",
     DETAILS: "/dashboard/user/details",
     VERIFICATION: "/dashboard/user/verification",
+    PREFUND_ACCOUNTS: "/dashboard/user/prefundAccounts",
   },
 } as const;

@@ -1,6 +1,6 @@
 import CustomButtonComponent from "@/components/common/CustomButtonComponent";
 import { RefreshCw, ShieldAlert } from "lucide-react-native";
-import { Modal, StyleSheet, Text, View } from "react-native";
+import { Modal, Text, View } from "react-native";
 
 export interface RefreshPageFallbackProps {
     visible: boolean;
@@ -26,29 +26,37 @@ export default function RefreshPageFallbackComponent({
             statusBarTranslucent
             visible={visible}
         >
-            <View style={styles.overlay}>
-                <View style={styles.card}>
-                    <View style={styles.iconContainer}>
-                        <ShieldAlert size={30} color="#ffffff" />
+            <View className="flex-1 items-center justify-center bg-[#0c1830]/75 p-6">
+                <View className="w-full max-w-[360px] items-center rounded-2xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-6 shadow-2xl">
+                    {/* Security Warning Icon */}
+                    <View className="mb-4 h-14 w-14 items-center justify-center rounded-2xl bg-[#0c1830] border border-[var(--color-gold)]/40 shadow-sm">
+                        <ShieldAlert size={28} color="#d49a4d" />
                     </View>
 
-                    <Text style={styles.titleText}>{title}</Text>
-                    <Text style={styles.descriptionText}>{description}</Text>
+                    {/* Title */}
+                    <Text className="mb-2 text-center text-lg font-bold text-[var(--color-ink)]">
+                        {title}
+                    </Text>
 
-                    <View style={styles.buttonWrapper}>
+                    {/* Description */}
+                    <Text className="mb-6 text-center text-xs leading-5 text-[var(--color-ink-soft)]">
+                        {description}
+                    </Text>
+
+                    {/* Action Button */}
+                    <View className="w-full">
                         <CustomButtonComponent
-                            variant="outline"
+                            id="refresh-page-fallback-btn"
+                            variant="navy"
                             onPress={onRetry}
                             disabled={isLoading}
                             showButtonLoader={isLoading}
-                            buttonClassName="w-full flex-row items-center justify-center gap-2 border-[var(--color-line-strong)]"
+                            buttonClassName="w-full h-11 flex-row items-center justify-center gap-2 rounded-xl border border-[var(--color-gold)] bg-[var(--color-navy)] active:bg-[var(--color-navy-active)]"
                         >
-                            {!isLoading && (
-                                <View style={styles.buttonContent}>
-                                    <RefreshCw size={16} color="#0c1830" />
-                                    <Text style={styles.buttonText}>Refresh Page</Text>
-                                </View>
-                            )}
+                            <RefreshCw size={15} color="#d49a4d" />
+                            <Text className="text-sm font-bold text-white text-center">
+                                Refresh Page
+                            </Text>
                         </CustomButtonComponent>
                     </View>
                 </View>
@@ -56,68 +64,3 @@ export default function RefreshPageFallbackComponent({
         </Modal>
     );
 }
-
-const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: "rgba(12, 24, 48, 0.72)",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-    },
-    card: {
-        width: "100%",
-        maxWidth: 380,
-        backgroundColor: "#ffffff",
-        borderRadius: 16,
-        padding: 24,
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: "#e6e8ee",
-        borderLeftWidth: 4,
-        borderLeftColor: "#b03333",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.18,
-        shadowRadius: 16,
-        elevation: 10,
-    },
-    iconContainer: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: "#b03333",
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 16,
-    },
-    titleText: {
-        fontSize: 18,
-        fontWeight: "700",
-        color: "#0c1830",
-        textAlign: "center",
-        marginBottom: 8,
-    },
-    descriptionText: {
-        fontSize: 14,
-        color: "#4a5673",
-        textAlign: "center",
-        lineHeight: 20,
-        marginBottom: 20,
-    },
-    buttonWrapper: {
-        width: "100%",
-        marginTop: 4,
-    },
-    buttonContent: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-    },
-    buttonText: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#0c1830",
-    },
-});
