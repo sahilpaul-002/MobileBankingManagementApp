@@ -114,9 +114,6 @@ export default function UserPrefundAccountsScreenComponent() {
         }
     }, [userPrefundAccountsDetails]);
 
-    const isInitialLoading =
-        !isSessionLoaded || getPrefundAccountsDetailsIsLoading;
-
     // Active tab
     const [activeTab, setActiveTab] = useState<TabId>('fiat');
 
@@ -133,6 +130,11 @@ export default function UserPrefundAccountsScreenComponent() {
             setRefreshing(false);
         }
     }, [isAuthorizedAdmin, refetchPrefundAccounts]);
+
+    // ── Prefund Accounts Page Loader State ─────────────────────────────────────
+    const showPrefundingAccountsPageLoader =
+        !isSessionLoaded ||
+        (!refreshing && (getPrefundAccountsDetailsIsFetching || getPrefundAccountsDetailsIsLoading));
 
     // Non-admin restriction guard
     if (!isAuthorizedAdmin) {
@@ -179,15 +181,15 @@ export default function UserPrefundAccountsScreenComponent() {
                     />
                 }
             >
-                {/* Initial Loader State */}
-                {isInitialLoading ? (
+                {/* Page Loader */}
+                {showPrefundingAccountsPageLoader ? (
                     <View className="w-full min-h-[300px] items-center justify-center">
                         <CircleFadeLoaderComponent size={40} color="#d49a4d" />
                     </View>
                 ) : null}
 
                 {/* Main Content */}
-                {!isInitialLoading ? (
+                {!showPrefundingAccountsPageLoader ? (
                     <View className="w-full flex-col gap-4">
                         {userPrefundAccountsDetailsNotFound ? (
                             <View className="w-full rounded-2xl border border-[var(--color-line)] bg-[var(--color-app-surface)] shadow-xs">

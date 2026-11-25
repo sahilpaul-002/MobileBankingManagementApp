@@ -88,8 +88,6 @@ export default function UserKycScreenComponent() {
   }, [userKycDetails]);
   // ------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------ \\
 
-  const isInitialLoading = !isSessionLoaded || getKycDetailsIsLoading;
-
   // Modal state
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -105,6 +103,14 @@ export default function UserKycScreenComponent() {
       setRefreshing(false);
     }
   }, [refetchGetKycDetails]);
+
+  // ------------------------------ Page Loader State ------------------------------ \\
+  const showKycPageLoader =
+    !isSessionLoaded ||
+    getKycDetailsIsLoading ||
+    (!refreshing && getKycDetailsIsFetching) ||
+    (!getKycData?.data && !isKycNotFound);
+  // -------------------------------- XXXXXXXXXXXXXXXXXXX -------------------------------- \\
 
   return (
     <View className="flex-1 w-full bg-[var(--color-app)]">
@@ -131,15 +137,15 @@ export default function UserKycScreenComponent() {
           </Text>
         </View>
 
-        {/* Loading Skeleton */}
-        {isInitialLoading ? (
+        {/* Page Loader */}
+        {showKycPageLoader ? (
           <View className="w-full min-h-[260px] items-center justify-center">
             <CircleFadeLoaderComponent size={40} color="#d49a4d" />
           </View>
         ) : null}
 
         {/* Main Content */}
-        {!isInitialLoading ? (
+        {!showKycPageLoader ? (
           <View className="w-full flex-col gap-4">
             {isKycNotFound ? (
               <KycNotAvailableComponent

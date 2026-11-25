@@ -103,9 +103,6 @@ export default function UserDetailsScreenComponent() {
         }
     }, [userOnboardingDetails]);
 
-    const isInitialLoading = !isSessionLoaded || getUserDetailsIsLoading || getOnboardingDetailsIsLoading;
-    // ------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------ \\
-
     // --------------------------- Sub-tabs & Modal state --------------------------- \\
     const [activeTab, setActiveTab] = useState<TabId>('personal');
     const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
@@ -126,6 +123,19 @@ export default function UserDetailsScreenComponent() {
         }
     }, [refetchGetUserDetails, refetchGetOnboardingDetails]);
 
+    // -------------------------------- Page Loader State -------------------------------- \\
+    // const showUserDetailsPageLoader = getOnboardingDetailsIsFetching || getUserDetailsIsFetching
+    const showUserDetailsPageLoader =
+        !isSessionLoaded ||
+        getUserDetailsIsLoading ||
+        getOnboardingDetailsIsLoading ||
+        (!refreshing &&
+            (getUserDetailsIsFetching || getOnboardingDetailsIsFetching) &&
+            !userDetails &&
+            !userOnboardingDetails &&
+            !isOnboardingDetailsNotFound);
+    // ------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------ \\
+
     return (
         <View className="flex-1 w-full bg-[var(--color-app)]">
             <ScrollView
@@ -141,15 +151,15 @@ export default function UserDetailsScreenComponent() {
                     />
                 }
             >
-                {/* Initial Loader State */}
-                {isInitialLoading ? (
+                {/* Page Loader State */}
+                {showUserDetailsPageLoader ? (
                     <View className="w-full min-h-[300px] items-center justify-center">
                         <CircleFadeLoaderComponent size={42} color="#d49a4d" />
                     </View>
                 ) : null}
 
                 {/* Content */}
-                {!isInitialLoading ? (
+                {!showUserDetailsPageLoader ? (
                     <View className="w-full flex-col gap-4">
                         {isOnboardingDetailsNotFound ? (
                             <View className="w-full rounded-2xl border border-[var(--color-line)] bg-[var(--color-app-surface)] shadow-xs">
@@ -193,7 +203,9 @@ export default function UserDetailsScreenComponent() {
                                     {activeTab === 'personal' ? (
                                         <View className="w-full">
                                             {getUserDetailsIsFetching ? (
-                                                <CircleFadeLoaderComponent size={34} color="#d49a4d" />
+                                                <View className="w-full py-10 items-center justify-center">
+                                                    <CircleFadeLoaderComponent size={34} color="#d49a4d" />
+                                                </View>
                                             ) : userDetails ? (
                                                 <PersonalDetailsComponent
                                                     userDetails={userDetails}
@@ -208,7 +220,9 @@ export default function UserDetailsScreenComponent() {
                                     {activeTab === 'address' ? (
                                         <View className="w-full">
                                             {getOnboardingDetailsIsFetching ? (
-                                                <CircleFadeLoaderComponent size={34} color="#d49a4d" />
+                                                <View className="w-full py-10 items-center justify-center">
+                                                    <CircleFadeLoaderComponent size={34} color="#d49a4d" />
+                                                </View>
                                             ) : addressDetails && bankDetails ? (
                                                 <AddressDetailsComponent
                                                     addressDetails={addressDetails}
@@ -226,7 +240,9 @@ export default function UserDetailsScreenComponent() {
                                     {activeTab === 'bank' ? (
                                         <View className="w-full">
                                             {getOnboardingDetailsIsFetching ? (
-                                                <CircleFadeLoaderComponent size={34} color="#d49a4d" />
+                                                <View className="w-full py-10 items-center justify-center">
+                                                    <CircleFadeLoaderComponent size={34} color="#d49a4d" />
+                                                </View>
                                             ) : bankDetails && addressDetails ? (
                                                 <BankDetailsComponent
                                                     bankDetails={bankDetails}
