@@ -25,7 +25,7 @@ import { isKycApproved } from '@/utils/kycHelper';
 import ShowInConsole from '@/utils/ShowInConsole';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Activity, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { BackHandler, RefreshControl, ScrollView, View } from 'react-native';
 
 export default function DashboardScreenComponent() {
@@ -300,16 +300,14 @@ export default function DashboardScreenComponent() {
   return (
     <View className="flex-1 w-full bg-[var(--color-app)]">
       {/* Initial Page Loading Skeleton */}
-      <Activity mode={isInitialPageLoading ? 'visible' : 'hidden'}>
+      {isInitialPageLoading ? (
         <View className="flex-1 w-full">
           <DashboardLoaderComponent />
         </View>
-      </Activity>
+      ) : null}
 
       {/* Blocking Fallback Dialog */}
-      <Activity
-        mode={!isInitialPageLoading && hasBlockingApiFailure ? 'visible' : 'hidden'}
-      >
+      {!isInitialPageLoading && hasBlockingApiFailure ? (
         <View className="flex-1 w-full">
           <RefreshPageFallbackComponent
             visible={!isInitialPageLoading && hasBlockingApiFailure}
@@ -317,10 +315,10 @@ export default function DashboardScreenComponent() {
             isLoading={getKycDetailsIsLoading || getOnboardingDetailsLoading}
           />
         </View>
-      </Activity>
+      ) : null}
 
       {/* Main Dashboard Screen View */}
-      <Activity mode={canRenderDashboard ? 'visible' : 'hidden'}>
+      {canRenderDashboard ? (
         <View className="flex-1 w-full">
           <ScrollView
             className="flex-1 w-full px-4 py-4"
@@ -341,9 +339,9 @@ export default function DashboardScreenComponent() {
             />
 
             {/* Verification Banners (if verification incomplete) */}
-            <Activity mode={!canAccessDashboard ? 'visible' : 'hidden'}>
+            {!canAccessDashboard ? (
               <View className="w-full">
-                <Activity mode={!kycApproved ? 'visible' : 'hidden'}>
+                {!kycApproved ? (
                   <View className="w-full">
                     <VerificationRequiredBannerComponent
                       title="User Details Verification Required"
@@ -352,9 +350,9 @@ export default function DashboardScreenComponent() {
                       onAction={() => router.push(ROUTE_NAMES.USER.VERIFICATION as any)}
                     />
                   </View>
-                </Activity>
+                ) : null}
 
-                <Activity mode={!kybApproved ? 'visible' : 'hidden'}>
+                {!kybApproved ? (
                   <View className="w-full">
                     <VerificationRequiredBannerComponent
                       title="User Bank Details Verification Required"
@@ -363,12 +361,12 @@ export default function DashboardScreenComponent() {
                       onAction={() => router.push(ROUTE_NAMES.USER.INDEX as any)}
                     />
                   </View>
-                </Activity>
+                ) : null}
               </View>
-            </Activity>
+            ) : null}
 
             {/* Dashboard Main Content Sections */}
-            <Activity mode={canAccessDashboard ? 'visible' : 'hidden'}>
+            {canAccessDashboard ? (
               <View className="w-full flex-col gap-5">
                 {/* Wallet Balance Section (with crypto balances) */}
                 <WalletBalanceSection
@@ -395,10 +393,10 @@ export default function DashboardScreenComponent() {
                   walletTransactionsNotFound={isWalletTransactionsNotFound}
                 />
               </View>
-            </Activity>
+            ) : null}
           </ScrollView>
         </View>
-      </Activity>
+      ) : null}
 
       {/* Logout Confirmation Modal (triggered by mobile hardware back button) */}
       <LogoutConfirmationModalComponent

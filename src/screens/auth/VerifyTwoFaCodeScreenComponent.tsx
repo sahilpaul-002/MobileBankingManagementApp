@@ -2,7 +2,10 @@ import CustomButtonComponent from "@/components/common/CustomButtonComponent";
 import CustomOtpInputComponent from "@/components/common/CustomOtpInputComponent";
 import { showToastMessage } from "@/components/common/ToastMessagesComponent";
 import { Text } from "@/components/ui/text";
-import { useSendTwoFaCodeMutation, useVerifyTwoFaCodeMutation } from "@/redux/features/twoFa/twoFaApis";
+import {
+    useSendTwoFaCodeMutation,
+    useVerifyTwoFaCodeMutation,
+} from "@/redux/features/twoFa/twoFaApis";
 import { useAppSelector } from "@/redux/hooks/reduxHooks";
 import { selectEmail } from "@/redux/slice/user/userSlice";
 import { ROUTE_NAMES } from "@/routes/routeNames";
@@ -11,8 +14,14 @@ import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Copy, Landmark } from "lucide-react-native";
-import { Activity, useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    View,
+} from "react-native";
 
 export default function VerifyTwoFaCodeScreenComponent() {
   const router = useRouter();
@@ -24,7 +33,11 @@ export default function VerifyTwoFaCodeScreenComponent() {
   }>();
 
   const rawTwoFaType = params.twoFaType || "emailOtp";
-  const normalizedType = rawTwoFaType.toLowerCase().includes("totp") ? "totp" : rawTwoFaType.toLowerCase().includes("sms") ? "smsOtp" : "emailOtp";
+  const normalizedType = rawTwoFaType.toLowerCase().includes("totp")
+    ? "totp"
+    : rawTwoFaType.toLowerCase().includes("sms")
+      ? "smsOtp"
+      : "emailOtp";
 
   const email = storedEmail || "";
   const secretKey = params.secretKey;
@@ -74,8 +87,10 @@ export default function VerifyTwoFaCodeScreenComponent() {
   }, [timeRemaining, normalizedType]);
 
   // Verify 2FA Code / Send 2FA Code Api Mutation
-  const [verify2FaCodeMutation, { isLoading: isVerifying2FaCode }] = useVerifyTwoFaCodeMutation();
-  const [send2FaCodeMutation, { isLoading: isSendingCode }] = useSendTwoFaCodeMutation();
+  const [verify2FaCodeMutation, { isLoading: isVerifying2FaCode }] =
+    useVerifyTwoFaCodeMutation();
+  const [send2FaCodeMutation, { isLoading: isSendingCode }] =
+    useSendTwoFaCodeMutation();
 
   // Function to handle verify 2FA code submission
   const handleVerifySubmit = async () => {
@@ -147,13 +162,13 @@ export default function VerifyTwoFaCodeScreenComponent() {
 
       switch (true) {
         case normalizedMessage.includes(
-          "email not in the valid state for 2 factor authentication using email - 2fa not enabled"
+          "email not in the valid state for 2 factor authentication using email - 2fa not enabled",
         ):
         case normalizedMessage.includes(
-          "email not in the valid state for 2 factor authentication using authenticator - 2fa not configured for authenticator"
+          "email not in the valid state for 2 factor authentication using authenticator - 2fa not configured for authenticator",
         ):
         case normalizedMessage.includes(
-          "verifiemailservice is facing issue - email not in the correct state for two factor auth verification"
+          "verifiemailservice is facing issue - email not in the correct state for two factor auth verification",
         ):
           showToastMessage({
             type: "error",
@@ -170,7 +185,8 @@ export default function VerifyTwoFaCodeScreenComponent() {
           showToastMessage({
             type: "error",
             text1: "Expired Code",
-            text2: "2-factor-authentication service failed due to expired code.",
+            text2:
+              "2-factor-authentication service failed due to expired code.",
           });
           break;
 
@@ -178,7 +194,8 @@ export default function VerifyTwoFaCodeScreenComponent() {
           showToastMessage({
             type: "error",
             text1: "Invalid Code",
-            text2: "2-factor-authentication service failed due to invalid code.",
+            text2:
+              "2-factor-authentication service failed due to invalid code.",
           });
           break;
 
@@ -300,15 +317,9 @@ export default function VerifyTwoFaCodeScreenComponent() {
           </View>
 
           {/* Authenticator QR Code & Secret Key Display (for TOTP) */}
-          <Activity
-            mode={
-              normalizedType === "totp" && Boolean(qrCodeUrl || secretKey)
-                ? "visible"
-                : "hidden"
-            }
-          >
+          {normalizedType === "totp" && Boolean(qrCodeUrl || secretKey) ? (
             <View className="w-full items-center gap-3 p-4 rounded-xl border border-[var(--color-gold)]/30 bg-[var(--color-app-surface)] shadow-sm shadow-black/5">
-              <Activity mode={Boolean(qrCodeUrl) ? "visible" : "hidden"}>
+              {Boolean(qrCodeUrl) ? (
                 <View className="w-36 h-36 p-2 rounded-lg bg-white border border-[var(--color-line)] items-center justify-center">
                   {Boolean(qrCodeUrl) && (
                     <Image
@@ -319,9 +330,9 @@ export default function VerifyTwoFaCodeScreenComponent() {
                     />
                   )}
                 </View>
-              </Activity>
+              ) : null}
 
-              <Activity mode={Boolean(secretKey) ? "visible" : "hidden"}>
+              {Boolean(secretKey) ? (
                 <View className="w-full flex-row items-center justify-between p-2.5 rounded-lg bg-[var(--color-app-subtle)] border border-[var(--color-line)]">
                   <View className="flex-1 mr-2">
                     <Text className="text-[11px] font-medium text-[var(--color-ink-muted)]">
@@ -345,9 +356,9 @@ export default function VerifyTwoFaCodeScreenComponent() {
                     <Copy size={14} color="#d49a4d" strokeWidth={2} />
                   </Pressable>
                 </View>
-              </Activity>
+              ) : null}
             </View>
-          </Activity>
+          ) : null}
 
           {/* OTP Input Form */}
           <View className="w-full flex flex-col justify-start items-center gap-5 pt-2">
@@ -373,7 +384,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
               />
 
               {/* Resend Code Button (Email OTP only) */}
-              <Activity mode={normalizedType === "emailOtp" ? "visible" : "hidden"}>
+              {normalizedType === "emailOtp" ? (
                 <View className="w-full items-center pt-2">
                   <CustomButtonComponent
                     id="verify2FaCode-verify2FaCodeForm-resendCode-button"
@@ -391,7 +402,7 @@ export default function VerifyTwoFaCodeScreenComponent() {
                     onPress={handleResendCode}
                   />
                 </View>
-              </Activity>
+              ) : null}
 
               {/* Back To Sign In */}
               <View className="w-full flex-row justify-center items-center gap-1">

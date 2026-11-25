@@ -18,7 +18,7 @@ import ShowInConsole from '@/utils/ShowInConsole';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { ShieldAlert } from 'lucide-react-native';
-import { Activity, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 
 type TabId = 'fiat' | 'crypto';
@@ -180,14 +180,14 @@ export default function UserPrefundAccountsScreenComponent() {
                 }
             >
                 {/* Initial Loader State */}
-                <Activity mode={isInitialLoading ? 'visible' : 'hidden'}>
+                {isInitialLoading ? (
                     <View className="w-full min-h-[300px] items-center justify-center">
                         <CircleFadeLoaderComponent size={40} color="#d49a4d" />
                     </View>
-                </Activity>
+                ) : null}
 
                 {/* Main Content */}
-                <Activity mode={!isInitialLoading ? 'visible' : 'hidden'}>
+                {!isInitialLoading ? (
                     <View className="w-full flex-col gap-4">
                         {userPrefundAccountsDetailsNotFound ? (
                             <View className="w-full rounded-2xl border border-[var(--color-line)] bg-[var(--color-app-surface)] shadow-xs">
@@ -205,9 +205,7 @@ export default function UserPrefundAccountsScreenComponent() {
 
                                 {/* Tab Content */}
                                 <View className="p-4 sm:p-6">
-                                    <Activity
-                                        mode={activeTab === 'fiat' ? 'visible' : 'hidden'}
-                                    >
+                                    {activeTab === 'fiat' ? (
                                         <View className="w-full">
                                             {getPrefundAccountsDetailsIsFetching ? (
                                                 <View className="w-full py-10 items-center justify-center">
@@ -219,11 +217,9 @@ export default function UserPrefundAccountsScreenComponent() {
                                                 />
                                             )}
                                         </View>
-                                    </Activity>
+                                    ) : null}
 
-                                    <Activity
-                                        mode={activeTab === 'crypto' ? 'visible' : 'hidden'}
-                                    >
+                                    {activeTab === 'crypto' ? (
                                         <View className="w-full">
                                             {getPrefundAccountsDetailsIsFetching ? (
                                                 <View className="w-full py-10 items-center justify-center">
@@ -235,12 +231,12 @@ export default function UserPrefundAccountsScreenComponent() {
                                                 />
                                             )}
                                         </View>
-                                    </Activity>
+                                    ) : null}
                                 </View>
                             </View>
                         )}
                     </View>
-                </Activity>
+                ) : null}
             </ScrollView>
         </View>
     );

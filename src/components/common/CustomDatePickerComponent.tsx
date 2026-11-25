@@ -7,7 +7,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react-native";
-import { Activity, forwardRef, useMemo, useState } from "react";
+import { forwardRef, useMemo, useState } from "react";
 import {
   FlatList,
   Modal,
@@ -183,10 +183,10 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
     const titleText = fieldLabel || label || "Select Date";
     const formattedDate = date
       ? date.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
       : null;
 
     const isNextMonthDisabled =
@@ -237,17 +237,14 @@ const CustomDatePickerComponent = forwardRef<View, CustomDatePickerProps>(
           <CalendarIcon size={18} color="#0c1830" strokeWidth={2} />
         </Pressable>
 
-        {/* Error message with Activity */}
-        <Activity mode={error ? "visible" : "hidden"}>
+        {/* Error and Hint Messages */}
+        {error ? (
           <Text className="text-sm font-medium text-[var(--color-status-danger)]">
             {error}
           </Text>
-        </Activity>
-
-        {/* Hint message with Activity */}
-        <Activity mode={Boolean(hint && !error) ? "visible" : "hidden"}>
+        ) : hint ? (
           <Text className="text-xs text-[var(--color-ink-muted)]">{hint}</Text>
-        </Activity>
+        ) : null}
 
         {/* Calendar Picker Modal */}
         <Modal

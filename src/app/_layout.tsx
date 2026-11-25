@@ -6,7 +6,7 @@ import { store, storeDispatch } from '@/redux/sotre';
 import { authenticateDevice } from '@/utils/authenticateDevice';
 import { DarkTheme, DefaultTheme, ThemeProvider, usePathname, useSegments, } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { Activity, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StatusBar, Text, useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { install } from 'react-native-quick-crypto';
@@ -108,25 +108,25 @@ export default function AppRootLayout() {
               />
 
               {/* Application starts only after successful initialization */}
-              <Activity mode={bootState === 'READY' ? 'visible' : 'hidden'}>
+              {bootState === 'READY' ? (
                 <>
                   <AppLayout />
                   <ToastMessagesComponent />
                 </>
-              </Activity>
+              ) : null}
 
               {/* Startup Loader */}
-              <Activity mode={bootState !== 'FAILED' && !showAppLayout ? 'visible' : 'hidden'}>
+              {bootState !== 'FAILED' && !showAppLayout ? (
                 <ApplicationLoaderSplashScreenComponent
                   isReady={bootState === 'READY'}
                   onAnimationComplete={() => {
                     setShowAppLayout(true);
                   }}
                 />
-              </Activity>
+              ) : null}
 
               {/* Failure screen */}
-              <Activity mode={bootState === 'FAILED' ? 'visible' : 'hidden'}>
+              {bootState === 'FAILED' ? (
                 <View className="absolute inset-0 z-50 items-center justify-center bg-[#0C1830] px-6">
                   <Text className="mb-3 text-center text-xl font-bold text-white">
                     Authentication Required
@@ -145,7 +145,7 @@ export default function AppRootLayout() {
                     </Text>
                   </Pressable>
                 </View>
-              </Activity>
+              ) : null}
             </View>
           </ThemeProvider>
         </SafeAreaProvider>

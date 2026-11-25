@@ -3,7 +3,7 @@ import { ROUTE_NAMES } from '@/routes/routeNames';
 import type { TopSpendingCardItemType } from '@/types/dashboard/topSpendingCardsTypes';
 import { useRouter } from 'expo-router';
 import { ChevronRight, CreditCard } from 'lucide-react-native';
-import { Activity, useState } from 'react';
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 import TopSpendingCardLimitToggleComponent, {
   type SpendingLimitPeriodType,
@@ -42,7 +42,7 @@ export default function TopCardsSection({
   return (
     <View className="w-full">
       {/* Empty State */}
-      <Activity mode={!hasCards ? 'visible' : 'hidden'}>
+      {!hasCards ? (
         <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Header */}
           <View className="flex-row items-center justify-between">
@@ -77,10 +77,10 @@ export default function TopCardsSection({
             </Text>
           </View>
         </View>
-      </Activity>
+      ) : null}
 
       {/* Cards List Found State */}
-      <Activity mode={hasCards ? 'visible' : 'hidden'}>
+      {hasCards ? (
         <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Header */}
           <View className="flex-row items-center justify-between">
@@ -119,7 +119,7 @@ export default function TopCardsSection({
             onSelectCard={handleSelectCard}
           />
         </View>
-      </Activity>
+      ) : null}
     </View>
   );
 }

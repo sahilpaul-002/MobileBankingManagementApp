@@ -80,27 +80,6 @@ export default function AuthLayout() {
   // ----------------------------------------
   return (
     <View className="flex-1">
-      {/* <Activity mode={displayPageLoader ? "visible" : "hidden"}>
-        <Animated.View
-          key="application-loader"
-          entering={FadeIn.duration(350)}
-          exiting={FadeOut.duration(350)}
-          className="absolute inset-0 z-[1000]"
-        >
-          <ApplicationLoaderComponent />
-        </Animated.View>
-      </Activity> */}
-
-      {/* <Activity mode={!displayPageLoader ? "visible" : "hidden"}>
-        <Animated.View
-          key="auth-screens"
-          entering={FadeIn.duration(350)}
-          className="flex-1 bg-[#f4f6fa]"
-        >
-          <Slot />
-        </Animated.View>
-      </Activity> */}
-
       <Animated.View
         key="auth-screens"
         entering={FadeIn.duration(350)}

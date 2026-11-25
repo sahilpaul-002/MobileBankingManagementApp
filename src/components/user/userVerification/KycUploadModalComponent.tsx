@@ -8,15 +8,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { AlertCircle, CheckCircle, FileText, RotateCcw, UploadCloud, X } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
-import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    View,
-} from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
@@ -58,8 +50,7 @@ export default function KycUploadModalComponent({
     const insets = useSafeAreaInsets();
     const scrollViewRef = useRef<ScrollView>(null);
     const [apiError, setApiError] = useState<string | null>(null);
-    const [triggerUploadKycDetails, { isLoading: isSubmitting }] =
-        useUploadKycDetailsMutation();
+    const [triggerUploadKycDetails, { isLoading: isSubmitting }] = useUploadKycDetailsMutation();
 
     const [poiDoc, setPoiDoc] = useState<SelectedDoc | null>(null);
     const [poaDoc, setPoaDoc] = useState<SelectedDoc | null>(null);

@@ -10,7 +10,7 @@ import type {
 import ShowInConsole from '@/utils/ShowInConsole';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Pencil } from 'lucide-react-native';
-import { Activity, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
 import { Text, View } from 'react-native';
 import { z } from 'zod';
@@ -92,7 +92,7 @@ function AddressSubForm({
                     </Text>
                 </View>
 
-                <Activity mode={!isEditing && !kybApproved ? 'visible' : 'hidden'}>
+                {!isEditing && !kybApproved ? (
                     <View className="w-20">
                         <CustomButtonComponent
                             id={`${formId}-edit-btn`}
@@ -107,7 +107,7 @@ function AddressSubForm({
                             </Text>
                         </CustomButtonComponent>
                     </View>
-                </Activity>
+                ) : null}
             </View>
 
             {/* Form Fields */}
@@ -246,7 +246,7 @@ function AddressSubForm({
             </View>
 
             {/* Action Buttons */}
-            <Activity mode={isEditing ? 'visible' : 'hidden'}>
+            {isEditing ? (
                 <View className="mt-3 flex-row items-center justify-end gap-3 border-t border-[var(--color-line)] pt-3">
                     <View className="flex-1">
                         <CustomButtonComponent
@@ -269,7 +269,7 @@ function AddressSubForm({
                         />
                     </View>
                 </View>
-            </Activity>
+            ) : null}
         </View>
     );
 }

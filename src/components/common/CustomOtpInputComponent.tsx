@@ -1,6 +1,6 @@
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
-import React, { Activity, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Pressable,
   TextInput,
@@ -55,7 +55,7 @@ export default function CustomOtpInputComponent({
 
   return (
     <View className={cn("w-full flex-col items-center gap-2", containerClassname)}>
-      <Activity mode={Boolean(label) ? "visible" : "hidden"}>
+      {label ? (
         <Text
           className={cn(
             "text-base font-semibold text-[var(--color-ink-secondary)] tracking-wide text-center",
@@ -64,7 +64,7 @@ export default function CustomOtpInputComponent({
         >
           {label}
         </Text>
-      </Activity>
+      ) : null}
 
       <Pressable
         onPress={handleBoxPress}
@@ -84,10 +84,10 @@ export default function CustomOtpInputComponent({
                 error
                   ? "border-[var(--color-status-danger)]"
                   : isCurrentIndex
-                  ? "border-[var(--color-gold)] border-2"
-                  : hasValue
-                  ? "border-[var(--color-gold)]/60"
-                  : "border-[var(--color-line-strong)]",
+                    ? "border-[var(--color-gold)] border-2"
+                    : hasValue
+                      ? "border-[var(--color-gold)]/60"
+                      : "border-[var(--color-line-strong)]",
                 otpInputClassName
               )}
             >
@@ -116,11 +116,12 @@ export default function CustomOtpInputComponent({
         aria-hidden={true}
       />
 
-      <Activity mode={Boolean(error) ? "visible" : "hidden"}>
+      {/* Error Message */}
+      {error ? (
         <Text className="text-sm text-[var(--color-status-danger)] font-medium text-center">
           {error}
         </Text>
-      </Activity>
+      ) : null}
     </View>
   );
 }

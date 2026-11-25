@@ -186,6 +186,7 @@ const setupInterceptors = (instance: AxiosInstance) => {
 
                 // ENCRYPT MULTIPART FORMDATA
                 if (req.data instanceof FormData) {
+                    debugger
                     const originalFormData = req.data;
 
                     // New encrypted FormData

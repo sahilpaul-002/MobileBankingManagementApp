@@ -3,7 +3,7 @@ import type {
   WalletBalanceItemType,
 } from '@/types/dashboard/allWalletsBalancesSectionTypes';
 import { Wallet } from 'lucide-react-native';
-import { Activity, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 
 interface WalletBalanceSectionPropsType {
@@ -65,7 +65,7 @@ export default function WalletBalanceSection({
   return (
     <View className="w-full">
       {/* Wallets Balances Not Found / Empty State */}
-      <Activity mode={!hasWalletBalances ? 'visible' : 'hidden'}>
+      {!hasWalletBalances ? (
         <View className="w-full items-center justify-center rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-6 shadow-sm">
           {/* Section label */}
           <View className="mb-4 flex-row items-center gap-1.5 self-start">
@@ -86,10 +86,10 @@ export default function WalletBalanceSection({
             </Text>
           </View>
         </View>
-      </Activity>
+      ) : null}
 
       {/* Wallets Balances Found State */}
-      <Activity mode={hasWalletBalances ? 'visible' : 'hidden'}>
+      {hasWalletBalances ? (
         <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
           {/* Treasury Total Section */}
           <View className="w-full flex-col items-start gap-2">
@@ -164,7 +164,7 @@ export default function WalletBalanceSection({
             )}
           </View>
         </View>
-      </Activity>
+      ) : null}
     </View>
   );
 }

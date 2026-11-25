@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react-native";
-import React, { Activity, useState } from "react";
+import React, { useState } from "react";
 import { Pressable, View } from "react-native";
 
 export interface RadioChoiceItem {
@@ -55,7 +55,7 @@ export default function CustonRadioGroupChoiceCardComponent({
 
   return (
     <View testID={id} className={cn("w-full flex-col gap-3", containerClassname)}>
-      <Activity mode={Boolean(label) ? "visible" : "hidden"}>
+      {Boolean(label) ? (
         <Text
           className={cn(
             "text-base font-semibold text-[var(--color-ink-secondary)] tracking-wide text-center",
@@ -64,7 +64,7 @@ export default function CustonRadioGroupChoiceCardComponent({
         >
           {label}
         </Text>
-      </Activity>
+      ) : null}
 
       <View className="w-full flex-col gap-2.5">
         {fieldItems.map((item) => {
@@ -111,20 +111,20 @@ export default function CustonRadioGroupChoiceCardComponent({
                     : "border-[var(--color-line-strong)] bg-[var(--color-app-surface)]"
                 )}
               >
-                <Activity mode={isSelected ? "visible" : "hidden"}>
+                {isSelected ? (
                   <Check size={14} color="#ffffff" strokeWidth={3} />
-                </Activity>
+                ) : null}
               </View>
             </Pressable>
           );
         })}
       </View>
 
-      <Activity mode={Boolean(error) ? "visible" : "hidden"}>
+      {Boolean(error) ? (
         <Text className="text-sm text-[var(--color-status-danger)] font-medium text-center">
           {error}
         </Text>
-      </Activity>
+      ) : null}
     </View>
   );
 }

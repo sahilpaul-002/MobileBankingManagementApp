@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
-import { Activity, forwardRef } from "react";
+import { forwardRef } from "react";
 import { View, type TextInput, type TextInputProps } from "react-native";
 
 export interface CustomInputProps extends Omit<TextInputProps, "id"> {
@@ -58,17 +58,16 @@ const CustomInputComponent = forwardRef<TextInput, CustomInputProps>(
           {...rest}
         />
 
-        <Activity mode={error ? "visible" : "hidden"}>
+        {/* Error / Hint Message */}
+        {error ? (
           <Text className="text-sm text-[var(--color-status-danger)] font-medium">
             {error}
           </Text>
-        </Activity>
-
-        <Activity mode={Boolean(hint && !error) ? "visible" : "hidden"}>
+        ) : hint ? (
           <Text className="text-xs text-[var(--color-ink-muted)]">
             {hint}
           </Text>
-        </Activity>
+        ) : null}
       </View>
     );
   },

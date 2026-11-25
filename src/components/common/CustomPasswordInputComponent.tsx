@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 import { Eye, EyeOff } from "lucide-react-native";
-import { Activity, forwardRef } from "react";
+import { forwardRef } from "react";
 import {
   Pressable,
   View,
@@ -49,7 +49,7 @@ const CustomPasswordInputComponent = forwardRef<
   ) => {
     return (
       <View className={cn("w-full flex-col gap-1.5", containerClassname)}>
-        {label && (
+        {label ? (
           <Text
             className={cn(
               "text-lg font-semibold text-[var(--color-ink-secondary)] tracking-wide",
@@ -58,7 +58,7 @@ const CustomPasswordInputComponent = forwardRef<
           >
             {label}
           </Text>
-        )}
+        ) : null}
 
         <View className="relative w-full justify-center">
           <Input
@@ -94,17 +94,16 @@ const CustomPasswordInputComponent = forwardRef<
           </Pressable>
         </View>
 
-        <Activity mode={error ? "visible" : "hidden"}>
+        {/* Error / Hint Message */}
+        {error ? (
           <Text className="text-sm text-[var(--color-status-danger)] font-medium">
             {error}
           </Text>
-        </Activity>
-
-        <Activity mode={Boolean(hint && !error) ? "visible" : "hidden"}>
+        ) : hint ? (
           <Text className="text-xs text-[var(--color-ink-muted)]">
             {hint}
           </Text>
-        </Activity>
+        ) : null}
       </View>
     );
   },

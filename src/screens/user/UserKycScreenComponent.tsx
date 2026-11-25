@@ -9,7 +9,7 @@ import { setShowInfoBanner } from "@/redux/slice/utility/utilitySlice";
 import type { KycStatusDataType } from "@/types/user/userVerificationPageTypes";
 import ShowInConsole from "@/utils/ShowInConsole";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Activity, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 
 export default function UserKycScreenComponent() {
@@ -56,7 +56,8 @@ export default function UserKycScreenComponent() {
     };
   }, [dispatch, reduxEmail]);
 
-  // ── Get KYC Verification Status ───────────────────────────────────────────
+  // ---------------------- Get KYC Verification Status Api ---------------------- \\
+  // Get Kyc Status Api Mutation
   const {
     data: getKycData,
     isLoading: getKycDetailsIsLoading,
@@ -85,6 +86,7 @@ export default function UserKycScreenComponent() {
       ShowInConsole("User KYC details:", userKycDetails);
     }
   }, [userKycDetails]);
+  // ------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------ \\
 
   const isInitialLoading = !isSessionLoaded || getKycDetailsIsLoading;
 
@@ -129,38 +131,38 @@ export default function UserKycScreenComponent() {
           </Text>
         </View>
 
-                {/* Loading Skeleton */}
-                <Activity mode={isInitialLoading ? 'visible' : 'hidden'}>
-                    <View className="w-full min-h-[260px] items-center justify-center">
-                        <CircleFadeLoaderComponent size={40} color="#d49a4d" />
-                    </View>
-                </Activity>
+        {/* Loading Skeleton */}
+        {isInitialLoading ? (
+          <View className="w-full min-h-[260px] items-center justify-center">
+            <CircleFadeLoaderComponent size={40} color="#d49a4d" />
+          </View>
+        ) : null}
 
-                {/* Main Content */}
-                <Activity mode={!isInitialLoading ? 'visible' : 'hidden'}>
-                    <View className="w-full flex-col gap-4">
-                        {isKycNotFound ? (
-                            <KycNotAvailableComponent
-                                onOpenSidebar={() => setIsUploadModalOpen(true)}
-                            />
-                        ) : (
-                            <KycStatusComponent
-                                kycData={userKycStatusData}
-                                onOpenSidebar={() => setIsUploadModalOpen(true)}
-                                onRefresh={refetchGetKycDetails}
-                                isRefreshing={getKycDetailsIsFetching}
-                            />
-                        )}
-                    </View>
-                </Activity>
-            </ScrollView>
+        {/* Main Content */}
+        {!isInitialLoading ? (
+          <View className="w-full flex-col gap-4">
+            {isKycNotFound ? (
+              <KycNotAvailableComponent
+                onOpenSidebar={() => setIsUploadModalOpen(true)}
+              />
+            ) : (
+              <KycStatusComponent
+                kycData={userKycStatusData}
+                onOpenSidebar={() => setIsUploadModalOpen(true)}
+                onRefresh={refetchGetKycDetails}
+                isRefreshing={getKycDetailsIsFetching}
+              />
+            )}
+          </View>
+        ) : null}
+      </ScrollView>
 
-            {/* KYC Upload Modal */}
-            <KycUploadModalComponent
-                isOpen={isUploadModalOpen}
-                onClose={() => setIsUploadModalOpen(false)}
-                userEmail={userEmail}
-            />
-        </View>
-    );
+      {/* KYC Upload Modal */}
+      <KycUploadModalComponent
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        userEmail={userEmail}
+      />
+    </View>
+  );
 }

@@ -13,7 +13,7 @@ import type { UserDetailsType, UserOnboardingDetailsType } from '@/types/user/us
 import { isKybApproved } from '@/utils/kybHelper';
 import ShowInConsole from '@/utils/ShowInConsole';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Activity, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 
 type TabId = 'personal' | 'address' | 'bank';
@@ -142,14 +142,14 @@ export default function UserDetailsScreenComponent() {
                 }
             >
                 {/* Initial Loader State */}
-                <Activity mode={isInitialLoading ? 'visible' : 'hidden'}>
+                {isInitialLoading ? (
                     <View className="w-full min-h-[300px] items-center justify-center">
                         <CircleFadeLoaderComponent size={42} color="#d49a4d" />
                     </View>
-                </Activity>
+                ) : null}
 
                 {/* Content */}
-                <Activity mode={!isInitialLoading ? 'visible' : 'hidden'}>
+                {!isInitialLoading ? (
                     <View className="w-full flex-col gap-4">
                         {isOnboardingDetailsNotFound ? (
                             <View className="w-full rounded-2xl border border-[var(--color-line)] bg-[var(--color-app-surface)] shadow-xs">
@@ -190,9 +190,7 @@ export default function UserDetailsScreenComponent() {
                                 {/* Tab Panels */}
                                 <View className="p-4 sm:p-6">
                                     {/* Personal Tab */}
-                                    <Activity
-                                        mode={activeTab === 'personal' ? 'visible' : 'hidden'}
-                                    >
+                                    {activeTab === 'personal' ? (
                                         <View className="w-full">
                                             {getUserDetailsIsFetching ? (
                                                 <CircleFadeLoaderComponent size={34} color="#d49a4d" />
@@ -204,12 +202,10 @@ export default function UserDetailsScreenComponent() {
                                                 <DetailsEmptyState type="personal" />
                                             )}
                                         </View>
-                                    </Activity>
+                                    ) : null}
 
                                     {/* Address Tab */}
-                                    <Activity
-                                        mode={activeTab === 'address' ? 'visible' : 'hidden'}
-                                    >
+                                    {activeTab === 'address' ? (
                                         <View className="w-full">
                                             {getOnboardingDetailsIsFetching ? (
                                                 <CircleFadeLoaderComponent size={34} color="#d49a4d" />
@@ -224,10 +220,10 @@ export default function UserDetailsScreenComponent() {
                                                 <DetailsEmptyState type="address" />
                                             )}
                                         </View>
-                                    </Activity>
+                                    ) : null}
 
                                     {/* Bank Tab */}
-                                    <Activity mode={activeTab === 'bank' ? 'visible' : 'hidden'}>
+                                    {activeTab === 'bank' ? (
                                         <View className="w-full">
                                             {getOnboardingDetailsIsFetching ? (
                                                 <CircleFadeLoaderComponent size={34} color="#d49a4d" />
@@ -242,12 +238,12 @@ export default function UserDetailsScreenComponent() {
                                                 <DetailsEmptyState type="bank" />
                                             )}
                                         </View>
-                                    </Activity>
+                                    ) : null}
                                 </View>
                             </View>
                         )}
                     </View>
-                </Activity>
+                ) : null}
             </ScrollView>
 
             {/* Add Onboarding Details Modal */}

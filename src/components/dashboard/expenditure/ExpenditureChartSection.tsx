@@ -10,7 +10,7 @@ import type {
 import ShowInConsole from '@/utils/ShowInConsole';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChartNoAxesCombined, Info } from 'lucide-react-native';
-import { Activity, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import ExpenditureAreaChartComponent from './ExpenditureAreaChartComponent';
 import ExpenditureBarChartComponent, {
@@ -205,7 +205,7 @@ export default function ExpenditureChartSection({
   return (
     <View className="w-full">
       {/* Loading State */}
-      <Activity mode={isExpenditureLoading ? 'visible' : 'hidden'}>
+      {isExpenditureLoading ? (
         <View className="w-full">
           <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
             <View className="flex-row items-center gap-1.5">
@@ -226,10 +226,10 @@ export default function ExpenditureChartSection({
             </View>
           </View>
         </View>
-      </Activity>
+      ) : null}
 
       {/* Loaded State */}
-      <Activity mode={!isExpenditureLoading ? 'visible' : 'hidden'}>
+      {!isExpenditureLoading ? (
         <View className="w-full">
           <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
             {/* Header */}
@@ -298,7 +298,7 @@ export default function ExpenditureChartSection({
             )}
           </View>
         </View>
-      </Activity>
+      ) : null}
     </View>
   );
 }

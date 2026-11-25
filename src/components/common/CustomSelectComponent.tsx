@@ -1,7 +1,7 @@
 import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
 import { Check, ChevronDown, Search, X } from "lucide-react-native";
-import { Activity, forwardRef, useMemo, useState } from "react";
+import { forwardRef, useMemo, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -150,17 +150,16 @@ const CustomSelectComponent = forwardRef<View, CustomSelectProps>(
           <ChevronDown size={18} color="#0c1830" strokeWidth={2} />
         </Pressable>
 
-        {/* Error message with Activity */}
-        <Activity mode={error ? "visible" : "hidden"}>
+        {/* Error / Hint Message */}
+        {error ? (
           <Text className="text-sm font-medium text-[var(--color-status-danger)]">
             {error}
           </Text>
-        </Activity>
-
-        {/* Hint message with Activity */}
-        <Activity mode={Boolean(hint && !error) ? "visible" : "hidden"}>
-          <Text className="text-xs text-[var(--color-ink-muted)]">{hint}</Text>
-        </Activity>
+        ) : hint ? (
+          <Text className="text-xs text-[var(--color-ink-muted)]">
+            {hint}
+          </Text>
+        ) : null}
 
         {/* Modal Selection Dialog */}
         <Modal

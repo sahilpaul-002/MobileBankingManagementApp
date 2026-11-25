@@ -6,7 +6,6 @@ import type {
 } from '@/types/dashboard/walletTransactionsSectionTypes';
 import { useRouter } from 'expo-router';
 import { ChevronRight, ReceiptText } from 'lucide-react-native';
-import { Activity } from 'react';
 import { Text, View } from 'react-native';
 import RecentTransactionItemComponent from './RecentTransactionItemComponent';
 
@@ -39,42 +38,42 @@ export default function RecentTransactionsSection({
   return (
     <View className="w-full">
       {/* Empty State */}
-      <Activity mode={!hasWalletTransactions ? 'visible' : 'hidden'}>
-          <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
-            {/* Header */}
-            <View className="flex-row items-center justify-between gap-2">
-              <Text className="shrink text-xs font-semibold tracking-wider uppercase text-[var(--color-ink-soft)]">
-                Recent Transactions
-              </Text>
+      {!hasWalletTransactions ? (
+        <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
+          {/* Header */}
+          <View className="flex-row items-center justify-between gap-2">
+            <Text className="shrink text-xs font-semibold tracking-wider uppercase text-[var(--color-ink-soft)]">
+              Recent Transactions
+            </Text>
 
-              <CustomButtonComponent
-                id="recent-transactions-empty-statements-button"
-                variant="link"
-                buttonClassName="w-auto shrink-0 flex-row items-center gap-0.5 px-0 py-0"
-                onPress={handleNavigateStatements}
-              >
-                <Text className="text-xs font-semibold text-[var(--color-link)]">
-                  View statements
-                </Text>
-                <ChevronRight size={14} color="#9193f7" />
-              </CustomButtonComponent>
-            </View>
-
-            {/* Empty Icon and Text */}
-            <View className="my-6 items-center justify-center">
-              <ReceiptText size={32} color="#8a93a8" strokeWidth={1.5} />
-              <Text className="mt-3 text-sm font-semibold text-[var(--color-ink)]">
-                No transactions found
+            <CustomButtonComponent
+              id="recent-transactions-empty-statements-button"
+              variant="link"
+              buttonClassName="w-auto shrink-0 flex-row items-center gap-0.5 px-0 py-0"
+              onPress={handleNavigateStatements}
+            >
+              <Text className="text-xs font-semibold text-[var(--color-link)]">
+                View statements
               </Text>
-              <Text className="mt-1 text-center text-xs leading-5 text-[var(--color-ink-soft)]">
-                Recent transactions will appear here once activity is available.
-              </Text>
-            </View>
+              <ChevronRight size={14} color="#9193f7" />
+            </CustomButtonComponent>
           </View>
-      </Activity>
+
+          {/* Empty Icon and Text */}
+          <View className="my-6 items-center justify-center">
+            <ReceiptText size={32} color="#8a93a8" strokeWidth={1.5} />
+            <Text className="mt-3 text-sm font-semibold text-[var(--color-ink)]">
+              No transactions found
+            </Text>
+            <Text className="mt-1 text-center text-xs leading-5 text-[var(--color-ink-soft)]">
+              Recent transactions will appear here once activity is available.
+            </Text>
+          </View>
+        </View>
+      ) : null}
 
       {/* Found State */}
-      <Activity mode={hasWalletTransactions ? 'visible' : 'hidden'}>
+      {hasWalletTransactions ? (
         <View className="w-full">
           <View className="w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-app-surface)] p-5 shadow-sm">
             {/* Header */}
@@ -107,7 +106,7 @@ export default function RecentTransactionsSection({
             </View>
           </View>
         </View>
-      </Activity>
+      ) : null}
     </View>
   );
 }
