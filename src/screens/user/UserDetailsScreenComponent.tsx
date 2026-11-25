@@ -14,7 +14,8 @@ import { isKybApproved } from '@/utils/kybHelper';
 import ShowInConsole from '@/utils/ShowInConsole';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, Text, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 type TabId = 'personal' | 'address' | 'bank';
 
@@ -138,9 +139,12 @@ export default function UserDetailsScreenComponent() {
 
     return (
         <View className="flex-1 w-full bg-[var(--color-app)]">
-            <ScrollView
+            <KeyboardAwareScrollView
+                bottomOffset={60}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 className="flex-1 w-full px-4 py-4"
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: 60 }}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -260,7 +264,7 @@ export default function UserDetailsScreenComponent() {
                         )}
                     </View>
                 ) : null}
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             {/* Add Onboarding Details Modal */}
             <AddOnboardingDetailsModalComponent

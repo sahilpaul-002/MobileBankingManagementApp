@@ -11,6 +11,7 @@ import { Pressable, StatusBar, Text, useColorScheme, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { install } from 'react-native-quick-crypto';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { Provider } from 'react-redux';
 import '../global.css';
 
@@ -95,59 +96,61 @@ export default function AppRootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <SafeAreaProvider>
-          <ThemeProvider
-            value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-          >
-            <View className="w-full flex-1 bg-[var(--color-app)]">
-              <StatusBar
-                barStyle={
-                  colorScheme === 'dark'
-                    ? 'light-content'
-                    : 'dark-content'
-                }
-              />
-
-              {/* Application starts only after successful initialization */}
-              {bootState === 'READY' ? (
-                <>
-                  <AppLayout />
-                  <ToastMessagesComponent />
-                </>
-              ) : null}
-
-              {/* Startup Loader */}
-              {bootState !== 'FAILED' && !showAppLayout ? (
-                <ApplicationLoaderSplashScreenComponent
-                  isReady={bootState === 'READY'}
-                  onAnimationComplete={() => {
-                    setShowAppLayout(true);
-                  }}
+          <KeyboardProvider statusBarTranslucent navigationBarTranslucent>
+            <ThemeProvider
+              value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
+            >
+              <View className="w-full flex-1 bg-[var(--color-app)]">
+                <StatusBar
+                  barStyle={
+                    colorScheme === 'dark'
+                      ? 'light-content'
+                      : 'dark-content'
+                  }
                 />
-              ) : null}
 
-              {/* Failure screen */}
-              {bootState === 'FAILED' ? (
-                <View className="absolute inset-0 z-50 items-center justify-center bg-[#0C1830] px-6">
-                  <Text className="mb-3 text-center text-xl font-bold text-white">
-                    Authentication Required
-                  </Text>
+                {/* Application starts only after successful initialization */}
+                {bootState === 'READY' ? (
+                  <>
+                    <AppLayout />
+                    <ToastMessagesComponent />
+                  </>
+                ) : null}
 
-                  <Text className="mb-6 text-center text-sm text-gray-300">
-                    {bootError}
-                  </Text>
+                {/* Startup Loader */}
+                {bootState !== 'FAILED' && !showAppLayout ? (
+                  <ApplicationLoaderSplashScreenComponent
+                    isReady={bootState === 'READY'}
+                    onAnimationComplete={() => {
+                      setShowAppLayout(true);
+                    }}
+                  />
+                ) : null}
 
-                  <Pressable
-                    onPress={handleRetry}
-                    className="rounded-lg bg-[#D49A4D] px-8 py-3"
-                  >
-                    <Text className="font-semibold text-[#0C1830]">
-                      Try Again
+                {/* Failure screen */}
+                {bootState === 'FAILED' ? (
+                  <View className="absolute inset-0 z-50 items-center justify-center bg-[#0C1830] px-6">
+                    <Text className="mb-3 text-center text-xl font-bold text-white">
+                      Authentication Required
                     </Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
-          </ThemeProvider>
+
+                    <Text className="mb-6 text-center text-sm text-gray-300">
+                      {bootError}
+                    </Text>
+
+                    <Pressable
+                      onPress={handleRetry}
+                      className="rounded-lg bg-[#D49A4D] px-8 py-3"
+                    >
+                      <Text className="font-semibold text-[#0C1830]">
+                        Try Again
+                      </Text>
+                    </Pressable>
+                  </View>
+                ) : null}
+              </View>
+            </ThemeProvider>
+          </KeyboardProvider>
         </SafeAreaProvider>
       </Provider>
     </GestureHandlerRootView>

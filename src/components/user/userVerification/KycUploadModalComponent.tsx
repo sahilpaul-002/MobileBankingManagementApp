@@ -9,6 +9,7 @@ import { AlertCircle, CheckCircle, FileText, RotateCcw, UploadCloud, X } from 'l
 import { useRef, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
@@ -288,10 +289,12 @@ export default function KycUploadModalComponent({
                         </View>
 
                         {/* Form Content */}
-                        <ScrollView
-                            ref={scrollViewRef}
+                        <KeyboardAwareScrollView
+                            bottomOffset={80}
+                            keyboardShouldPersistTaps="handled"
+                            keyboardDismissMode="on-drag"
                             className="px-6 py-4"
-                            contentContainerStyle={{ paddingBottom: 24 }}
+                            contentContainerStyle={{ paddingBottom: 48 }}
                             showsVerticalScrollIndicator={false}
                         >
                             {/* Inline API Error Banner */}
@@ -470,7 +473,7 @@ export default function KycUploadModalComponent({
                                     />
                                 </View>
                             </View>
-                        </ScrollView>
+                        </KeyboardAwareScrollView>
                     </View>
                 </KeyboardAvoidingView>
             </View>

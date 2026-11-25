@@ -17,7 +17,9 @@ import { router } from "expo-router";
 import { Landmark } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm, type SubmitErrorHandler, type SubmitHandler } from "react-hook-form";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { z } from "zod";
 
@@ -101,6 +103,7 @@ const FORM_STEPS = [
 ];
 
 export default function SignUpScreenComponent() {
+  const insets = useSafeAreaInsets();
   // Sign Up API Mutation
   const [signUpMutation, { isLoading }] = useSignUpMutation();
 
@@ -352,20 +355,20 @@ export default function SignUpScreenComponent() {
   // ------------------------------------- XXXXXXXXXXXXXXXXXXXX ------------------------------------- \\
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <KeyboardAwareScrollView
+      bottomOffset={32}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator={false}
       className="flex-1 bg-[var(--color-app)]"
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingHorizontal: 24,
+        paddingTop: 20,
+        paddingBottom: insets.bottom + 32,
+      }}
     >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingHorizontal: 24,
-          paddingVertical: 20,
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <GestureDetector gesture={swipeGesture}>
+      <GestureDetector gesture={swipeGesture}>
           <View className="my-auto w-full h-full flex-col justify-start items-center gap-5">
             {/* Logo / Brand Header */}
 
@@ -779,7 +782,6 @@ export default function SignUpScreenComponent() {
             </View>
           </View>
         </GestureDetector>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }

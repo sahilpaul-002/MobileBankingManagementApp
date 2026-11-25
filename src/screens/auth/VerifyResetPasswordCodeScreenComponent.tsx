@@ -13,7 +13,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Landmark } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { z } from "zod";
 
 // ------------------------------------- ZOD VALIDATION SCHEMA ------------------------------------- \\
@@ -38,6 +40,7 @@ type ResetPasswordFormData = z.infer<typeof resetPasswordValidationSchema>;
 // ------------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------ \\
 
 export default function VerifyResetPasswordCodeScreenComponent() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const storedEmail = useAppSelector(selectEmail);
   const params = useLocalSearchParams<{ email?: string }>();
@@ -255,20 +258,20 @@ export default function VerifyResetPasswordCodeScreenComponent() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <KeyboardAwareScrollView
+      bottomOffset={32}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator={false}
       className="flex-1 bg-[var(--color-app)]"
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingHorizontal: 24,
+        paddingTop: 24,
+        paddingBottom: insets.bottom + 32,
+      }}
     >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingHorizontal: 24,
-          paddingVertical: 24,
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
+      <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
           {/* Logo */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
@@ -397,7 +400,6 @@ export default function VerifyResetPasswordCodeScreenComponent() {
             </View>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }

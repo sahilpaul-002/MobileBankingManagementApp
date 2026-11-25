@@ -6,12 +6,11 @@ import { Copy, Landmark } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form';
 import {
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
-  ScrollView,
   View,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 import CustomButtonComponent from '@/components/common/CustomButtonComponent';
@@ -54,6 +53,7 @@ const DEMO_CREDENTIALS = [
 
 export default function SignInScreenComponent() {
   const dispatch = useappDispatchType();
+  const insets = useSafeAreaInsets();
   const dnsData = useAppSelector(selectDnsConfigDetails);
   const isDnsAvailable = Boolean(dnsData && Object.keys(dnsData).length > 0);
 
@@ -296,16 +296,20 @@ export default function SignInScreenComponent() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <KeyboardAwareScrollView
+      bottomOffset={32}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator={false}
       className="flex-1 bg-[var(--color-app)]"
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingHorizontal: 24,
+        paddingTop: 20,
+        paddingBottom: insets.bottom + 32,
+      }}
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
+      <View className="w-full h-full flex-col justify-center items-center gap-5 my-auto">
           {/* Logo / Brand Header */}
           <View className="w-28 h-28 rounded-2xl bg-[var(--color-navy)] border border-[var(--color-gold)]/40 items-center justify-center shadow-sm shadow-black/10">
             <Landmark size={56} color="#d49a4d" strokeWidth={1.8} />
@@ -464,7 +468,6 @@ export default function SignInScreenComponent() {
             </View>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAwareScrollView>
   );
 }
