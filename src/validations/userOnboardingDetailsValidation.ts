@@ -166,7 +166,7 @@ export const userBankDetailsValidationSchema = z.object({
         .trim()
         .regex(
             /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/,
-            "Invalid IBAN format."
+            "Invalid IBAN code. It must start with a 2-letter country code, followed by 2 check digits and 11–30 alphanumeric account characters. Spaces and special characters are not allowed."
         ),
 
     bank_name: z
