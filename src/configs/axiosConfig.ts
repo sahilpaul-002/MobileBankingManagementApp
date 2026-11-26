@@ -187,51 +187,80 @@ const setupInterceptors = (instance: AxiosInstance) => {
                 // ENCRYPT MULTIPART FORMDATA
                 if (req.data instanceof FormData) {
                     debugger
-                    const originalFormData = req.data;
 
-                    // New encrypted FormData
+                    const originalFormData = req.data;
                     const encryptedFormData = new FormData();
 
-                    // ---------------------------------------------
-                    // COLLECT NORMAL FORM FIELDS
-                    // ---------------------------------------------
-                    const formFields: Record<string, string> = {};
+                    // React Native file representation
+                    type ReactNativeFileAsset = {
+                        uri: string;
+                        name?: string;
+                        type?: string;
+                        mimeType?: string;
+                    };
 
-                    // Keep track of file/blob entries separately
-                    const fileEntries: Array<{
+                    type FileEntry = {
                         fieldName: string;
-                        file: File | Blob;
-                        fileName?: string;
-                    }> = [];
+                        file: ReactNativeFileAsset;
+                        fileName: string;
+                    };
+
+                    // Collect normal fields and files separately
+                    const formFields: Record<string, string> = {};
+                    const fileEntries: FileEntry[] = [];
+
+                    // Identify React Native URI-based files
+                    const isReactNativeFile = (value: unknown): value is ReactNativeFileAsset => {
+                        return (
+                            typeof value === "object" &&
+                            value !== null &&
+                            "uri" in value &&
+                            typeof value.uri === "string"
+                        );
+                    };
 
                     for (const [fieldName, value] of originalFormData.entries()) {
-                        const formValue = value as string | File | Blob;
+                        const formValue: unknown = value;
 
-                        // File / Blob
-                        if (formValue instanceof File) {
+                        // React Native URI-based file
+                        if (isReactNativeFile(formValue)) {
                             fileEntries.push({
                                 fieldName,
                                 file: formValue,
+                                fileName: formValue.name ?? fieldName,
+                            });
+
+                            continue;
+                        }
+
+                        // File / Blob
+                        if (typeof File !== "undefined" && formValue instanceof File) {
+                            fileEntries.push({
+                                fieldName,
+                                file: {
+                                    uri: (formValue as File & { uri: string }).uri,
+                                    name: formValue.name,
+                                    type: formValue.type,
+                                },
                                 fileName: formValue.name,
                             });
 
                             continue;
                         }
 
-                        if (formValue instanceof Blob) {
-                            fileEntries.push({
-                                fieldName,
-                                file: formValue,
-                            });
-
-                            continue;
+                        if (typeof Blob !== "undefined" && formValue instanceof Blob) {
+                            throw new Error(
+                                "Blob-based files are not supported by this React Native encryption flow."
+                            );
                         }
 
-                        // Normal Form Field
-                        formFields[fieldName] = formValue;
+                        // Normal form field
+                        if (typeof formValue === "string") {
+                            formFields[fieldName] = formValue;
+                        }
                     }
 
-                    // Encrypt json form fields
+                    // Encrypt normal form fields
                     if (Object.keys(formFields).length > 0) {
                         const aesFieldsResult = await aesEncryption(
                             aesKey as string,
@@ -245,43 +274,41 @@ const setupInterceptors = (instance: AxiosInstance) => {
                         );
                     }
 
-                    // Rsa encrypted IV
+                    // RSA encrypted IV
                     encryptedFormData.append(
                         "encryptedPayload1",
                         rsaRes?.ciphertextBase64 ?? ""
                     );
 
-                    // Encrypt all file entries
-                    for (const {
-                        fieldName,
-                        file,
-                        fileName,
-                    } of fileEntries) {
+                    // Encrypt individual files
+                    for (const {fieldName, file, fileName} of fileEntries) {
+                        const mimeType = file.type ?? file.mimeType ?? "application/octet-stream";
 
                         const encryptedFileResult = await aesEncryptMultipartFile(
                             aesKey as string,
                             {
-                                uri: (file as File & { uri: string }).uri,
-                                name: fileName ?? ("name" in file ? file.name : fieldName),
-                                mimeType: file.type ?? "application/octet-stream",
+                                uri: file.uri,
+                                name: fileName,
+                                mimeType,
                             },
                             ivHex
                         );
 
+                        // Append as an actual React Native multipart file part
                         encryptedFormData.append(
                             fieldName,
                             {
                                 uri: encryptedFileResult.encryptedFile.uri,
-                                name: fileName ?? fieldName,
-                                type: encryptedFileResult.encryptedFile.type,
-                            } as unknown as Blob
+                                name: fileName,
+                                type: encryptedFileResult.encryptedFile.type ?? mimeType,
+                            } as any
                         );
                     }
 
-                    // Replace original FormData
+                    // Replace original request body
                     req.data = encryptedFormData;
 
-                    // Encrypt query params if present
+                    // Encrypt query parameters
                     if (req.params) {
                         const aesParamsResult = await aesEncryption(
                             aesKey as string,
@@ -295,8 +322,6 @@ const setupInterceptors = (instance: AxiosInstance) => {
                         };
                     }
 
-                    // DO NOT manually set Content-Type.
-                    // Axios/browser will generate the multipart boundary.
                     return req;
                 }
 

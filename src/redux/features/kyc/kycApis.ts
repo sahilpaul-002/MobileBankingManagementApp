@@ -133,7 +133,7 @@ export const kycApis = createApi({
 
                         headers = kycApiHeaders(state)
                     }
-                    debugger
+
                     const formData = new FormData();
 
                     formData.append('email', payload.email);
