@@ -6,16 +6,17 @@ import PrefundAccountsEmptyStateComponent from '@/components/user/userPrefundAcc
 import PrefundAccountsTabsComponent from '@/components/user/userPrefundAccounts/PrefundAccountTabsComponent';
 import { useGetUserPrefundAccountsDetailsQuery } from '@/redux/features/user/userApis';
 import { useappDispatchType, useAppSelector } from '@/redux/hooks/reduxHooks';
+import { selectIsLoggingOut } from '@/redux/slice/appSession/appSessionSlice';
 import {
     selectEmail,
     selectIsAdmin,
     selectIsMasterAdmin,
+    selectUserId,
 } from '@/redux/slice/user/userSlice';
 import { setShowInfoBanner } from '@/redux/slice/utility/utilitySlice';
 import { ROUTE_NAMES } from '@/routes/routeNames';
 import type { UserPrefundAccountsDetailsType } from '@/types/user/userPrefundAccountsDetailsTypes';
 import ShowInConsole from '@/utils/ShowInConsole';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { ShieldAlert } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
@@ -36,48 +37,21 @@ export default function UserPrefundAccountsScreenComponent() {
     const isMasterAdmin = useAppSelector(selectIsMasterAdmin);
     const isAuthorizedAdmin = isAdmin || isMasterAdmin;
 
-    const reduxEmail = useAppSelector(selectEmail);
-    const [userEmail, setUserEmail] = useState<string | null>(reduxEmail || null);
-    const [userId, setUserId] = useState<string | null>(null);
-    const [isSessionLoaded, setIsSessionLoaded] = useState(false);
+    // Runtime user session from Redux
+    const userEmail = useAppSelector(selectEmail);
+    const userId = useAppSelector(selectUserId);
+    const isLoggingOut = useAppSelector(selectIsLoggingOut);
 
+    // Validate session presence
     useEffect(() => {
-        let isMounted = true;
-        const loadSession = async () => {
-            try {
-                const storedItems = await AsyncStorage.multiGet([
-                    'userEmail',
-                    'userId',
-                ]);
-                const storedMap = Object.fromEntries(storedItems);
-                const email = storedMap.userEmail || reduxEmail || null;
-                const uid = storedMap.userId || null;
-
-                if (isMounted) {
-                    setUserEmail(email);
-                    setUserId(uid);
-                    setIsSessionLoaded(true);
-
-                    if (!email || !uid) {
-                        dispatch(
-                            setShowInfoBanner(
-                                'Application facing issue, necessary user details not present in session. Please re-login.'
-                            )
-                        );
-                    }
-                }
-            } catch {
-                if (isMounted) {
-                    setIsSessionLoaded(true);
-                }
-            }
-        };
-
-        loadSession();
-        return () => {
-            isMounted = false;
-        };
-    }, [dispatch, reduxEmail]);
+        if (!isLoggingOut && (!userEmail || !userId)) {
+            dispatch(
+                setShowInfoBanner(
+                    'Application facing issue, necessary user details not present in session. Please re-login.'
+                )
+            );
+        }
+    }, [dispatch, isLoggingOut, userEmail, userId]);
 
     // ── Get User Prefund Accounts Details ──────────────────────────────────────
     const {
@@ -90,7 +64,7 @@ export default function UserPrefundAccountsScreenComponent() {
     } = useGetUserPrefundAccountsDetailsQuery(
         { email: userEmail! },
         {
-            skip: !userEmail || !userId || !isAuthorizedAdmin,
+            skip: !userEmail || !userId || !isAuthorizedAdmin || isLoggingOut,
             refetchOnMountOrArgChange: true,
         }
     );
@@ -133,8 +107,11 @@ export default function UserPrefundAccountsScreenComponent() {
 
     // ── Prefund Accounts Page Loader State ─────────────────────────────────────
     const showPrefundingAccountsPageLoader =
-        !isSessionLoaded ||
-        (!refreshing && (getPrefundAccountsDetailsIsFetching || getPrefundAccountsDetailsIsLoading));
+        !refreshing && (getPrefundAccountsDetailsIsFetching || getPrefundAccountsDetailsIsLoading);
+
+    if (isLoggingOut) {
+        return <View className="flex-1 w-full bg-[var(--color-app)]" />;
+    }
 
     // Non-admin restriction guard
     if (!isAuthorizedAdmin) {

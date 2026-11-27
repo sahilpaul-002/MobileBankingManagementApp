@@ -15,7 +15,16 @@ export interface apiErrorType {
     data: backendErrorType;
 }
 
-const handleErrors = (error: unknown, dispatch: any): never => {
+const handleErrors = (error: unknown, dispatch: any, getState?: () => any): never => {
+    // If logout is in progress or request was cancelled, suppress session destroy triggers and UI error banners
+    try {
+        const isLoggingOut = getState ? getState()?.appSession?.isLoggingOut : false;
+        if (isLoggingOut || axios.isCancel(error)) {
+            throw error;
+        }
+    } catch (e) {
+        if (e === error) throw e;
+    }
     // Axios error
     if (axios.isAxiosError(error)) {
         const err = error as AxiosError<any>;

@@ -1,8 +1,6 @@
 import { useAppSelector } from '@/redux/hooks/reduxHooks';
 import { selectEmail, selectIsAdmin, selectIsMasterAdmin } from '@/redux/slice/user/userSlice';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Power, Shield } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 interface CommonAppHeaderComponentProps {
@@ -14,27 +12,7 @@ export default function CommonAppHeaderComponent({onPowerPress}: CommonAppHeader
     const isAdmin = useAppSelector(selectIsAdmin);
     const isMasterAdmin = useAppSelector(selectIsMasterAdmin);
 
-    const [storedEmail, setStoredEmail] = useState<string | null>(null);
-
-    useEffect(() => {
-        let isMounted = true;
-        const fetchEmail = async () => {
-            try {
-                const email = await AsyncStorage.getItem('userEmail');
-                if (isMounted && email) {
-                    setStoredEmail(email);
-                }
-            } catch {
-                // Ignore
-            }
-        };
-        fetchEmail();
-        return () => {
-            isMounted = false;
-        };
-    }, []);
-
-    const displayEmail = reduxEmail || storedEmail || 'user@example.com';
+    const displayEmail = reduxEmail || 'user@example.com';
     const roleLabel = isMasterAdmin ? 'Master Admin' : isAdmin ? 'Admin' : 'Cardholder';
 
     return (

@@ -3,6 +3,8 @@ import { logError } from '@/errorHandling/errorLogger';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
 import { beneficiariesApis } from '../features/beneficiaries/beneficiariesApi';
+import { cardApis } from '../features/card/cardApi';
+import { cardholdersApis } from '../features/cardholder/cardholdersApi';
 import { configApis } from '../features/config/configApi';
 import { helperApis } from '../features/helper/helperApis';
 import { kycApis } from '../features/kyc/kycApis';
@@ -39,7 +41,10 @@ export const logoutUser = createAsyncThunk(
             // Attempt server-side session destruction first.
             try {
                 await dispatch(
-                    helperApis.endpoints.destroySession.initiate(),
+                    helperApis.endpoints.destroySession.initiate(undefined, {
+                        forceRefetch: true,
+                        subscribe: false,
+                    }),
                 ).unwrap();
             } 
             catch (error) {
@@ -92,6 +97,15 @@ export const logoutUser = createAsyncThunk(
                 });
             }
 
+            // Clear client application state FIRST before clearing RTK Query caches.
+            // Synchronously clears user session (email, userId, etc.) so selectors return null
+            // and any mounted query hooks with skip: !userEmail evaluate skip=true.
+            dispatch(resetUserState());
+            dispatch(resetConfigStates());
+            dispatch(resetUtilityStates());
+            dispatch(clearDestroySession());
+            dispatch(clearBanner());
+
             // Clear RTK Query caches.
             dispatch(configApis.util.resetApiState());
             dispatch(helperApis.util.resetApiState());
@@ -101,13 +115,8 @@ export const logoutUser = createAsyncThunk(
             dispatch(walletApis.util.resetApiState());
             dispatch(beneficiariesApis.util.resetApiState());
             dispatch(transferApis.util.resetApiState());
-
-            // Clear application state.
-            dispatch(resetUserState());
-            dispatch(resetConfigStates());
-            dispatch(resetUtilityStates());
-            dispatch(clearDestroySession());
-            dispatch(clearBanner());
+            dispatch(cardholdersApis.util.resetApiState());
+            dispatch(cardApis.util.resetApiState());
 
             dispatch(finishLogout());
         } catch (err: unknown) {

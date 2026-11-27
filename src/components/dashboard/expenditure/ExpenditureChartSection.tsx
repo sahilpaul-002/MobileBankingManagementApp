@@ -1,16 +1,16 @@
 import { useGetAllCardsExpendituresQuery } from '@/redux/features/card/cardApi';
 import { useGetPayoutsExpendituresQuery } from '@/redux/features/transfer/transferApis';
 import { useAppSelector } from '@/redux/hooks/reduxHooks';
-import { selectIsAdmin, selectIsMasterAdmin } from '@/redux/slice/user/userSlice';
+import { selectIsLoggingOut } from '@/redux/slice/appSession/appSessionSlice';
+import { selectIsAdmin, selectIsMasterAdmin, selectUserId } from '@/redux/slice/user/userSlice';
 import type {
   CardExpenditureChartResponseDataType,
   ExpenditureChartItemType,
   PayoutExpenditureChartResponseDataType,
 } from '@/types/dashboard/expenditureChartSectionTypes';
 import ShowInConsole from '@/utils/ShowInConsole';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChartNoAxesCombined, Info } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Text, View } from 'react-native';
 import ExpenditureAreaChartComponent from './ExpenditureAreaChartComponent';
 import ExpenditureBarChartComponent, {
@@ -32,21 +32,11 @@ export default function ExpenditureChartSection({
   const isAdmin = useAppSelector(selectIsAdmin);
   const isMasterAdmin = useAppSelector(selectIsMasterAdmin);
   const canAccessPayoutsExpenditures = isAdmin || isMasterAdmin;
+  const isLoggingOut = useAppSelector(selectIsLoggingOut);
 
-  // Resolve user id from prop or async storage
-  const [asyncStorageUserId, setAsyncStorageUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!userId) {
-      AsyncStorage.getItem('userId').then((storedId) => {
-        if (storedId) {
-          setAsyncStorageUserId(storedId);
-        }
-      });
-    }
-  }, [userId]);
-
-  const effectiveUserId = userId || asyncStorageUserId;
+  // Resolve user id from prop or Redux
+  const reduxUserId = useAppSelector(selectUserId);
+  const effectiveUserId = userId || reduxUserId;
 
   // ----------------------------- Date Range Calculation (Last 30 Days) ----------------------------- \\
   const { fromDate, toDate, fromDateObject } = useMemo(() => {
@@ -82,7 +72,7 @@ export default function ExpenditureChartSection({
       toDate,
     },
     {
-      skip: !userEmail || !effectiveUserId || !canAccessPayoutsExpenditures,
+      skip: !userEmail || !effectiveUserId || !canAccessPayoutsExpenditures || isLoggingOut,
       refetchOnMountOrArgChange: true,
     }
   );
@@ -112,7 +102,7 @@ export default function ExpenditureChartSection({
       toDate,
     },
     {
-      skip: !userEmail || !userCardholderId,
+      skip: !userEmail || !userCardholderId || isLoggingOut,
       refetchOnMountOrArgChange: true,
     }
   );

@@ -4,57 +4,32 @@ import KycStatusComponent from "@/components/user/userVerification/KycStatusComp
 import KycUploadModalComponent from "@/components/user/userVerification/KycUploadModalComponent";
 import { useGetKycDetailsQuery } from "@/redux/features/kyc/kycApis";
 import { useappDispatchType, useAppSelector } from "@/redux/hooks/reduxHooks";
-import { selectEmail } from "@/redux/slice/user/userSlice";
+import { selectIsLoggingOut } from "@/redux/slice/appSession/appSessionSlice";
+import { selectEmail, selectUserId } from "@/redux/slice/user/userSlice";
 import { setShowInfoBanner } from "@/redux/slice/utility/utilitySlice";
 import type { KycStatusDataType } from "@/types/user/userVerificationPageTypes";
 import ShowInConsole from "@/utils/ShowInConsole";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 
 export default function UserKycScreenComponent() {
   const dispatch = useappDispatchType();
-  const reduxEmail = useAppSelector(selectEmail);
 
-  const [userEmail, setUserEmail] = useState<string | null>(reduxEmail || null);
-  const [isSessionLoaded, setIsSessionLoaded] = useState(false);
+  // Runtime user session from Redux
+  const userEmail = useAppSelector(selectEmail);
+  const userId = useAppSelector(selectUserId);
+  const isLoggingOut = useAppSelector(selectIsLoggingOut);
 
+  // Validate session presence
   useEffect(() => {
-    let isMounted = true;
-    const loadSession = async () => {
-      try {
-        const storedItems = await AsyncStorage.multiGet([
-          "userEmail",
-          "userId",
-        ]);
-        const storedMap = Object.fromEntries(storedItems);
-        const email = storedMap.userEmail || reduxEmail || null;
-        const uid = storedMap.userId || null;
-
-        if (isMounted) {
-          setUserEmail(email);
-          setIsSessionLoaded(true);
-
-          if (!email || !uid) {
-            dispatch(
-              setShowInfoBanner(
-                "Application facing issue, necessary user details not present in session. Please re-login.",
-              ),
-            );
-          }
-        }
-      } catch {
-        if (isMounted) {
-          setIsSessionLoaded(true);
-        }
-      }
-    };
-
-    loadSession();
-    return () => {
-      isMounted = false;
-    };
-  }, [dispatch, reduxEmail]);
+    if (!isLoggingOut && (!userEmail || !userId)) {
+      dispatch(
+        setShowInfoBanner(
+          "Application facing issue, necessary user details not present in session. Please re-login.",
+        ),
+      );
+    }
+  }, [dispatch, isLoggingOut, userEmail, userId]);
 
   // ---------------------- Get KYC Verification Status Api ---------------------- \\
   // Get Kyc Status Api Mutation
@@ -65,7 +40,7 @@ export default function UserKycScreenComponent() {
     isError: getKycDetailsIsError,
     error: getKycDetailsError,
     refetch: refetchGetKycDetails,
-  } = useGetKycDetailsQuery({ email: userEmail! }, { skip: !userEmail });
+  } = useGetKycDetailsQuery({ email: userEmail! }, { skip: !userEmail || isLoggingOut });
 
   const userKycDetails = getKycData?.data as Record<string, any> | undefined;
   const userKycStatusData: KycStatusDataType = {
@@ -106,11 +81,14 @@ export default function UserKycScreenComponent() {
 
   // ------------------------------ Page Loader State ------------------------------ \\
   const showKycPageLoader =
-    !isSessionLoaded ||
     getKycDetailsIsLoading ||
     (!refreshing && getKycDetailsIsFetching) ||
     (!getKycData?.data && !isKycNotFound);
   // -------------------------------- XXXXXXXXXXXXXXXXXXX -------------------------------- \\
+
+  if (isLoggingOut) {
+    return <View className="flex-1 w-full bg-[var(--color-app)]" />;
+  }
 
   return (
     <View className="flex-1 w-full bg-[var(--color-app)]">

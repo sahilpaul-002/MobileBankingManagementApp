@@ -47,6 +47,12 @@ export const setAxiosDispatch = (dispatch: any) => {
 // Store ivHex value in WeakMap for in request cycle use
 const ivStore = new WeakMap<object, string>();
 
+const isDestroySessionUrl = (url?: string): boolean => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return lower.includes('destroy-session') || lower.includes('destroysession');
+};
+
 // ====================================
 // SETUP INTERCEPTORS ON AXIOS INSTANCE
 // ====================================
@@ -57,17 +63,11 @@ const setupInterceptors = (instance: AxiosInstance) => {
     // ==========================
     instance.interceptors.request.use(
         async (req) => {
-            // // DEBUG: Log actual API request URL
-            // console.log("========== API REQUEST ==========");
-            // console.log("Environment:", ENVIRONMENT);
-            // console.log("Base URL:", req.baseURL);
-            // console.log("Request URL:", req.url);
-            // console.log(
-            //     "Full URL:",
-            //     `${req.baseURL ?? ""}${req.url ?? ""}`
-            // );
-            // console.log("Method:", req.method?.toUpperCase());
-            // console.log("=================================");
+            // Central protection: Abort any outgoing request if logout is active (except server destroySession)
+            const isLoggingOut = reduxAccess?.getState()?.appSession?.isLoggingOut;
+            if (isLoggingOut && !isDestroySessionUrl(req.url)) {
+                return Promise.reject(new axios.Cancel('Request cancelled: logout in progress'));
+            }
 
             req.headers = req.headers ?? {};
             req.headers["portal"] = "user";
@@ -481,7 +481,7 @@ const setupInterceptors = (instance: AxiosInstance) => {
             }
 
             if (globalDispatch) {
-                handleErrors(error, globalDispatch);
+                handleErrors(error, globalDispatch, reduxAccess?.getState);
             }
             return Promise.reject(error);
         }
@@ -586,6 +586,17 @@ export const axiosBaseQuery =
             params?: unknown
             headers?: AxiosRequestConfig["headers"]
         }) => {
+            // Central protection: Abort any RTK Query request if logout is active (except server destroySession)
+            const isLoggingOut = reduxAccess?.getState()?.appSession?.isLoggingOut;
+            if (isLoggingOut && !isDestroySessionUrl(url)) {
+                return {
+                    error: {
+                        status: 'CANCELLED',
+                        data: 'Request cancelled: logout in progress',
+                    },
+                };
+            }
+
             try {
                 const baseURL = await getApiBaseUrl();
 

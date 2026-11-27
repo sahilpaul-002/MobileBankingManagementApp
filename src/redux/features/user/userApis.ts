@@ -3,7 +3,7 @@ import { USER_URL } from '@/configs/constants'
 import { ApplicationServiceError } from '@/errorHandling/error'
 import rtkQueryCatchError from '@/errorHandling/rtkQueryCatchError'
 import { selectApplicaitonHeaders, selectDnsConfigDetails, setAppliationHeaders, type applicationHeaderItemsType, type dnsConfigDataType } from '@/redux/slice/config/configSlice'
-import { setAuthenticated, setIsAdmin, setIsMasterAdmin } from '@/redux/slice/user/userSlice'
+import { setAuthenticated, setIsAdmin, setIsMasterAdmin, setUserSession } from '@/redux/slice/user/userSlice'
 import type { rootStateType } from '@/redux/sotre'
 import { saveAuthToken, saveRefreshToken } from '@/utils/expoSecureJwtTokenStorage'
 import { rsaEncryption } from '@/utils/rsaEncryption'
@@ -372,6 +372,16 @@ export const userApis = createApi({
 
                         // Update authentication status of user
                         dispatch(setAuthenticated(true));
+
+                        // Store user session details in Redux
+                        dispatch(
+                            setUserSession({
+                                email: sanitizedLoginData.userEmail ?? null,
+                                userId: sanitizedLoginData.userId ?? null,
+                                cardholderId: sanitizedLoginData.cardholderId ?? null,
+                                walletId: sanitizedLoginData.userWalletId ?? null,
+                            })
+                        );
 
                         // Set Admin
                         if (sanitizedLoginData?.isAdmin?.toUpperCase() === "Y") {

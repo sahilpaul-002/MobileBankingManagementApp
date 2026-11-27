@@ -7,12 +7,12 @@ import OnboardingDetailsEmptyState from '@/components/user/userDetails/Onboardin
 import PersonalDetailsComponent from '@/components/user/userDetails/PersonalDetailsComponent';
 import { useGetUserDetailsQuery, useGetUserOnboardingDetailsQuery } from '@/redux/features/user/userApis';
 import { useappDispatchType, useAppSelector } from '@/redux/hooks/reduxHooks';
-import { selectEmail } from '@/redux/slice/user/userSlice';
+import { selectIsLoggingOut } from '@/redux/slice/appSession/appSessionSlice';
+import { selectCardholderId, selectEmail, selectUserId } from '@/redux/slice/user/userSlice';
 import { setShowInfoBanner } from '@/redux/slice/utility/utilitySlice';
 import type { UserDetailsType, UserOnboardingDetailsType } from '@/types/user/userDetailsPageTypes';
 import { isKybApproved } from '@/utils/kybHelper';
 import ShowInConsole from '@/utils/ShowInConsole';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
@@ -27,57 +27,31 @@ const TABS: { id: TabId; label: string }[] = [
 
 export default function UserDetailsScreenComponent() {
     const dispatch = useappDispatchType();
-    const reduxEmail = useAppSelector(selectEmail);
 
-    const [userEmail, setUserEmail] = useState<string | null>(reduxEmail || null);
-    const [isSessionLoaded, setIsSessionLoaded] = useState(false);
+    // Runtime user session from Redux
+    const userEmail = useAppSelector(selectEmail);
+    const userId = useAppSelector(selectUserId);
+    const cardholderId = useAppSelector(selectCardholderId);
+    const isLoggingOut = useAppSelector(selectIsLoggingOut);
 
+    // Validate session presence
     useEffect(() => {
-        let isMounted = true;
-        const loadSession = async () => {
-            try {
-                const storedItems = await AsyncStorage.multiGet([
-                    'userEmail',
-                    'userId',
-                    'cardholderId',
-                ]);
-                const storedMap = Object.fromEntries(storedItems);
-                const email = storedMap.userEmail || reduxEmail || null;
-                const uid = storedMap.userId || null;
-                const cid = storedMap.cardholderId || null;
-
-                if (isMounted) {
-                    setUserEmail(email);
-                    setIsSessionLoaded(true);
-
-                    if (!email || !uid || !cid) {
-                        dispatch(
-                            setShowInfoBanner(
-                                'Application facing issue, necessary user details not present in session. Please re-login.'
-                            )
-                        );
-                    }
-                }
-            } catch {
-                if (isMounted) {
-                    setIsSessionLoaded(true);
-                }
-            }
-        };
-
-        loadSession();
-        return () => {
-            isMounted = false;
-        };
-    }, [dispatch, reduxEmail]);
+        if (!isLoggingOut && (!userEmail || !userId || !cardholderId)) {
+            dispatch(
+                setShowInfoBanner(
+                    'Application facing issue, necessary user details not present in session. Please re-login.'
+                )
+            );
+        }
+    }, [dispatch, isLoggingOut, userEmail, userId, cardholderId]);
 
     // -------------------------------- User Details / User Onboarding Details Api -------------------------------- \\
     // Get User Details API
-    const {data: getUserData, isLoading: getUserDetailsIsLoading, isFetching: getUserDetailsIsFetching, refetch: refetchGetUserDetails} = useGetUserDetailsQuery({ email: userEmail! }, { skip: !userEmail });
+    const {data: getUserData, isLoading: getUserDetailsIsLoading, isFetching: getUserDetailsIsFetching, refetch: refetchGetUserDetails} = useGetUserDetailsQuery({ email: userEmail! }, { skip: !userEmail || isLoggingOut });
     const userDetails = getUserData?.data as UserDetailsType | undefined;
 
     // Get User Onboarding Details API
-    const {data: getOnboardingData, isLoading: getOnboardingDetailsIsLoading, isFetching: getOnboardingDetailsIsFetching, isError: getOnboardingDetailsIsError, error: getOnboardingDetailsError, refetch: refetchGetOnboardingDetails} = useGetUserOnboardingDetailsQuery({ email: userEmail! }, { skip: !userEmail });
+    const {data: getOnboardingData, isLoading: getOnboardingDetailsIsLoading, isFetching: getOnboardingDetailsIsFetching, isError: getOnboardingDetailsIsError, error: getOnboardingDetailsError, refetch: refetchGetOnboardingDetails} = useGetUserOnboardingDetailsQuery({ email: userEmail! }, { skip: !userEmail || isLoggingOut });
 
     const userOnboardingDetails = getOnboardingData?.data as UserOnboardingDetailsType | undefined;
     const addressDetails = userOnboardingDetails?.addressDetails;
@@ -127,7 +101,6 @@ export default function UserDetailsScreenComponent() {
     // -------------------------------- Page Loader State -------------------------------- \\
     // const showUserDetailsPageLoader = getOnboardingDetailsIsFetching || getUserDetailsIsFetching
     const showUserDetailsPageLoader =
-        !isSessionLoaded ||
         getUserDetailsIsLoading ||
         getOnboardingDetailsIsLoading ||
         (!refreshing &&
@@ -136,6 +109,10 @@ export default function UserDetailsScreenComponent() {
             !userOnboardingDetails &&
             !isOnboardingDetailsNotFound);
     // ------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------ \\
+
+    if (isLoggingOut) {
+        return <View className="flex-1 w-full bg-[var(--color-app)]" />;
+    }
 
     return (
         <View className="flex-1 w-full bg-[var(--color-app)]">

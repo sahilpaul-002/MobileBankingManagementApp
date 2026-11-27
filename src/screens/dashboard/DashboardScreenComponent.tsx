@@ -14,7 +14,16 @@ import { useGetUserOnboardingDetailsQuery } from '@/redux/features/user/userApis
 import { useGetAllWalletBalancesQuery, useGetWalletTransactionsQuery } from '@/redux/features/wallet/walletApis';
 import { useappDispatchType, useAppSelector } from '@/redux/hooks/reduxHooks';
 import { selectDnsConfigDetails } from '@/redux/slice/config/configSlice';
-import { selectEmail, selectIsAdmin, selectIsMasterAdmin } from '@/redux/slice/user/userSlice';
+import { selectIsLoggingOut } from '@/redux/slice/appSession/appSessionSlice';
+import {
+  selectCardholderId,
+  selectEmail,
+  selectIsAdmin,
+  selectIsMasterAdmin,
+  selectUserId,
+  selectWalletId,
+  setWalletId,
+} from '@/redux/slice/user/userSlice';
 import { setShowInfoBanner } from '@/redux/slice/utility/utilitySlice';
 import { ROUTE_NAMES } from '@/routes/routeNames';
 import type { AllWalletBalancesResponseDataType } from '@/types/dashboard/allWalletsBalancesSectionTypes';
@@ -35,7 +44,13 @@ export default function DashboardScreenComponent() {
   const isAdmin = useAppSelector(selectIsAdmin);
   const isMasterAdmin = useAppSelector(selectIsMasterAdmin);
   const canAccessAdminFeatures = isAdmin || isMasterAdmin;
-  const reduxEmail = useAppSelector(selectEmail);
+  const isLoggingOut = useAppSelector(selectIsLoggingOut);
+
+  // Runtime User Session from Redux
+  const userEmail = useAppSelector(selectEmail);
+  const userId = useAppSelector(selectUserId);
+  const userCardholderId = useAppSelector(selectCardholderId);
+  const userWalletId = useAppSelector(selectWalletId);
 
   // ------------------------------- LOGOUT CONFIRMATION MODAL & BACK HANDLER ---------------------------------- \\
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -57,73 +72,16 @@ export default function DashboardScreenComponent() {
     }, []),
   );
 
-  // ------------------------------- GET CREDENTIALS FROM ASYNC STORAGE ---------------------------------- \\
-  const [userSession, setUserSession] = useState<{
-    email: string | null;
-    userId: string | null;
-    cardholderId: string | null;
-    walletId: string | null;
-  }>({
-    email: null,
-    userId: null,
-    cardholderId: null,
-    walletId: null,
-  });
-  const [isSessionLoaded, setIsSessionLoaded] = useState(false);
-
+  // Validate session presence
   useEffect(() => {
-    let isMounted = true;
-    const loadSession = async () => {
-      try {
-        const storedItems = await AsyncStorage.multiGet([
-          'userEmail',
-          'userId',
-          'cardholderId',
-          'userWalletId',
-        ]);
-        const storedMap = Object.fromEntries(storedItems);
-        const email = storedMap.userEmail || reduxEmail || null;
-        const userId = storedMap.userId || null;
-        const cardholderId = storedMap.cardholderId || null;
-        const walletId = storedMap.userWalletId || null;
-
-        if (isMounted) {
-          setUserSession({
-            email,
-            userId,
-            cardholderId,
-            walletId,
-          });
-          setIsSessionLoaded(true);
-
-          if (!email || !userId || !cardholderId) {
-            dispatch(
-              setShowInfoBanner(
-                'Application facing issue, necessary user details not present in session. Please re-login.'
-              )
-            );
-          }
-        }
-      } catch {
-        if (isMounted) {
-          setIsSessionLoaded(true);
-          dispatch(
-            setShowInfoBanner(
-              'Failed to read user session details. Please re-login.'
-            )
-          );
-        }
-      }
-    };
-
-    loadSession();
-    return () => {
-      isMounted = false;
-    };
-  }, [dispatch, reduxEmail]);
-
-  const userEmail = userSession.email;
-  const userCardholderId = userSession.cardholderId;
+    if (!isLoggingOut && (!userEmail || !userId || !userCardholderId)) {
+      dispatch(
+        setShowInfoBanner(
+          'Application facing issue, necessary user details not present in session. Please re-login.'
+        )
+      );
+    }
+  }, [dispatch, isLoggingOut, userEmail, userId, userCardholderId]);
   // ------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------- \\
 
   // ---------------------------------- Get DNS Data ---------------------------------- \\
@@ -132,15 +90,15 @@ export default function DashboardScreenComponent() {
   const [triggerDnsConfig, { isFetching: isDnsFetching }] = useLazyGetDnsConfigQuery();
 
   useEffect(() => {
-    if (!dnsData && !isDnsFetching && domainName) {
+    if (!dnsData && !isDnsFetching && domainName && !isLoggingOut) {
       triggerDnsConfig({ domainName });
     }
-  }, [dnsData, isDnsFetching, triggerDnsConfig, domainName]);
+  }, [dnsData, isDnsFetching, triggerDnsConfig, domainName, isLoggingOut]);
   // -------------------------------- XXXXXXXXXXXXXXXXXXXXXXXX -------------------------------- \\
 
   // ----------------------------------- KYC / KYB Verification Status ----------------------------------- \\
   // Get KYC Details API
-  const { data: getKycData, isLoading: getKycDetailsIsLoading, isError: getKycDetailsIsError, error: getKycDetailsError, isSuccess: getKycDetailsIsSuccess, refetch: refetchGetKycDetails } = useGetKycDetailsQuery({ email: userEmail! }, { skip: !userEmail });
+  const { data: getKycData, isLoading: getKycDetailsIsLoading, isError: getKycDetailsIsError, error: getKycDetailsError, isSuccess: getKycDetailsIsSuccess, refetch: refetchGetKycDetails } = useGetKycDetailsQuery({ email: userEmail! }, { skip: !userEmail || isLoggingOut });
 
   const userKycDetails = getKycData?.data as Record<string, any> | undefined;
   const isKycNotFound =
@@ -150,7 +108,7 @@ export default function DashboardScreenComponent() {
     getKycDetailsError.status === 404;
 
   // Get KYB Details API
-  const { data: getOnboardingData, isLoading: getOnboardingDetailsLoading, isError: getOnboardingDetailsIsError, error: getOnboardingDetailsError, isSuccess: getOnboardingDetailsIsSuccess, refetch: refetchGetOnboardingDetails } = useGetUserOnboardingDetailsQuery({ email: userEmail! }, { skip: !userEmail });
+  const { data: getOnboardingData, isLoading: getOnboardingDetailsLoading, isError: getOnboardingDetailsIsError, error: getOnboardingDetailsError, isSuccess: getOnboardingDetailsIsSuccess, refetch: refetchGetOnboardingDetails } = useGetUserOnboardingDetailsQuery({ email: userEmail! }, { skip: !userEmail || isLoggingOut });
 
   const userOnboardingDetails = getOnboardingData?.data as Record<string, any> | undefined;
   const isOnboardingNotFound =
@@ -169,31 +127,37 @@ export default function DashboardScreenComponent() {
     getKycDetailsIsSuccess &&
     getOnboardingDetailsIsSuccess &&
     !getKycDetailsIsError &&
-    !getOnboardingDetailsIsError;
+    !getOnboardingDetailsIsError &&
+    !isLoggingOut;
 
   const shouldFetchDependentApis = verificationApisCompleted;
 
   useEffect(() => {
-    ShowInConsole('User kyc details', userKycDetails);
-  }, [userKycDetails]);
+    if (!isLoggingOut) {
+      ShowInConsole('User kyc details', userKycDetails);
+    }
+  }, [userKycDetails, isLoggingOut]);
 
   useEffect(() => {
-    ShowInConsole('User onboarding details', userOnboardingDetails);
-  }, [userOnboardingDetails]);
+    if (!isLoggingOut) {
+      ShowInConsole('User onboarding details', userOnboardingDetails);
+    }
+  }, [userOnboardingDetails, isLoggingOut]);
   // -------------------------------- XXXXXXXXXXXXXXXXX -------------------------------- \\
 
   // -------------------------------- All Wallets Balances -------------------------------- \\
-  const { data: getAllWalletsBalancesData, isError: getAllWalletsBalancesIsError, error: getAllWalletsBalancesError, isSuccess: getAllWalletsBalancesIsSuccess, refetch: refetchGetAllWalletsBalances } = useGetAllWalletBalancesQuery({ email: userEmail!, cardholderId: userCardholderId! }, { skip: !userEmail || !userCardholderId || !shouldFetchDependentApis, refetchOnMountOrArgChange: true });
+  const { data: getAllWalletsBalancesData, isError: getAllWalletsBalancesIsError, error: getAllWalletsBalancesError, isSuccess: getAllWalletsBalancesIsSuccess, refetch: refetchGetAllWalletsBalances } = useGetAllWalletBalancesQuery({ email: userEmail!, cardholderId: userCardholderId! }, { skip: !userEmail || !userCardholderId || !shouldFetchDependentApis || isLoggingOut, refetchOnMountOrArgChange: true });
 
   const userAllWalletsBalances = (getAllWalletsBalancesData?.data as AllWalletBalancesResponseDataType | undefined) ?? [];
   const fetchedWalletId = (getAllWalletsBalancesData?.data as AllWalletBalancesResponseDataType | undefined)?.walletId;
 
-  // Set user wallet id in expo secure store
+  // Set user wallet id in expo secure store and Redux
   useEffect(() => {
-    if (getAllWalletsBalancesIsSuccess && fetchedWalletId) {
+    if (getAllWalletsBalancesIsSuccess && fetchedWalletId && !isLoggingOut) {
       AsyncStorage.setItem('userWalletId', fetchedWalletId);
+      dispatch(setWalletId(fetchedWalletId));
     }
-  }, [getAllWalletsBalancesIsSuccess, fetchedWalletId]);
+  }, [getAllWalletsBalancesIsSuccess, fetchedWalletId, dispatch, isLoggingOut]);
 
   const isAllWalletsBalancesNotFound =
     getAllWalletsBalancesIsError &&
@@ -203,9 +167,9 @@ export default function DashboardScreenComponent() {
   // --------------------------------- XXXXXXXXXXXXXXXXXXXXXX --------------------------------- \\
 
   // -------------------------------- Cards List -------------------------------- \\
-  const shouldFetchTopSpendingCardsList = shouldFetchDependentApis && getAllWalletsBalancesIsSuccess && !!userCardholderId;
+  const shouldFetchTopSpendingCardsList = shouldFetchDependentApis && getAllWalletsBalancesIsSuccess && !!userCardholderId && !isLoggingOut;
 
-  const { data: getTopSpendingCardsData, isError: getTopSpendingCardsIsError, error: getTopSpendingCardsError, refetch: refetchTopSpendingCards } = useGetTopSpendingCardsQuery({ email: userEmail!, cardholderId: userCardholderId! }, { skip: !userEmail || !userCardholderId || !shouldFetchTopSpendingCardsList, refetchOnMountOrArgChange: true });
+  const { data: getTopSpendingCardsData, isError: getTopSpendingCardsIsError, error: getTopSpendingCardsError, refetch: refetchTopSpendingCards } = useGetTopSpendingCardsQuery({ email: userEmail!, cardholderId: userCardholderId! }, { skip: !userEmail || !userCardholderId || !shouldFetchTopSpendingCardsList || isLoggingOut, refetchOnMountOrArgChange: true });
 
   const topSpendingCardsResponseData = getTopSpendingCardsData?.data as TopSpendingCardsResponseDataType | undefined;
   const topSpendingCardsList = topSpendingCardsResponseData?.cards ?? [];
@@ -218,10 +182,10 @@ export default function DashboardScreenComponent() {
   // ------------------------------- XXXXXXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------- \\
 
   // -------------------------------- Wallet Transactions -------------------------------- \\
-  const activeWalletId = fetchedWalletId || userSession.walletId;
-  const shouldFetchWalletTransactions = shouldFetchDependentApis && getAllWalletsBalancesIsSuccess && !!activeWalletId;
+  const activeWalletId = fetchedWalletId || userWalletId;
+  const shouldFetchWalletTransactions = shouldFetchDependentApis && getAllWalletsBalancesIsSuccess && !!activeWalletId && !isLoggingOut;
 
-  const { data: getWalletTransactionsData, isError: getWalletTransactionsIsError, error: getWalletTransactionsError, refetch: refetchWalletTransactions } = useGetWalletTransactionsQuery({ email: userEmail!, cardholderId: userCardholderId!, walletId: activeWalletId!, pageNumber: 1, pageSize: 7 }, { skip: !userEmail || !userCardholderId || !activeWalletId || !shouldFetchWalletTransactions, refetchOnMountOrArgChange: true });
+  const { data: getWalletTransactionsData, isError: getWalletTransactionsIsError, error: getWalletTransactionsError, refetch: refetchWalletTransactions } = useGetWalletTransactionsQuery({ email: userEmail!, cardholderId: userCardholderId!, walletId: activeWalletId!, pageNumber: 1, pageSize: 7 }, { skip: !userEmail || !userCardholderId || !activeWalletId || !shouldFetchWalletTransactions || isLoggingOut, refetchOnMountOrArgChange: true });
 
   const userWalletTransactions = (getWalletTransactionsData?.data as WalletTransactionsListResponseDataType | undefined) ?? [];
 
@@ -233,16 +197,17 @@ export default function DashboardScreenComponent() {
   // ------------------------------------ XXXXXXXXXXXXXXXXXXXXXXXXX ------------------------------------ \\
 
   // -------------------------------- Failure & Loading Handling -------------------------------- \\
-  const isInitialPageLoading = !isSessionLoaded || getKycDetailsIsLoading || getOnboardingDetailsLoading;
+  const isInitialPageLoading = getKycDetailsIsLoading || getOnboardingDetailsLoading;
 
   const hasBlockingApiFailure = (getKycDetailsIsError && !isKycNotFound) || (getOnboardingDetailsIsError && !isOnboardingNotFound);
 
   const hasDashboardUiApiFailure = getAllWalletsBalancesIsError || getWalletTransactionsIsError;
 
-  const canRenderDashboard = !isInitialPageLoading && !hasBlockingApiFailure;
-  const canAccessDashboard = kycApproved && kybApproved;
+  const canRenderDashboard = !isInitialPageLoading && !hasBlockingApiFailure && !isLoggingOut;
+  const canAccessDashboard = kycApproved && kybApproved && !isLoggingOut;
 
   useEffect(() => {
+    if (isLoggingOut) return;
     if (hasBlockingApiFailure) {
       dispatch(
         setShowInfoBanner(
@@ -254,14 +219,16 @@ export default function DashboardScreenComponent() {
         setShowInfoBanner('Some dashboard services are currently unavailable.')
       );
     }
-  }, [hasBlockingApiFailure, hasDashboardUiApiFailure, dispatch]);
+  }, [hasBlockingApiFailure, hasDashboardUiApiFailure, dispatch, isLoggingOut]);
 
   const handleRetryFailedRequests = useCallback(() => {
+    if (isLoggingOut) return;
     if (getKycDetailsIsError) refetchGetKycDetails();
     if (getOnboardingDetailsIsError) refetchGetOnboardingDetails();
     if (getAllWalletsBalancesIsError) refetchGetAllWalletsBalances();
     if (getWalletTransactionsIsError) refetchWalletTransactions();
   }, [
+    isLoggingOut,
     getKycDetailsIsError,
     refetchGetKycDetails,
     getOnboardingDetailsIsError,
@@ -275,6 +242,7 @@ export default function DashboardScreenComponent() {
   // Pull to refresh
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
+    if (isLoggingOut) return;
     setRefreshing(true);
     try {
       await Promise.all([
@@ -290,12 +258,17 @@ export default function DashboardScreenComponent() {
       setRefreshing(false);
     }
   }, [
+    isLoggingOut,
     refetchGetKycDetails,
     refetchGetOnboardingDetails,
     refetchGetAllWalletsBalances,
     refetchTopSpendingCards,
     refetchWalletTransactions,
   ]);
+
+  if (isLoggingOut) {
+    return <View className="flex-1 w-full bg-[var(--color-app)]" />;
+  }
 
   return (
     <View className="flex-1 w-full bg-[var(--color-app)]">
@@ -384,7 +357,7 @@ export default function DashboardScreenComponent() {
                 <ExpenditureChartSection
                   userEmail={userEmail}
                   userCardholderId={userCardholderId}
-                  userId={userSession.userId}
+                  userId={userId}
                 />
 
                 {/* Recent Transactions Section */}

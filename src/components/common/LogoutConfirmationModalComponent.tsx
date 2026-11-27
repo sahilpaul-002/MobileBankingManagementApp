@@ -28,13 +28,13 @@ export default function LogoutConfirmationModalComponent({
     if (isLoggingOut) return;
 
     setIsLoggingOut(true);
+    onClose();
     try {
       await dispatch(logoutUser()).unwrap();
     } catch {
       // Error handled within logout thunk
     } finally {
       setIsLoggingOut(false);
-      onClose();
       router.replace(ROUTE_NAMES.INDEX as any);
     }
   };

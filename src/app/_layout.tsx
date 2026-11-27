@@ -3,7 +3,9 @@ import ToastMessagesComponent from '@/components/common/ToastMessagesComponent';
 import { setAxiosDispatch, setAxiosReduxAccess } from '@/configs/axiosConfig';
 import AppLayout from '@/layouts/AppLayout';
 import { store, storeDispatch } from '@/redux/sotre';
+import { setAuthenticated, setUserSession } from '@/redux/slice/user/userSlice';
 import { authenticateDevice } from '@/utils/authenticateDevice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme, ThemeProvider, usePathname, useSegments, } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useState } from 'react';
@@ -71,6 +73,35 @@ export default function AppRootLayout() {
 
       // Device authentication successful
       setBootState('INITIALIZING');
+
+      // Hydrate user session from AsyncStorage into Redux once during startup
+      try {
+        const storedItems = await AsyncStorage.multiGet([
+          'userEmail',
+          'userId',
+          'cardholderId',
+          'userWalletId',
+        ]);
+        const storedMap = Object.fromEntries(storedItems);
+        const email = storedMap.userEmail;
+        const userId = storedMap.userId;
+        const cardholderId = storedMap.cardholderId;
+        const walletId = storedMap.userWalletId;
+
+        if (email) {
+          store.dispatch(
+            setUserSession({
+              email: email ?? null,
+              userId: userId ?? null,
+              cardholderId: cardholderId ?? null,
+              walletId: walletId ?? null,
+            })
+          );
+          store.dispatch(setAuthenticated(true));
+        }
+      } catch (hydrationError) {
+        console.warn('Failed to hydrate user session from AsyncStorage:', hydrationError);
+      }
 
       // Application initialization successful
       setBootState('READY');
