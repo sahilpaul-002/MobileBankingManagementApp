@@ -22,6 +22,7 @@ import deleteFromCloudinary from "../configs/claudinaryDelete.js";
 
 dotenv.config();
 
+const nodeEnv = process.env.NODE_ENV
 const fromEmail = process.env.MAIL_SERVICE_SENDING_EMAIL || "nodemailtesting02@gmail.com"
 const bmaNotificationMail = process.env.BMA_EMAIL || "bma_notification@yopmail.com"
 
@@ -560,8 +561,8 @@ export const sendKycVerificationMailService = async (requestSession: Request["se
         );
 
         // Backend webhook URLs
-        const approveUrl = `${requestSession?.sessiondata?.baseUrl}/api/v1/public/kyc/kycVerificationWebhook?token=${encodeURIComponent(approveToken)}`;
-        const rejectUrl = `${requestSession?.sessiondata?.baseUrl}/api/v1/public/kyc/kycVerificationWebhook?token=${encodeURIComponent(rejectToken)}`;
+        const approveUrl = `${nodeEnv?.toUpperCase() === "DEVELOPMENT" ? "http://localhost:3000" :  requestSession?.sessiondata?.baseUrl}/api/v1/public/kyc/kycVerificationWebhook?token=${encodeURIComponent(approveToken)}`;
+        const rejectUrl = `${nodeEnv?.toUpperCase() === "DEVELOPMENT" ? "http://localhost:3000" : requestSession?.sessiondata?.baseUrl}/api/v1/public/kyc/kycVerificationWebhook?token=${encodeURIComponent(rejectToken)}`;
 
         // Generate email template
         const poiDocumentUrl = userKycDetailsDoc?.poi_document?.secure_url
